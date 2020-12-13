@@ -1,0 +1,58 @@
+[
+   {
+      "flags":0,
+      "maxElements":1,
+      "minElements":1,
+      "selfModificable":false,
+      "uniqueValues":false,
+      "global":false,
+      "syntaxState":{
+         
+      },
+      "displayedName":{
+         "DefaultValue":"Last deprovisioning verification time",
+         "Map":{
+            "en":"Last deprovisioning verification time"
+         }
+      },
+      "i18nDescription":{
+         "DefaultValue":null,
+         "Map":{
+            
+         }
+      },
+      "metadata":{
+         
+      },
+      "name":"deprovisioning:LastHomeIdPVerification",
+      "syntaxId":"datetime"
+   },
+   {
+      "flags":0,
+      "maxElements":1,
+      "minElements":1,
+      "selfModificable":false,
+      "uniqueValues":false,
+      "global":false,
+      "syntaxState":{
+         
+      },
+      "displayedName":{
+         "DefaultValue":"Last offline deprovisioning verification time",
+         "Map":{
+            "en":"Last offline deprovisioning verification time"
+         }
+      },
+      "i18nDescription":{
+         "DefaultValue":null,
+         "Map":{
+            
+         }
+      },
+      "metadata":{
+         
+      },
+      "name":"deprovisioning:LastOfflineVerification",
+      "syntaxId":"datetime"
+   }
+]
