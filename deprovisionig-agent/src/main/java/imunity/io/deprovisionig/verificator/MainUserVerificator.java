@@ -5,8 +5,10 @@
 
 package imunity.io.deprovisionig.verificator;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -111,8 +113,7 @@ public class MainUserVerificator
 				SAMLErrorResponseException cause = (SAMLErrorResponseException) e.getCause();
 				if (SubStatus.STATUS2_UNKNOWN_PRINCIPIAL.equals(cause.getSamlSubErrorId()))
 				{
-					changeUserStatusIfNeeded(user, EntityState.disabled, samlIdpInfo);
-
+					changeUserStatusIfNeeded(user, EntityState.toRemove, samlIdpInfo);
 				} else
 				{
 					gotoOfflineVerification(user, samlIdpInfo);
@@ -183,7 +184,7 @@ public class MainUserVerificator
 			return EntityState.disabled;
 		} else if ("deleted".equals(statusL))
 		{
-			return EntityState.disabled;
+			return EntityState.onlyLoginPermitted;
 		}
 
 		log.debug("Can not interpret new status of user " + user.entityId + " status=" + statusL);
@@ -200,18 +201,31 @@ public class MainUserVerificator
 
 		log.info("Change user status of " + user.entityId + " to " + newStatus.toString());
 
-		groovyHook.run(user, newStatus, idpInfo);
+		Instant time = null;
+		if (newStatus.equals(EntityState.onlyLoginPermitted))
+		{
+			time = getRemoveTime();
+			unityClient.scheduleRemoveUserWithLoginPermit(String.valueOf(user.entityId),
+					time.toEpochMilli());
+		}
+		if (newStatus.equals(EntityState.toRemove))
+		{
+			time = getRemoveTime();
+			unityClient.setUserStatus(String.valueOf(user.entityId), EntityState.disabled);
+			unityClient.scheduleRemoveUser(String.valueOf(user.entityId), time.toEpochMilli());
 
-		// TODO apiClient change user status, shedule remove if need
-		// TODO Triger change status script
+		} else
+		{
+			unityClient.setUserStatus(String.valueOf(user.entityId), newStatus);
+		}
 
+		groovyHook.run(user, newStatus, idpInfo, time);
 	}
 
-	// private void disableUser(UnityUser user)
-	// {
-	// log.info("Disable user " + user.entityId);
-	// // TODO
-	// }
+	private Instant getRemoveTime()
+	{
+		return Instant.now().plus(timesConfig.removeUserCompletlyPeriod(), ChronoUnit.DAYS);
+	}
 
 	private void gotoOfflineVerification(UnityUser user, SAMLIdpInfo idpInfo)
 	{
@@ -230,8 +244,8 @@ public class MainUserVerificator
 			offlineVerificator.verify(user, idpInfo.technicalAdminEmail);
 		}
 
-		// TODO should also remove
-		changeUserStatusIfNeeded(user, EntityState.disabled, idpInfo);
+
+		changeUserStatusIfNeeded(user, EntityState.onlyLoginPermitted, idpInfo);
 	}
 
 }

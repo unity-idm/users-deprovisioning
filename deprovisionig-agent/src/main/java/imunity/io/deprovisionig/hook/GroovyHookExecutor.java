@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.time.Instant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,12 +33,12 @@ public class GroovyHookExecutor
 	@Value("${hookScript}")
 	private String hookScript;
 
-	public void run(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo)
+	public void run(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo, Instant removeTime)
 	{
 		Reader scriptReader = getFileReader();
 		try
 		{
-			runScript(scriptReader, getBinding(user, newStatus, idpInfo));
+			runScript(scriptReader, getBinding(user, newStatus, idpInfo, removeTime));
 		} catch (InternalException e)
 		{
 			log.error("Can not execute groovy script", e);
@@ -81,7 +82,7 @@ public class GroovyHookExecutor
 		log.debug("Groovy script: {} finished", hookScript);
 	}
 
-	Binding getBinding(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo)
+	Binding getBinding(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo, Instant removeTime)
 	{
 		Binding binding = new Binding();
 
@@ -89,7 +90,7 @@ public class GroovyHookExecutor
 		binding.setVariable("user", user);
 		binding.setVariable("newUserStatus", newStatus);
 		binding.setVariable("idpInfo", idpInfo);
-		
+		binding.setVariable("removeTime", removeTime);
 		return binding;
 	}
 }

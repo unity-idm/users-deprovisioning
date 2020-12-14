@@ -160,6 +160,35 @@ public class UnityRestClient
 		return response;
 	}
 	
+	public HttpResponse put(String path, Optional<Map<String, String>> params) throws UnityException
+
+	{
+		URIBuilder builder;
+		try
+		{
+			builder = new URIBuilder(restPath + path);
+		} catch (URISyntaxException e)
+		{
+			throw new UnityException("Invalid unity url", e);
+		}
+		if (params.isPresent())
+		{
+			params.get().forEach((k, v) -> builder.addParameter(k, v));
+		}
+		HttpPut putReq;
+		try
+		{
+			putReq = new HttpPut(builder.build());
+		} catch (URISyntaxException e)
+		{
+			throw new UnityException("Invalid unity url params", e);
+		}
+
+		HttpResponse response = execute(putReq);
+		assertResponseStatusIsOk(response);
+		return response;
+	}
+	
 	public HttpResponse put(String path, ContentType contentType, Optional<String> content) throws UnityException
 	{
 		HttpPut putReq;

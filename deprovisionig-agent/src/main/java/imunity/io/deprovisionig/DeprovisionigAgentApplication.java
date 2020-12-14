@@ -84,15 +84,15 @@ public class DeprovisionigAgentApplication implements CommandLineRunner
 		// attr.setName("deprovisioning:LastHomeIdPVerification");
 		// attr.setValues(Arrays.asList(LocalDateTime.now().withNano(0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
 
-		Identity id = new Identity();
-		id.setTypeId("email");
-		id.setValue("demo@demo.pl");
-		groovyHook.run(new UnityUser(1L, EntityState.disabled, Arrays.asList(id),
-				new HashSet<>(Arrays.asList("/")), LocalDateTime.now(), LocalDateTime.now(),
-				LocalDateTime.now()), EntityState.valid,
-				new SAMLIdpInfo("idp", "queryService", "demo@demo.pl"));
-
-		// apiClient.updateAttribute("c840d9f5-323d-449f-9e75-d73745c8b7ac",
+//		Identity id = new Identity();
+//		id.setTypeId("email");
+//		id.setValue("demo@demo.pl");
+//		groovyHook.run(new UnityUser(1L, EntityState.disabled, Arrays.asList(id),
+//				new HashSet<>(Arrays.asList("/")), LocalDateTime.now(), LocalDateTime.now(),
+//				LocalDateTime.now()), EntityState.valid,
+//				new SAMLIdpInfo("idp", "queryService", "demo@demo.pl"));
+//
+//		// apiClient.updateAttribute("c840d9f5-323d-449f-9e75-d73745c8b7ac",
 		// attr);
 
 	}

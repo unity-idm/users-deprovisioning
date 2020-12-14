@@ -42,12 +42,37 @@ public class UnityApiClient
 
 	public void setUserStatus(String identity, EntityState state)
 	{
-		// TODO
+		try
+		{
+			client.put("/entity/" + identity + "/state/" + state.toString(), Optional.empty());
+		} catch (UnityException e)
+		{
+			log.error("Can not set status " + state.toString() + " of user" + identity, e);
+		}
 	}
 
-	public void removeUser(String identity, long when)
+	public void scheduleRemoveUser(String identity, long when)
 	{
-		// TODO
+		try
+		{
+			client.put("/entity/" + identity + "/removal-schedule",
+					Optional.of(Map.of("when", String.valueOf(when))));
+		} catch (UnityException e)
+		{
+			log.error("Can not shedule remove user with login permit option", e);
+		}
+	}
+
+	public void scheduleRemoveUserWithLoginPermit(String identity, long when)
+	{
+		try
+		{
+			client.put("/entity/" + identity + "/admin-schedule",
+					Optional.of(Map.of("when", String.valueOf(when), "operation", "REMOVE")));
+		} catch (UnityException e)
+		{
+			log.error("Can not shedule remove user", e);
+		}
 	}
 
 	public void updateAttribute(String identity, Attribute attribute)
