@@ -27,7 +27,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -36,12 +35,12 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.xmlbeans.XmlException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import eu.unicore.samly2.SAMLConstants;
 import imunity.io.deprovisionig.NetworkClient;
+import imunity.io.deprovisionig.WorkdirFileManager;
 import xmlbeans.org.oasis.saml2.metadata.AttributeAuthorityDescriptorType;
 import xmlbeans.org.oasis.saml2.metadata.ContactType;
 import xmlbeans.org.oasis.saml2.metadata.EndpointType;
@@ -54,17 +53,20 @@ public class SAMLMetadataManager
 {
 	private static final Logger log = LogManager.getLogger(SAMLMetadataManager.class);
 
-	@Value("${workdir:data}")
-	private String workdir;
-
 	@Value("${saml.metadataValidityTime:1}")
 	private int metadataValidityTime;
 
-	@Value("${saml.metadataSource}")
+	@Value("${saml.metadataSource:http://www.aai.dfn.de/fileadmin/metadata/dfn-aai-basic-metadata.xml}")
 	private String metadataSource;
 
-	@Autowired
 	private NetworkClient networkClient;
+	private WorkdirFileManager fileMan;
+
+	public SAMLMetadataManager(NetworkClient networkClient, WorkdirFileManager fileMan)
+	{
+		this.networkClient = networkClient;
+		this.fileMan = fileMan;
+	}
 
 	public static final Set<String> SUPPORTED_URL_SCHEMES = new HashSet<>(Arrays.asList("data", "http", "https"));
 
@@ -166,8 +168,8 @@ public class SAMLMetadataManager
 			return parseMetadataFile(readFile(uri));
 		}
 
-		Path filePath = getFilePathForUri(uri.toString());
-		if (Files.exists(filePath) && Files.getLastModifiedTime(filePath).toInstant()
+		String filePath = uri.toString();
+		if (fileMan.exists(filePath) && fileMan.getLastModifiedTime(filePath)
 				.isAfter(Instant.now().minus(metadataValidityTime, ChronoUnit.DAYS)))
 		{
 			return parseMetadataFile(readFile(URI.create("file:" + filePath.toString())));
@@ -181,12 +183,11 @@ public class SAMLMetadataManager
 
 	}
 
-	private void cacheMetadata(URI uri, ByteArrayInputStream metadataFileContent, Path filePath) throws IOException
+	private void cacheMetadata(URI uri, ByteArrayInputStream metadataFileContent, String filePath)
+			throws IOException
 	{
 		log.info("Cache metadata file from: " + uri);
-		Files.createDirectories(filePath.getParent());
-		Files.write(filePath, metadataFileContent.readAllBytes());
-
+		fileMan.saveFile(metadataFileContent.readAllBytes(), filePath);
 		metadataFileContent.reset();
 	}
 
@@ -296,8 +297,4 @@ public class SAMLMetadataManager
 		return false;
 	}
 
-	public Path getFilePathForUri(String uri)
-	{
-		return Paths.get(workdir, DigestUtils.md5Hex(uri));
-	}
 }

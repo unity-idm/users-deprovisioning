@@ -30,7 +30,7 @@ public class GroovyHookExecutor
 {
 	private static final Logger log = LogManager.getLogger(GroovyHookExecutor.class);
 
-	@Value("${hookScript}")
+	@Value("${hookScript:}")
 	private String hookScript;
 
 	public void run(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo, Instant removeTime)

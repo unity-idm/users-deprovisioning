@@ -29,7 +29,7 @@ public class UnityUserExtractor
 	private final UnityApiClient client;
 	private final TimesConfiguration timesConfig;
 
-	@Value("${unity.root.group}")
+	@Value("${unity.root.group:/}")
 	private String unityRootGroup;
 
 	@Value("${unity.exclude.groups:}")
@@ -38,13 +38,12 @@ public class UnityUserExtractor
 	@Value("${unity.exclude.users:}")
 	private String[] excludedUsers;
 
-	@Value("${unity.identifier.relatedProfile}")
+	@Value("${unity.identifier.relatedProfile:}")
 	private String relatedTranslationProfile;
 
 	@Autowired
 	public UnityUserExtractor(UnityApiClient client, TimesConfiguration timesConfig)
 	{
-		super();
 		this.client = client;
 		this.timesConfig = timesConfig;
 	}

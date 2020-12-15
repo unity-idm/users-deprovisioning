@@ -16,9 +16,14 @@ import eu.unicore.util.httpclient.HttpUtils;
 @Component
 public class NetworkClient
 {
-	@Autowired
 	private CredentialConfiguration credentials;
 
+	@Autowired
+	public NetworkClient(CredentialConfiguration credentials)
+	{
+		this.credentials = credentials;
+	}
+	
 	public HttpClient getClient(String url) throws Exception
 	{
 		return url.startsWith("https:") ? getSSLClient(url) : HttpClientBuilder.create().build();

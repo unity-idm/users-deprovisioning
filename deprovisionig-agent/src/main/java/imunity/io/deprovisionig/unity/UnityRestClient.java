@@ -45,7 +45,6 @@ import imunity.io.deprovisionig.exception.UnityException;
 @Component
 public class UnityRestClient
 {
-
 	@Value("${unity.rest.uri}")
 	private String restUri;
 	@Value("${unity.rest.client.username}")
@@ -56,8 +55,9 @@ public class UnityRestClient
 	private HttpHost host;
 	private String restPath;
 	private HttpClientContext context;
-	private NetworkClient networkClient;
 	private HttpClient client;
+	
+	private NetworkClient networkClient;
 
 	@Autowired
 	public UnityRestClient(NetworkClient networkClient)

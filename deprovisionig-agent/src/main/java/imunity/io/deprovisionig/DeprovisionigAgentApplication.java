@@ -1,32 +1,19 @@
 package imunity.io.deprovisionig;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalField;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import javax.swing.event.ListSelectionEvent;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-import com.sun.xml.ws.policy.privateutil.PolicyUtils.Collections;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 
 import imunity.io.deprovisionig.extractor.UnityUserExtractor;
 import imunity.io.deprovisionig.hook.GroovyHookExecutor;
 import imunity.io.deprovisionig.saml.AttributeQueryClient;
-import imunity.io.deprovisionig.saml.metadata.SAMLIdpInfo;
 import imunity.io.deprovisionig.saml.metadata.SAMLMetadataManager;
 import imunity.io.deprovisionig.unity.UnityApiClient;
-import imunity.io.deprovisionig.unity.types.Attribute;
-import imunity.io.deprovisionig.unity.types.EntityState;
-import imunity.io.deprovisionig.unity.types.Identity;
-import imunity.io.deprovisionig.unity.types.UnityUser;
 import imunity.io.deprovisionig.verificator.MainUserVerificator;
 
 @SpringBootApplication
@@ -48,14 +35,16 @@ public class DeprovisionigAgentApplication implements CommandLineRunner
 	UnityApiClient apiClient;
 
 	@Autowired
-	private MainUserVerificator onlineUserVerificator;
+	private MainUserVerificator verificator;
 
 	@Autowired
 	private GroovyHookExecutor groovyHook;
 
 	public static void main(String[] args)
 	{
-		SpringApplication.run(DeprovisionigAgentApplication.class, args);
+		//SpringApplication.run(DeprovisionigAgentApplication.class, args);
+		System.setProperty("illegal-access", "deny");
+		new SpringApplicationBuilder(DeprovisionigAgentApplication.class).web(WebApplicationType.NONE).run(args);
 	}
 
 	@Override
@@ -71,9 +60,8 @@ public class DeprovisionigAgentApplication implements CommandLineRunner
 		// samlMetaManager.getAttributeQueryAddressesAsMap();
 		// System.out.println(entitiesDescriptorDocument);
 
-		// query.query("https://localhost:2443/soapidp/saml2idp-soap/AssertionQueryService",
-		// "379bee81-3833-4bd4-9ed0-9693104f0106");
-
+//		 query.queryToFile("https://localhost:2443/soapidp/saml2idp-soap/AssertionQueryService", "16c0c3d2-c7fe-47a2-b3d5-2c5370bff8d8");
+//		query.queryToFile(args[0], args[1]);
 		// onlineUserVerificator.verifyUsers(extractor.extractUnityUsers());
 
 		// apiClient.sendEmail("fb7d3791-d419-4213-af7f-7db11a34b295",

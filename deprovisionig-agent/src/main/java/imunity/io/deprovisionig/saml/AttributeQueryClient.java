@@ -29,31 +29,31 @@ import imunity.io.deprovisionig.exception.SAMLException;
 public class AttributeQueryClient
 {
 	private static final Logger log = LogManager.getLogger(AttributeQueryClient.class);
-
-	@Autowired
+	
 	private SAMLCredentialConfiguration credentials;
+	
+	@Autowired
+	public AttributeQueryClient(SAMLCredentialConfiguration credentials)
+	{
+		this.credentials = credentials;	
+	}
 
 	@Value("${saml.requester.requesterEntityId}")
 	private String requesterEntityId;
 
-	public Optional<List<ParsedAttribute>> query(String attributeQueryServiceUrl, String userId)
+	public Optional<List<ParsedAttribute>> getAttributes(String attributeQueryServiceUrl, String userId)
 			throws InternalException
 	{
 		try
 		{
-			return Optional.of(internalQuery(attributeQueryServiceUrl, userId).getAttributes());
+			return Optional.of(query(attributeQueryServiceUrl, userId).getAttributes());
 		} catch (SAMLValidationException e)
 		{
 			throw new SAMLException("Can not extract attributes for saml response", e);
 		}
 	}
 
-	public void queryToFile(String attributeQueryServiceUrl, String userId) throws InternalException
-	{
-
-	}
-
-	private AttributeAssertionParser internalQuery(String attributeQueryServiceUrl, String userId)
+	public AttributeAssertionParser query(String attributeQueryServiceUrl, String userIdentity)
 			throws InternalException
 	{
 		DefaultClientConfiguration clientCfg = new DefaultClientConfiguration();
@@ -69,19 +69,18 @@ public class AttributeQueryClient
 			attrClient = new SAMLAttributeQueryClient(attributeQueryServiceUrl, clientCfg);
 		} catch (MalformedURLException e)
 		{
-			throw new InternalException("Invalid attribute service url", e);
+			throw new InternalException("Invalid attribute service url " + attributeQueryServiceUrl, e);
 		}
 
-		log.debug("Query for attributes for user " + userId + " from " + attributeQueryServiceUrl);
-
+		log.debug("Query for attributes for user " + userIdentity + " from " + attributeQueryServiceUrl);
 		AttributeAssertionParser attrQueryParser;
 		try
 		{
-			attrQueryParser = attrClient.getAssertion(new NameID(userId, SAMLConstants.NFORMAT_PERSISTENT),
+			attrQueryParser = attrClient.getAssertion(new NameID(userIdentity, SAMLConstants.NFORMAT_PERSISTENT),
 					localIssuer);
 		} catch (SAMLValidationException e)
 		{
-			throw new SAMLException("Can not query for attributes", e);
+			throw new SAMLException("Attribute query to " + attributeQueryServiceUrl + " for " + userIdentity + "failed", e);
 		}
 
 		return attrQueryParser;

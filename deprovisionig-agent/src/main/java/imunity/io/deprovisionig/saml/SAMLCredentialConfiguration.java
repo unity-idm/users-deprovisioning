@@ -29,9 +29,15 @@ public class SAMLCredentialConfiguration
 	@Value("${saml.requester.credential.keyAlias}")
 	private String credentialKeyAlias;
 
-	@Autowired
 	private CredentialConfiguration main;
-
+	
+	@Autowired
+	public SAMLCredentialConfiguration(CredentialConfiguration main)
+	{
+		this.main = main;
+	}
+	
+	
 	public KeystoreCredential getCredential() throws CredentialConfigurationException
 	{
 		try

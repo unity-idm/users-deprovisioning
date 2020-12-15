@@ -105,7 +105,7 @@ public class MainUserVerificator
 			Optional<List<ParsedAttribute>> attributes;
 			try
 			{
-				attributes = samlAttrQueryClient.query(samlIdpInfo.attributeQueryServiceUrl,
+				attributes = samlAttrQueryClient.getAttributes(samlIdpInfo.attributeQueryServiceUrl,
 						identity.get().getValue());
 
 			} catch (SAMLException e)

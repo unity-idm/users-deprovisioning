@@ -24,6 +24,11 @@ public class CredentialConfiguration
 	@Value("${truststore.format}")
 	private String truststoreFormat;
 
+	public CredentialConfiguration()
+	{
+		
+	}
+	
 	public KeystoreCertChainValidator getValidator() throws CredentialConfigurationException
 	{
 		try
