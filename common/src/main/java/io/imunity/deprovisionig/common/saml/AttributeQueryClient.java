@@ -25,29 +25,29 @@ import eu.unicore.util.httpclient.DefaultClientConfiguration;
 import io.imunity.deprovisionig.common.exception.InternalException;
 import io.imunity.deprovisionig.common.exception.SAMLException;
 
-
 @Component
 public class AttributeQueryClient
 {
 	private static final Logger log = LogManager.getLogger(AttributeQueryClient.class);
-	
+
 	private SAMLCredentialConfiguration credentials;
-	
+
 	@Autowired
 	public AttributeQueryClient(SAMLCredentialConfiguration credentials)
 	{
-		this.credentials = credentials;	
+		this.credentials = credentials;
 	}
 
 	@Value("${saml.requester.requesterEntityId}")
 	private String requesterEntityId;
 
-	public Optional<List<ParsedAttribute>> getAttributes(String attributeQueryServiceUrl, String userId)
+	public Optional<List<ParsedAttribute>> getAttributes(String attributeQueryServiceUrl, String userIdentity)
 			throws InternalException
 	{
+		log.debug("Get attributes for user " + userIdentity + " from " + attributeQueryServiceUrl);
 		try
 		{
-			return Optional.of(query(attributeQueryServiceUrl, userId).getAttributes());
+			return Optional.of(query(attributeQueryServiceUrl, userIdentity).getAttributes());
 		} catch (SAMLValidationException e)
 		{
 			throw new SAMLException("Can not extract attributes for saml response", e);
@@ -77,11 +77,16 @@ public class AttributeQueryClient
 		AttributeAssertionParser attrQueryParser;
 		try
 		{
-			attrQueryParser = attrClient.getAssertion(new NameID(userIdentity, SAMLConstants.NFORMAT_PERSISTENT),
-					localIssuer);
+			attrQueryParser = attrClient.getAssertion(
+					new NameID(userIdentity, SAMLConstants.NFORMAT_PERSISTENT), localIssuer);
 		} catch (SAMLValidationException e)
 		{
-			throw new SAMLException("Attribute query to " + attributeQueryServiceUrl + " for " + userIdentity + "failed", e);
+			throw new SAMLException("Invalid saml attribute query response from " + attributeQueryServiceUrl
+					+ " for user  " + userIdentity + " failed", e);
+		} catch (Exception e)
+		{
+			throw new InternalException("Attribute query to " + attributeQueryServiceUrl + " for user "
+					+ userIdentity + "failed", e);
 		}
 
 		return attrQueryParser;

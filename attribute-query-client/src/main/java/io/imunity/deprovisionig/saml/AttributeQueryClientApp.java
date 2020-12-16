@@ -20,7 +20,6 @@ import org.springframework.context.annotation.ComponentScan;
 
 import eu.unicore.samly2.assertion.AttributeAssertionParser;
 import io.imunity.deprovisionig.common.WorkdirFileManager;
-import io.imunity.deprovisionig.common.exception.InternalException;
 import io.imunity.deprovisionig.common.saml.AttributeQueryClient;
 
 @SpringBootApplication
@@ -41,41 +40,42 @@ public class AttributeQueryClientApp implements CommandLineRunner
 
 	public static void main(String[] args)
 	{
-		new SpringApplicationBuilder(AttributeQueryClientApp.class).bannerMode(Mode.OFF).web(WebApplicationType.NONE).run(args);
+		new SpringApplicationBuilder(AttributeQueryClientApp.class).bannerMode(Mode.OFF)
+				.web(WebApplicationType.NONE).run(args);
 	}
 
 	public void run(String... args)
 	{
-		log.info("Starting attribute query");
+		log.info("Starting attribute query client");
 
-		if (args.length < 2)
+		if (args.length != 2)
 		{
-			throw new IllegalArgumentException("UserId and attribute service url are required");
+			throw new IllegalArgumentException("Invalid arguments used. The basic syntax is: attributeClient <UserIdentity <AttributeQueryServiceUrl>");
 		}
 
-		String user = args[0];
-		String url = args[1];
+		String userIdentity = args[0];
+		String attributeQueryServiceUrl = args[1];
 
 		AttributeAssertionParser queryResult;
 		try
 		{
-			queryResult = query.query(url, user);
-		} catch (InternalException e)
+			queryResult = query.query(attributeQueryServiceUrl, userIdentity);
+		} catch (Exception e)
 		{
-			log.error("Attribute query failed", e);
+			log.error("Can not perform attribute query for user " + userIdentity, e);
 			return;
 		}
 
-		saveFile(queryResult, user);
+		saveFile(queryResult, userIdentity);
 	}
 
-	public void saveFile(AttributeAssertionParser attributesDoc, String user)
+	public void saveFile(AttributeAssertionParser attributesDoc, String userIdentity)
 	{
 		try
 		{
-			String fileName = user + "_" + UUID.randomUUID().toString() + ".xml";
+			String fileName = userIdentity + "_" + UUID.randomUUID().toString().substring(0, 5) + ".xml";
 			fileMan.saveFile(attributesDoc.getXMLBeanDoc().toString().getBytes(), fileName);
-			log.info("Query result save in " + fileName);
+			log.info("Attribute query result for user " + userIdentity + "save in " + fileName);
 
 		} catch (IOException e)
 		{
