@@ -6,6 +6,7 @@
 package io.imunity.deprovisionig.unity.types;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -21,12 +22,16 @@ public class UnityUser
 	public final Set<String> groups;
 	public final List<Identity> identities;
 	public final LocalDateTime lastAuthenticationTime;
-	public final LocalDateTime lastHomeIdPVerification;
-	public final LocalDateTime lastOfflineVerification;
+	public final LocalDateTime firstHomeIdpVerificationFailure;
+	public final LocalDateTime lastSuccessHomeIdPVerification;
+	public final LocalDateTime firstOfflineVerificationAttempt;
+	public final LocalDateTime lastOfflineVerificationAttempt;
+	
+	
 
 	public UnityUser(Long entityId, EntityState entityState, List<Identity> identities, Set<String> groups,
-			LocalDateTime lastAuthenticationTime, LocalDateTime lastHomeIdPVerification,
-			LocalDateTime lastOfflineVerification)
+			LocalDateTime lastAuthenticationTime,LocalDateTime firstHomeIdpVerificationFailure, LocalDateTime lastSuccessHomeIdPVerification,
+			LocalDateTime firstOfflineVerificationAttempt, LocalDateTime lastOfflineVerificationAttempt)
 	{
 
 		this.entityId = entityId;
@@ -34,14 +39,26 @@ public class UnityUser
 		this.identities = identities;
 		this.groups = groups;
 		this.lastAuthenticationTime = lastAuthenticationTime;
-		this.lastHomeIdPVerification = lastHomeIdPVerification;
-		this.lastOfflineVerification = lastOfflineVerification;
+		this.lastSuccessHomeIdPVerification = lastSuccessHomeIdPVerification;
+		this.lastOfflineVerificationAttempt = lastOfflineVerificationAttempt;
+		this.firstHomeIdpVerificationFailure = firstHomeIdpVerificationFailure;
+		this.firstOfflineVerificationAttempt = firstOfflineVerificationAttempt;
 	}
 
 	public Optional<Identity> getIdentifierIdentityByProfile(String profile)
 	{
 		return identities.stream().filter(i -> i.getTypeId().equals(Constans.IDENTIFIER_IDENTITY)
 				&& profile.equals(i.getTranslationProfile())).findAny();
+	}
+
+	public LocalDateTime getLastSuccessfullOnlineVerificationTime()
+	{
+		LocalDateTime maxOld = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
+		LocalDateTime notEmptylastAuth = lastAuthenticationTime == null ? maxOld : lastAuthenticationTime;
+		LocalDateTime notEmptylastHomeIdpVerification = lastSuccessHomeIdPVerification == null ? maxOld
+				: lastSuccessHomeIdPVerification;
+		return notEmptylastAuth.isAfter(notEmptylastHomeIdpVerification) ? notEmptylastAuth
+				: notEmptylastHomeIdpVerification;
 	}
 
 	@Override
@@ -51,6 +68,6 @@ public class UnityUser
 				+ identities.stream().map(id -> id.getTypeId() + ":" + id.getValue())
 						.collect(Collectors.toList())
 				+ " lastAuthenticationTime:" + lastAuthenticationTime + " lastHomeIdPVerification:"
-				+ lastHomeIdPVerification + " lastOfflineVerification:" + lastOfflineVerification;
+				+ lastSuccessHomeIdPVerification + " lastOfflineVerification:" + lastOfflineVerificationAttempt;
 	}
 }

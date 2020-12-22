@@ -5,52 +5,31 @@
 
 package io.imunity.deprovisionig;
 
+import java.time.Duration;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
 
 @Component
 public class TimesConfiguration
 {
-	@Value("${time.timetolive:14}")
-	private int timetolive;
-	
-	@Value("${time.gracePeriod1:14}")
-	private int gracePeriod1;
-	
-	@Value("${time.gracePeriod2:14}")
-	private int gracePeriod2;
-	
-	@Value("${time.emailResendPeriod:10}")
-	private int emailResendPeriod;
-	
-	@Value("${time.removeUserCompletlyPeriod:10}")
-	private int removeUserCompletlyPeriod;
-	
-	public int ttl()
-	{
-		return timetolive;
-	}
-	
-	public int gracePeriod1()
-	{
-		return timetolive + gracePeriod1;
-	}
-	
-	public int gracePeriod2()
-	{
-		return timetolive + gracePeriod1 + gracePeriod2;
-	}
-	
-	public int getEmailResendPeriod()
-	{
-		return emailResendPeriod;
-	}
-	
-	public int removeUserCompletlyPeriod()
-	{
-		return removeUserCompletlyPeriod;
-	}
+	public final Duration validAccountPeriod;
+	public final Duration onlineOnlyVerificationPeriod;
+	public final Duration offlineVerificationPeriod;
+	public final Duration emailResendPeriod;
+	public final Duration removeUserCompletlyPeriod;
 
-	
+	public TimesConfiguration(@Value("${time.validAccountPeriod:14}") Duration validAccountPeriod,
+			@Value("${time.onlineOnlyVerificationPeriod:14}") Duration onlineOnlyVerificationPeriod,
+			@Value("${time.offlineVerificationPeriod:14}") Duration offlineVerificationPeriod,
+			@Value("${time.emailResendPeriod:10}") Duration emailResendPeriod,
+			@Value("${time.removeUserCompletlyPeriod:10}") Duration removeUserCompletlyPeriod)
+
+	{
+		this.validAccountPeriod = validAccountPeriod;
+		this.onlineOnlyVerificationPeriod = onlineOnlyVerificationPeriod;
+		this.offlineVerificationPeriod = offlineVerificationPeriod;
+		this.emailResendPeriod = emailResendPeriod;
+		this.removeUserCompletlyPeriod = removeUserCompletlyPeriod;
+	}
 }

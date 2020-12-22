@@ -29,23 +29,25 @@ public class UnityUserExtractor
 	private final UnityApiClient client;
 	private final TimesConfiguration timesConfig;
 
-	@Value("${unity.root.group:/}")
-	private String unityRootGroup;
-
-	@Value("${unity.exclude.groups:}")
-	private String[] excludedGroups;
-
-	@Value("${unity.exclude.users:}")
-	private String[] excludedUsers;
-
-	@Value("${unity.identifier.relatedProfile:}")
-	private String relatedTranslationProfile;
+	private final String unityRootGroup;
+	private final String[] excludedGroups;
+	private final String[] excludedUsers;
+	private final String relatedTranslationProfile;
 
 	@Autowired
-	public UnityUserExtractor(UnityApiClient client, TimesConfiguration timesConfig)
+	public UnityUserExtractor(UnityApiClient client, TimesConfiguration timesConfig,
+			@Value("${unity.root.group:/}") String unityRootGroup,
+			@Value("${unity.exclude.groups:}") String[] excludedGroups,
+			@Value("${unity.exclude.users:}") String[] excludedUsers,
+			@Value("${unity.identifier.relatedProfile:}") String relatedTranslationProfile)
+
 	{
 		this.client = client;
 		this.timesConfig = timesConfig;
+		this.excludedGroups = excludedGroups;
+		this.unityRootGroup = unityRootGroup;
+		this.excludedUsers = excludedUsers;
+		this.relatedTranslationProfile = relatedTranslationProfile;
 	}
 
 	public Set<UnityUser> extractUnityUsers()
@@ -65,10 +67,10 @@ public class UnityUserExtractor
 				&& u.identities.stream().filter(i -> i.getTypeId().equals(Constans.IDENTIFIER_IDENTITY)
 						&& relatedTranslationProfile.equals(i.getTranslationProfile()))
 						.count() > 0
-				&& (u.lastAuthenticationTime == null
-						|| u.lastAuthenticationTime.plusDays(timesConfig.ttl()).isBefore(now))
-				&& (u.lastHomeIdPVerification == null
-						|| u.lastHomeIdPVerification.plusDays(timesConfig.ttl()).isBefore(now)))
+				&& (u.lastAuthenticationTime == null || u.lastAuthenticationTime
+						.plus(timesConfig.validAccountPeriod).isBefore(now))
+				&& (u.lastSuccessHomeIdPVerification == null || u.lastSuccessHomeIdPVerification
+						.plus(timesConfig.validAccountPeriod).isBefore(now)))
 				.collect(Collectors.toSet());
 		return users;
 	}

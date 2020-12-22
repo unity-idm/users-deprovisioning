@@ -5,6 +5,7 @@
 
 package io.imunity.deprovisionig.unity;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
@@ -34,53 +35,66 @@ import io.imunity.deprovisionig.unity.types.MultiGroupMembers.EntityGroupAttribu
 public class UnityApiClient
 {
 	public static final String CUSTOM_EMAIL_VAR_PREFIX = "custom.";
-
 	private static final Logger log = LogManager.getLogger(UnityApiClient.class);
 
+	private final UnityRestClient client;
+
 	@Autowired
-	private UnityRestClient client;
+	public UnityApiClient(UnityRestClient client)
+	{
 
-	public void setUserStatus(String identity, EntityState state)
+		this.client = client;
+	}
+
+	public void setUserStatus(long entityId, EntityState state)
 	{
 		try
 		{
-			client.put("/entity/" + identity + "/state/" + state.toString(), Optional.empty());
+			client.put("/entity/" + entityId + "/status/" + state.toString(), Optional.empty());
+			log.debug("Set status of user " + entityId + " to " + state);
 		} catch (UnityException e)
 		{
-			log.error("Can not set status " + state.toString() + " of user" + identity, e);
+			log.error("Can not set status " + state.toString() + " of user" + entityId, e);
 		}
 	}
 
-	public void scheduleRemoveUser(String identity, long when)
+	public void scheduleRemoveUser(long entityId, long when)
 	{
 		try
 		{
-			client.put("/entity/" + identity + "/removal-schedule",
-					Optional.of(Map.of("when", String.valueOf(when))));
-		} catch (UnityException e)
-		{
-			log.error("Can not shedule remove user with login permit option", e);
-		}
-	}
-
-	public void scheduleRemoveUserWithLoginPermit(String identity, long when)
-	{
-		try
-		{
-			client.put("/entity/" + identity + "/admin-schedule",
+			client.put("/entity/" + entityId + "/admin-schedule",
 					Optional.of(Map.of("when", String.valueOf(when), "operation", "REMOVE")));
+			log.debug("Shedule remove of user (login permit) " + entityId + " to "
+					+ Instant.ofEpochMilli(when));
 		} catch (UnityException e)
 		{
 			log.error("Can not shedule remove user", e);
 		}
 	}
 
-	public void updateAttribute(String identity, Attribute attribute)
+	public void scheduleRemoveUserWithLoginPermit(long entityId, long when)
 	{
 		try
 		{
-			client.put("/entity/" + identity + "/attribute", ContentType.APPLICATION_JSON,
+			client.put("/entity/" + entityId + "/removal-schedule",
+					Optional.of(Map.of("when", String.valueOf(when))));
+			log.debug("Shedule remove of user " + entityId + " to " + Instant.ofEpochMilli(when));
+		} catch (UnityException e)
+		{
+			log.error("Can not shedule remove user with login permit option", e);
+		}
+	}
+
+	public void updateAttribute(long entityId, Attribute attribute)
+	{
+
+		try
+		{
+
+			client.put("/entity/" + entityId + "/attribute", ContentType.APPLICATION_JSON,
 					Optional.of(Constans.MAPPER.writeValueAsString(attribute)));
+			log.debug("Update attribute " + attribute.getName() + " of user " + entityId + ",set value to "
+					+ attribute.getValues());
 		} catch (UnityException | JsonProcessingException e)
 		{
 			log.error("Can not update attribute", e);
@@ -88,16 +102,17 @@ public class UnityApiClient
 
 	}
 
-	public void sendEmail(String identity, String template, Map<String, String> params)
+	public void sendEmail(long entityId, String template, Map<String, String> params)
 	{
 
 		try
 		{
-			client.post("/userNotification-trigger/entity/" + identity + "/template/" + template,
+			client.post("/userNotification-trigger/entity/" + entityId + "/template/" + template,
 					params.entrySet().stream()
 							.collect(Collectors.toMap(
 									e -> CUSTOM_EMAIL_VAR_PREFIX + e.getKey(),
 									Map.Entry::getValue)));
+			log.debug("Send email to the user " + entityId + " with params " + params);
 		} catch (UnityException e)
 		{
 			log.error("Can not send email via unity", e);
@@ -107,6 +122,7 @@ public class UnityApiClient
 
 	public Set<UnityUser> getUsers(String group)
 	{
+		log.debug("Get users from group " + group);
 		MultiGroupMembers groupMemebers = null;
 		try
 		{
@@ -123,7 +139,7 @@ public class UnityApiClient
 	private Set<UnityUser> mapToUnityUsers(MultiGroupMembers groupMemebers, String group)
 	{
 		Set<UnityUser> users = new HashSet<>();
-		if (groupMemebers == null)
+		if (groupMemebers == null || groupMemebers.entities.isEmpty() || groupMemebers.members.get(group) == null)
 		{
 			return users;
 		}
@@ -146,9 +162,13 @@ public class UnityApiClient
 							.map(e -> e.getKey()).collect(Collectors.toSet()),
 					extractDataTimeAttribute(Constans.LAST_AUTHENTICATION_ATTRIBUTE,
 							entityRootAttrs),
-					extractDataTimeAttribute(Constans.LAST_HOME_IDP_VERIFICATION_ATTRIBUTE,
+					extractDataTimeAttribute(Constans.FIRST_HOME_IDP_VERIFICATION_FAILURE_ATTRIBUTE,
 							entityRootAttrs),
-					extractDataTimeAttribute(Constans.LAST_OFFLINE_VERIFICATION_ATTRIBUTE,
+					extractDataTimeAttribute(Constans.LAST_SUCCESS_HOME_IDP_VERIFICATION_ATTRIBUTE,
+							entityRootAttrs),
+					extractDataTimeAttribute(Constans.FIRST_OFFLINE_VERIFICATION_ATTEMPT_ATTRIBUTE,
+							entityRootAttrs),
+					extractDataTimeAttribute(Constans.LAST_OFFLINE_VERIFICATION_ATTEMPT_ATTRIBUTE,
 							entityRootAttrs)));
 		}
 
@@ -162,10 +182,10 @@ public class UnityApiClient
 		if (entityGroupAttributes.isEmpty())
 			return null;
 
-		Optional<Attribute> lastAuthAttr = entityGroupAttributes.get().attributes.stream()
+		Optional<Attribute> attr = entityGroupAttributes.get().attributes.stream()
 				.filter(a -> a.getName().equals(attrName)).findAny();
-		if (lastAuthAttr.isPresent())
-			return LocalDateTime.parse(lastAuthAttr.get().getValues().get(0),
+		if (attr.isPresent() && attr.get().getValues() != null && attr.get().getValues().size() > 0)
+			return LocalDateTime.parse(attr.get().getValues().get(0),
 					DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
 		return null;

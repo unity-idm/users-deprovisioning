@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Bixbit - Krzysztof Benedyczak. All rights reserved.
+a	a * Copyright (c) 2020 Bixbit - Krzysztof Benedyczak. All rights reserved.
  * See LICENCE.txt file for licensing information.
  */
 
@@ -7,9 +7,6 @@ package io.imunity.deprovisionig.verificator;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,20 +26,19 @@ import io.imunity.deprovisionig.TimesConfiguration;
 import io.imunity.deprovisionig.common.exception.SAMLException;
 import io.imunity.deprovisionig.common.saml.AttributeQueryClient;
 import io.imunity.deprovisionig.hook.GroovyHookExecutor;
+import io.imunity.deprovisionig.saml.StatusAttributeExtractor;
 import io.imunity.deprovisionig.saml.metadata.SAMLIdpInfo;
 import io.imunity.deprovisionig.saml.metadata.SAMLMetadataManager;
 import io.imunity.deprovisionig.unity.UnityApiClient;
-import io.imunity.deprovisionig.unity.types.Attribute;
 import io.imunity.deprovisionig.unity.types.EntityState;
 import io.imunity.deprovisionig.unity.types.Identity;
+import io.imunity.deprovisionig.unity.types.LocalDateTimeAttribute;
 import io.imunity.deprovisionig.unity.types.UnityUser;
 
 @Component
 public class MainUserVerificator
 {
 	private static final Logger log = LogManager.getLogger(MainUserVerificator.class);
-	private static final String SAML_STATUS_ATTRIBUTE_NAME = "1.3.6.1.4.1.25178.1.2.19";
-	private static final String SAML_STATUS_ATTRIBUTE_SCHAC_PREFIX = "urn:schac:userStatus:";
 
 	private final AttributeQueryClient samlAttrQueryClient;
 	private final SAMLMetadataManager samlMetadaMan;
@@ -50,14 +46,14 @@ public class MainUserVerificator
 	private final OfflineVerificator offlineVerificator;
 	private final GroovyHookExecutor groovyHook;
 
-	@Value("${unity.identifier.relatedProfile}")
-	private String relatedTranslationProfile;
-	private TimesConfiguration timesConfig;
+	private final String relatedTranslationProfile;
+	private final TimesConfiguration timesConfig;
 
 	@Autowired
 	MainUserVerificator(AttributeQueryClient samlAttrQueryClient, SAMLMetadataManager samlMetadaMan,
 			UnityApiClient unityClient, TimesConfiguration timesConfig,
-			OfflineVerificator offlineVerificator, GroovyHookExecutor groovyHook)
+			OfflineVerificator offlineVerificator, GroovyHookExecutor groovyHook,
+			@Value("${unity.identifier.relatedProfile}") String relatedTranslationProfile)
 	{
 		this.samlAttrQueryClient = samlAttrQueryClient;
 		this.samlMetadaMan = samlMetadaMan;
@@ -65,6 +61,7 @@ public class MainUserVerificator
 		this.timesConfig = timesConfig;
 		this.offlineVerificator = offlineVerificator;
 		this.groovyHook = groovyHook;
+		this.relatedTranslationProfile = relatedTranslationProfile;
 	}
 
 	public void verifyUsers(Set<UnityUser> extractUnityUsers)
@@ -116,80 +113,66 @@ public class MainUserVerificator
 					changeUserStatusIfNeeded(user, EntityState.toRemove, samlIdpInfo);
 				} else
 				{
-					gotoOfflineVerification(user, samlIdpInfo);
+					processNotVerifiedUser(user, samlIdpInfo);
 
 				}
 				continue;
 			} catch (Exception e)
 			{
-				gotoOfflineVerification(user, samlIdpInfo);
+				processNotVerifiedUser(user, samlIdpInfo);
 				continue;
 			}
-
-			changeUserStatusIfNeeded(user, getStatusFromAttributesOrFallbackToUserStatus(user, attributes),
-					samlIdpInfo);
-			updateLastHomeIdpVerificationTime(user);
+			//TODO 
+			changeUserStatusIfNeeded(user, StatusAttributeExtractor
+					.getStatusFromAttributesOrFallbackToUserStatus(user, attributes), samlIdpInfo);
+			updateLastSuccessVerificationTime(user);
 
 		}
 
 	}
 
-	private EntityState getStatusFromAttributesOrFallbackToUserStatus(UnityUser user,
-			Optional<List<ParsedAttribute>> attributes)
+	private void updateLastSuccessVerificationTime(UnityUser user)
 	{
-		if (attributes.isEmpty())
-		{
-			return user.entityState;
-		}
-
-		Optional<ParsedAttribute> statusAttr = attributes.get().stream()
-				.filter(a -> a.getName().equals(SAML_STATUS_ATTRIBUTE_NAME)
-						|| a.getName().startsWith(SAML_STATUS_ATTRIBUTE_SCHAC_PREFIX))
-				.findAny();
-
-		return mapToUnityStatusOrFallbackToUserStatus(user, statusAttr);
+		unityClient.updateAttribute(user.entityId, LocalDateTimeAttribute
+				.of(Constans.LAST_SUCCESS_HOME_IDP_VERIFICATION_ATTRIBUTE, LocalDateTime.now()));
+		unityClient.updateAttribute(user.entityId, LocalDateTimeAttribute
+				.of(Constans.FIRST_HOME_IDP_VERIFICATION_FAILURE_ATTRIBUTE, null));
+		unityClient.updateAttribute(user.entityId,
+				LocalDateTimeAttribute.of(Constans.FIRST_OFFLINE_VERIFICATION_ATTEMPT_ATTRIBUTE, null));
 	}
 
-	private void updateLastHomeIdpVerificationTime(UnityUser user)
+	private void processNotVerifiedUser(UnityUser user, SAMLIdpInfo idpInfo)
 	{
-		log.debug("Update last idp verification for user " + user.entityId);
-		Attribute attr = new Attribute();
-		attr.setGroupPath("/");
-		attr.setName(Constans.LAST_HOME_IDP_VERIFICATION_ATTRIBUTE);
-		attr.setValues(Arrays
-				.asList(LocalDateTime.now().withNano(0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime firstHomeIdpVerificationFailure = now;
 
-		unityClient.updateAttribute(String.valueOf(user.entityId), attr);
-
-	}
-
-	private EntityState mapToUnityStatusOrFallbackToUserStatus(UnityUser user, Optional<ParsedAttribute> status)
-	{
-		if (status.isEmpty() || status.get().getStringValues().isEmpty())
+		if (user.firstHomeIdpVerificationFailure == null
+				|| user.firstHomeIdpVerificationFailure.isBefore(user.lastAuthenticationTime))
 		{
-			log.debug("No status attributes for user " + user.entityId);
-			return user.entityState;
+
+			unityClient.updateAttribute(user.entityId, LocalDateTimeAttribute
+					.of(Constans.FIRST_HOME_IDP_VERIFICATION_FAILURE_ATTRIBUTE, now));
+		} else
+		{
+			firstHomeIdpVerificationFailure = user.firstHomeIdpVerificationFailure;
 		}
 
-		String statusL = status.get().getStringValues().get(0).toLowerCase();
+		// Online only verification time
+		if (now.isEqual(firstHomeIdpVerificationFailure) || (now.isAfter(firstHomeIdpVerificationFailure)
+				&& now.isBefore(firstHomeIdpVerificationFailure
+						.plus(timesConfig.onlineOnlyVerificationPeriod))))
+		{
 
-		if ("active".equals(statusL))
-		{
-			return EntityState.valid;
-		} else if ("locked".equals(statusL))
-		{
-			return EntityState.authenticationDisabled;
-		} else if ("disabled".equals(statusL))
-		{
-			return EntityState.disabled;
-		} else if ("deleted".equals(statusL))
-		{
-			return EntityState.onlyLoginPermitted;
+			return;
 		}
 
-		log.debug("Can not interpret new status of user " + user.entityId + " status=" + statusL);
-		return user.entityState;
+		if (offlineVerificator.verify(user, idpInfo.technicalAdminEmail))
+		{
 
+			return;
+		}
+
+		changeUserStatusIfNeeded(user, EntityState.onlyLoginPermitted, idpInfo);
 	}
 
 	private void changeUserStatusIfNeeded(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo)
@@ -205,47 +188,25 @@ public class MainUserVerificator
 		if (newStatus.equals(EntityState.onlyLoginPermitted))
 		{
 			time = getRemoveTime();
-			unityClient.scheduleRemoveUserWithLoginPermit(String.valueOf(user.entityId),
-					time.toEpochMilli());
+			unityClient.scheduleRemoveUserWithLoginPermit(user.entityId, time.toEpochMilli());
 		}
 		if (newStatus.equals(EntityState.toRemove))
 		{
 			time = getRemoveTime();
-			unityClient.setUserStatus(String.valueOf(user.entityId), EntityState.disabled);
-			unityClient.scheduleRemoveUser(String.valueOf(user.entityId), time.toEpochMilli());
+			unityClient.setUserStatus(user.entityId, EntityState.disabled);
+			unityClient.scheduleRemoveUser(user.entityId, time.toEpochMilli());
 
 		} else
 		{
-			unityClient.setUserStatus(String.valueOf(user.entityId), newStatus);
+			unityClient.setUserStatus(user.entityId, newStatus);
 		}
 
-		groovyHook.run(user, newStatus, idpInfo, time);
+		groovyHook.runHook(user, newStatus, idpInfo, time);
 	}
 
 	private Instant getRemoveTime()
 	{
-		return Instant.now().plus(timesConfig.removeUserCompletlyPeriod(), ChronoUnit.DAYS);
-	}
-
-	private void gotoOfflineVerification(UnityUser user, SAMLIdpInfo idpInfo)
-	{
-
-		LocalDateTime now = LocalDateTime.now();
-		if (user.lastHomeIdPVerification == null
-				|| user.lastHomeIdPVerification.plusDays(timesConfig.gracePeriod1()).isAfter(now)
-				|| user.entityState.equals(EntityState.disabled))
-		{
-			return;
-		}
-
-		if (user.lastHomeIdPVerification.plusDays(timesConfig.gracePeriod1()).isBefore(now)
-				&& user.lastHomeIdPVerification.plusDays(timesConfig.gracePeriod2()).isAfter(now))
-		{
-			offlineVerificator.verify(user, idpInfo.technicalAdminEmail);
-		}
-
-
-		changeUserStatusIfNeeded(user, EntityState.onlyLoginPermitted, idpInfo);
+		return Instant.now().plus(timesConfig.removeUserCompletlyPeriod);
 	}
 
 }

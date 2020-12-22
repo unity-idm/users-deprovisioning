@@ -24,6 +24,14 @@ public class Identity
 	{
 		
 	}
+	
+	
+	public Identity(String typeId, String value, String translationProfile)
+	{
+		this.typeId = typeId;
+		this.value = value;
+		this.translationProfile = translationProfile;
+	}
 
 	public String getRemoteIdp()
 	{

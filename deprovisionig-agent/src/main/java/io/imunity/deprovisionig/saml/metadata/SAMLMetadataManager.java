@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -35,6 +36,7 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.xmlbeans.XmlException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -51,29 +53,29 @@ import xmlbeans.org.oasis.saml2.metadata.EntityDescriptorType;
 @Component
 public class SAMLMetadataManager
 {
+	public static final Set<String> SUPPORTED_URL_SCHEMES = new HashSet<>(Arrays.asList("data", "http", "https"));
 	private static final Logger log = LogManager.getLogger(SAMLMetadataManager.class);
 
-	@Value("${saml.metadataValidityTime:1}")
-	private int metadataValidityTime;
-
-	@Value("${saml.metadataSource:http://www.aai.dfn.de/fileadmin/metadata/dfn-aai-basic-metadata.xml}")
-	private String metadataSource;
+	private final int metadataValidityTime;
+	private final String metadataSource;
 
 	private NetworkClient networkClient;
 	private WorkdirFileManager fileMan;
 
-	public SAMLMetadataManager(NetworkClient networkClient, WorkdirFileManager fileMan)
+	@Autowired
+	public SAMLMetadataManager(NetworkClient networkClient, WorkdirFileManager fileMan,
+			@Value("${saml.metadataValidityTime:1}") int metadataValidityTime,
+			@Value("${saml.metadataSource:http://www.aai.dfn.de/fileadmin/metadata/dfn-aai-basic-metadata.xml}") String metadataSource)
 	{
 		this.networkClient = networkClient;
 		this.fileMan = fileMan;
+		this.metadataValidityTime = metadataValidityTime;
+		this.metadataSource = metadataSource;
 	}
-
-	public static final Set<String> SUPPORTED_URL_SCHEMES = new HashSet<>(Arrays.asList("data", "http", "https"));
 
 	public Map<String, SAMLIdpInfo> getAttributeQueryAddressesAsMap() throws Exception
 	{
 		Map<String, SAMLIdpInfo> attrQueryAddr = new HashMap<>();
-
 		EntitiesDescriptorDocument metaDoc = getMetadaFromUri(metadataSource);
 		EntitiesDescriptorType meta = metaDoc.getEntitiesDescriptor();
 		searchAttributeQueryAddr(meta, attrQueryAddr);
@@ -168,11 +170,11 @@ public class SAMLMetadataManager
 			return parseMetadataFile(readFile(uri));
 		}
 
-		String filePath = uri.toString();
+		String filePath = DigestUtils.md5Hex(uri.toString());
 		if (fileMan.exists(filePath) && fileMan.getLastModifiedTime(filePath)
 				.isAfter(Instant.now().minus(metadataValidityTime, ChronoUnit.DAYS)))
 		{
-			return parseMetadataFile(readFile(URI.create("file:" + filePath.toString())));
+			return parseMetadataFile(fileMan.readFile(filePath));
 
 		} else
 		{
@@ -193,7 +195,7 @@ public class SAMLMetadataManager
 
 	private ByteArrayInputStream readFile(URI uri) throws IOException
 	{
-		log.info("Read metadata file from: " + uri);
+		log.info("Read metadata file from external file: " + uri);
 		Path toRead = Paths.get(getPathFromURI(uri));
 		return new ByteArrayInputStream(Files.readAllBytes(toRead));
 	}

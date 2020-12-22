@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import eu.unicore.util.configuration.ConfigurationException;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import io.imunity.deprovisionig.TimesConfiguration;
 import io.imunity.deprovisionig.common.exception.InternalException;
 import io.imunity.deprovisionig.saml.metadata.SAMLIdpInfo;
 import io.imunity.deprovisionig.unity.types.EntityState;
@@ -30,10 +31,16 @@ public class GroovyHookExecutor
 {
 	private static final Logger log = LogManager.getLogger(GroovyHookExecutor.class);
 
-	@Value("${hookScript:}")
-	private String hookScript;
+	private final String hookScript;
+	private final TimesConfiguration timesConfig;
 
-	public void run(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo, Instant removeTime)
+	public GroovyHookExecutor(TimesConfiguration timesConfig, @Value("${hookScript:}") String hookScript)
+	{
+		this.hookScript = hookScript;
+		this.timesConfig = timesConfig;
+	}
+
+	public void runHook(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo, Instant removeTime)
 	{
 		Reader scriptReader = getFileReader();
 		try
@@ -69,7 +76,7 @@ public class GroovyHookExecutor
 	private void runScript(Reader scriptReader, Binding binding) throws InternalException
 	{
 		GroovyShell shell = new GroovyShell(binding);
-		log.info("Triggers invocation of Groovy script: {}");
+		log.info("Triggers invocation of Groovy script: {}", hookScript);
 
 		try
 		{
@@ -79,7 +86,7 @@ public class GroovyHookExecutor
 			throw new InternalException("Failed to execute Groovy " + " script: " + hookScript
 					+ ": reason: " + e.getMessage(), e);
 		}
-		log.debug("Groovy script: {} finished", hookScript);
+		log.info("Groovy script: {} finished", hookScript);
 	}
 
 	Binding getBinding(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo, Instant removeTime)
@@ -91,6 +98,7 @@ public class GroovyHookExecutor
 		binding.setVariable("newUserStatus", newStatus);
 		binding.setVariable("idpInfo", idpInfo);
 		binding.setVariable("removeTime", removeTime);
+		binding.setVariable("timesConfiguration", timesConfig);
 		return binding;
 	}
 }

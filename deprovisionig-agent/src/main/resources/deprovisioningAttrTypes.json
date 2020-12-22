@@ -10,9 +10,9 @@
          
       },
       "displayedName":{
-         "DefaultValue":"Last deprovisioning verification time",
+         "DefaultValue":"Time of last success online verification",
          "Map":{
-            "en":"Last deprovisioning verification time"
+            "en":"Time of last success online verification"
          }
       },
       "i18nDescription":{
@@ -24,7 +24,7 @@
       "metadata":{
          
       },
-      "name":"deprovisioning:LastHomeIdPVerification",
+      "name":"deprovisioning:lastSuccessHomeIdPVerificationTS",
       "syntaxId":"datetime"
    },
    {
@@ -38,9 +38,9 @@
          
       },
       "displayedName":{
-         "DefaultValue":"Last offline deprovisioning verification time",
+         "DefaultValue":"Time of first failed online verification",
          "Map":{
-            "en":"Last offline deprovisioning verification time"
+            "en":"Time of first failed online verification"
          }
       },
       "i18nDescription":{
@@ -52,7 +52,63 @@
       "metadata":{
          
       },
-      "name":"deprovisioning:LastOfflineVerification",
+      "name":"deprovisioning:firstHomeIdpVerificationFailureTS",
+      "syntaxId":"datetime"
+   },
+   {
+      "flags":0,
+      "maxElements":1,
+      "minElements":1,
+      "selfModificable":false,
+      "uniqueValues":false,
+      "global":false,
+      "syntaxState":{
+         
+      },
+      "displayedName":{
+         "DefaultValue":"Time of last offline verification attempt",
+         "Map":{
+            "en":"Time of last offline verification attempt"
+         }
+      },
+      "i18nDescription":{
+         "DefaultValue":null,
+         "Map":{
+            
+         }
+      },
+      "metadata":{
+         
+      },
+      "name":"deprovisioning:lastOfflineVerificationAttemptTS",
+      "syntaxId":"datetime"
+   },
+   {
+      "flags":0,
+      "maxElements":1,
+      "minElements":1,
+      "selfModificable":false,
+      "uniqueValues":false,
+      "global":false,
+      "syntaxState":{
+         
+      },
+      "displayedName":{
+         "DefaultValue":"Time of first failed offline verification attempt",
+         "Map":{
+            "en":"Time of first failed offline verification attempt"
+         }
+      },
+      "i18nDescription":{
+         "DefaultValue":null,
+         "Map":{
+            
+         }
+      },
+      "metadata":{
+         
+      },
+      "name":"deprovisioning:firstOfflineVerificationAttemptTS",
       "syntaxId":"datetime"
    }
 ]

@@ -12,17 +12,17 @@ import org.springframework.stereotype.Component;
 
 import eu.unicore.util.httpclient.DefaultClientConfiguration;
 import eu.unicore.util.httpclient.HttpUtils;
-import io.imunity.deprovisionig.common.CredentialConfiguration;
+import io.imunity.deprovisionig.common.Truststore;
 
 @Component
 public class NetworkClient
 {
-	private CredentialConfiguration credentials;
+	private final Truststore truststore;
 
 	@Autowired
-	public NetworkClient(CredentialConfiguration credentials)
+	public NetworkClient(Truststore truststore)
 	{
-		this.credentials = credentials;
+		this.truststore = truststore;
 	}
 	
 	public HttpClient getClient(String url) throws Exception
@@ -33,7 +33,7 @@ public class NetworkClient
 	private HttpClient getSSLClient(String url) throws Exception
 	{
 		DefaultClientConfiguration clientCfg = new DefaultClientConfiguration();
-		clientCfg.setValidator(credentials.getValidator());
+		clientCfg.setValidator(truststore.getValidator());
 		clientCfg.setSslEnabled(true);
 		clientCfg.setSslAuthn(false);
 		clientCfg.setHttpAuthn(true);

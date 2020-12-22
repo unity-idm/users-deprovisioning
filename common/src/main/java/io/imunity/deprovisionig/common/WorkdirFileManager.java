@@ -50,4 +50,11 @@ public class WorkdirFileManager
 	{
 		return Paths.get(workdir, filename);
 	}
+	
+	public ByteArrayInputStream readFile(String filename) throws IOException
+	{
+		log.info("Read file from: " + filename);
+		Path toRead = getFullFilePath(filename);
+		return new ByteArrayInputStream(Files.readAllBytes(toRead));
+	}
 }

@@ -12,8 +12,6 @@ import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.annotation.PostConstruct;
-
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -45,28 +43,15 @@ import io.imunity.deprovisionig.exception.UnityException;
 @Component
 public class UnityRestClient
 {
-	@Value("${unity.rest.uri}")
-	private String restUri;
-	@Value("${unity.rest.client.username}")
-	private String restUsername;
-	@Value("${unity.rest.client.password}")
-	private String restPassword;
-
-	private HttpHost host;
-	private String restPath;
-	private HttpClientContext context;
-	private HttpClient client;
-	
-	private NetworkClient networkClient;
+	private final HttpHost host;
+	private final String restPath;
+	private final HttpClientContext context;
+	private final HttpClient client;
 
 	@Autowired
-	public UnityRestClient(NetworkClient networkClient)
-	{
-		this.networkClient = networkClient;
-	}
-
-	@PostConstruct
-	private void ini() throws Exception
+	public UnityRestClient(NetworkClient networkClient, @Value("${unity.rest.uri}") String restUri,
+			@Value("${unity.rest.client.username}") String restUsername,
+			@Value("${unity.rest.client.password}") String restPassword) throws Exception
 	{
 		URI uri = new URI(restUri);
 		host = new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme());
@@ -159,7 +144,7 @@ public class UnityRestClient
 		assertResponseStatusIsOk(response);
 		return response;
 	}
-	
+
 	public HttpResponse put(String path, Optional<Map<String, String>> params) throws UnityException
 
 	{
@@ -188,18 +173,18 @@ public class UnityRestClient
 		assertResponseStatusIsOk(response);
 		return response;
 	}
-	
+
 	public HttpResponse put(String path, ContentType contentType, Optional<String> content) throws UnityException
 	{
 		HttpPut putReq;
 		try
 		{
-			 putReq = new HttpPut(new URIBuilder(restPath + path).build());
+			putReq = new HttpPut(new URIBuilder(restPath + path).build());
 		} catch (URISyntaxException e)
 		{
 			throw new UnityException("Invalid unity url", e);
 		}
-			
+
 		if (contentType != null)
 		{
 			putReq.setHeader("Content-type", contentType.toString());
@@ -213,8 +198,8 @@ public class UnityRestClient
 			{
 				throw new UnityException("Can not set post request content", e);
 			}
-		}	
-		
+		}
+
 		HttpResponse response = execute(putReq);
 		assertResponseStatusIsOk(response);
 		return response;

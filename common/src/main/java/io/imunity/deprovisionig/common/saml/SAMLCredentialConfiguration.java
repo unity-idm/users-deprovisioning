@@ -5,53 +5,46 @@
 
 package io.imunity.deprovisionig.common.saml;
 
-import java.io.IOException;
-import java.security.KeyStoreException;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
-import eu.emi.security.authn.x509.impl.KeystoreCertChainValidator;
-import eu.emi.security.authn.x509.impl.KeystoreCredential;
-import io.imunity.deprovisionig.common.CredentialConfiguration;
+import eu.emi.security.authn.x509.X509CertChainValidatorExt;
+import eu.emi.security.authn.x509.X509Credential;
+import eu.unicore.security.canl.CredentialProperties;
+import io.imunity.deprovisionig.common.PropertiesHelper;
+import io.imunity.deprovisionig.common.Truststore;
 import io.imunity.deprovisionig.common.exception.CredentialConfigurationException;
 
 @Component
 public class SAMLCredentialConfiguration
 {
-	@Value("${saml.requester.credential.path}")
-	private String credentialPath;
-	@Value("${saml.requester.credential.password}")
-	private String credentialPassword;
-	@Value("${saml.requester.credential.format}")
-	private String credentialFormat;
-	@Value("${saml.requester.credential.keyAlias}")
-	private String credentialKeyAlias;
+	private X509Credential credential;
+	private Truststore truststore;
 
-	private CredentialConfiguration main;
-	
 	@Autowired
-	public SAMLCredentialConfiguration(CredentialConfiguration main)
+	public SAMLCredentialConfiguration(Truststore truststore, Environment env)
+			throws CredentialConfigurationException
 	{
-		this.main = main;
-	}
-	
-	
-	public KeystoreCredential getCredential() throws CredentialConfigurationException
-	{
+		this.truststore = truststore;
+
 		try
 		{
-			return new KeystoreCredential(credentialPath, credentialPassword.toCharArray(),
-					credentialPassword.toCharArray(), credentialKeyAlias, credentialFormat);
-		} catch (KeyStoreException | IOException e)
+			credential = new CredentialProperties(PropertiesHelper.getAllProperties(env),
+					"saml.requester.credential.").getCredential();
+		} catch (Exception e)
 		{
-			throw new CredentialConfigurationException("Can not load keystore", e);
+			throw new CredentialConfigurationException("Can not load credentials", e);
 		}
 	}
 
-	public KeystoreCertChainValidator getValidator() throws CredentialConfigurationException
+	public X509Credential getCredential()
 	{
-		return main.getValidator();
+		return credential;
+	}
+
+	public X509CertChainValidatorExt getValidator()
+	{
+		return truststore.getValidator();
 	}
 }

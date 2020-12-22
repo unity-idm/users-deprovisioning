@@ -18,7 +18,7 @@ public class Attribute
 	private String name;
 	private String valueSyntax;
 	private String groupPath;
-	List<String> values = Collections.emptyList();
+	private List<String> values = Collections.emptyList();
 	private String translationProfile;
 	private String remoteIdp;
 
