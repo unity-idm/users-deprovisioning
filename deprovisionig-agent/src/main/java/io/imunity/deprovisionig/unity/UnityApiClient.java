@@ -78,7 +78,7 @@ public class UnityApiClient
 		{
 			client.put("/entity/" + entityId + "/removal-schedule",
 					Optional.of(Map.of("when", String.valueOf(when))));
-			log.debug("Shedule remove of user " + entityId + " to " + Instant.ofEpochMilli(when));
+			log.debug("Shedule remove of user (with login permit) " + entityId + " to " + Instant.ofEpochMilli(when));
 		} catch (UnityException e)
 		{
 			log.error("Can not shedule remove user with login permit option", e);
@@ -97,7 +97,7 @@ public class UnityApiClient
 					+ attribute.getValues());
 		} catch (UnityException | JsonProcessingException e)
 		{
-			log.error("Can not update attribute", e);
+			log.error("Can not update attribute " + attribute.getName() + " for user " + entityId, e);
 		}
 
 	}

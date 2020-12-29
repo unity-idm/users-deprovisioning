@@ -3,7 +3,7 @@
  * See LICENCE.txt file for licensing information.
  */
 
-package io.imunity.deprovisionig;
+package io.imunity.deprovisionig.unity;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -22,6 +22,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import io.imunity.deprovisionig.Constans;
+import io.imunity.deprovisionig.TimesConfiguration;
 import io.imunity.deprovisionig.extractor.UnityUserExtractor;
 import io.imunity.deprovisionig.unity.UnityApiClient;
 import io.imunity.deprovisionig.unity.types.EntityState;

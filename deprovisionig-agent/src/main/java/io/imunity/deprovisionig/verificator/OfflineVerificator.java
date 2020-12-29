@@ -61,6 +61,7 @@ public class OfflineVerificator
 				|| now.isAfter(firstOfflineVerificationAttempt
 						.plus(timesConfig.offlineVerificationPeriod))))
 		{
+			log.debug("Skip offline verification for user " + user.entityId + "(offlineVerificationPeriod has passed)");
 			return false;
 		}
 
@@ -84,6 +85,9 @@ public class OfflineVerificator
 			unityClient.sendEmail(user.entityId, emailTemplate, params);
 			unityClient.updateAttribute(user.entityId, LocalDateTimeAttribute
 					.of(Constans.LAST_OFFLINE_VERIFICATION_ATTEMPT_ATTRIBUTE, now));
+		}else
+		{
+			log.debug("Skip send email to user " + user.entityId + " (emailResendPeriod)");
 		}
 
 		return true;

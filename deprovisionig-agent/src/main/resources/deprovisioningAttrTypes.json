@@ -2,7 +2,7 @@
    {
       "flags":0,
       "maxElements":1,
-      "minElements":1,
+      "minElements":0,
       "selfModificable":false,
       "uniqueValues":false,
       "global":false,
@@ -30,7 +30,7 @@
    {
       "flags":0,
       "maxElements":1,
-      "minElements":1,
+      "minElements":0,
       "selfModificable":false,
       "uniqueValues":false,
       "global":false,
@@ -58,7 +58,7 @@
    {
       "flags":0,
       "maxElements":1,
-      "minElements":1,
+      "minElements":0,
       "selfModificable":false,
       "uniqueValues":false,
       "global":false,
@@ -86,7 +86,7 @@
    {
       "flags":0,
       "maxElements":1,
-      "minElements":1,
+      "minElements":0,
       "selfModificable":false,
       "uniqueValues":false,
       "global":false,

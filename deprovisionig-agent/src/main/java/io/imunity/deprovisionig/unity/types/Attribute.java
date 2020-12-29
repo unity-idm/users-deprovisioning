@@ -3,11 +3,11 @@
  * See LICENCE.txt file for licensing information.
  */
 
-
 package io.imunity.deprovisionig.unity.types;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -86,6 +86,26 @@ public class Attribute
 	public Attribute()
 	{
 
+	}
+
+	@Override
+	public boolean equals(final Object other)
+	{
+		if (!(other instanceof Attribute))
+			return false;
+		Attribute castOther = (Attribute) other;
+		return Objects.equals(name, castOther.name) && Objects.equals(valueSyntax, castOther.valueSyntax)
+				&& Objects.equals(groupPath, castOther.groupPath)
+				&& Objects.equals(values, castOther.values)
+				&& Objects.equals(translationProfile, castOther.translationProfile)
+				&& Objects.equals(remoteIdp, castOther.remoteIdp);
+
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return Objects.hash(name, valueSyntax, groupPath, values, translationProfile, remoteIdp);
 	}
 
 }

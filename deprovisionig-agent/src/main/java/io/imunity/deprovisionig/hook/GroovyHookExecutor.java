@@ -89,7 +89,7 @@ public class GroovyHookExecutor
 		log.info("Groovy script: {} finished", hookScript);
 	}
 
-	Binding getBinding(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo, Instant removeTime)
+	private Binding getBinding(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo, Instant removeTime)
 	{
 		Binding binding = new Binding();
 

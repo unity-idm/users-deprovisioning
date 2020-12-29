@@ -207,7 +207,8 @@ public class UnityRestClient
 
 	private void assertResponseStatusIsOk(HttpResponse response) throws UnityException
 	{
-		if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK)
+		if (!(HttpStatus.SC_OK == response.getStatusLine().getStatusCode()
+				|| HttpStatus.SC_NO_CONTENT == response.getStatusLine().getStatusCode()))
 		{
 			throw new UnityException(response.getStatusLine().toString());
 		}

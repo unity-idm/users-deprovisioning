@@ -6,10 +6,10 @@
 package io.imunity.deprovisionig.unity.types;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Entity
@@ -41,5 +41,22 @@ public class Entity
 	public void setIdentities(List<Identity> identities)
 	{
 		this.identities = identities;
+	}
+
+	@Override
+	public boolean equals(final Object other)
+	{
+		if (!(other instanceof Entity))
+			return false;
+		Entity castOther = (Entity) other;
+		return Objects.equals(entityInformation, castOther.entityInformation)
+				&& Objects.equals(identities, castOther.identities);
+
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return Objects.hash(entityInformation, identities);
 	}
 }

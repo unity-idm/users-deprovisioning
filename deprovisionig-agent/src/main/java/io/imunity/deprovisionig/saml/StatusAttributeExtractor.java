@@ -21,8 +21,8 @@ public class StatusAttributeExtractor
 {
 	private static final Logger log = LogManager.getLogger(MainUserVerificator.class);
 	
-	private static final String SAML_STATUS_ATTRIBUTE_NAME = "1.3.6.1.4.1.25178.1.2.19";
-	private static final String SAML_STATUS_ATTRIBUTE_SCHAC_PREFIX = "urn:schac:userStatus:";
+	public static final String SAML_STATUS_ATTRIBUTE_NAME = "1.3.6.1.4.1.25178.1.2.19";
+	public static final String SAML_STATUS_ATTRIBUTE_SCHAC_PREFIX = "urn:schac:userStatus:";
 	
 	public static EntityState getStatusFromAttributesOrFallbackToUserStatus(UnityUser user,
 			Optional<List<ParsedAttribute>> attributes)
@@ -45,7 +45,7 @@ public class StatusAttributeExtractor
 	{
 		if (status.isEmpty() || status.get().getStringValues().isEmpty())
 		{
-			log.debug("No status attributes for user " + user.entityId);
+			log.debug("No status attributes in saml response  for user " + user.entityId);
 			return user.entityState;
 		}
 

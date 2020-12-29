@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import eu.unicore.samly2.SAMLConstants;
@@ -22,6 +23,8 @@ import eu.unicore.samly2.elements.NameID;
 import eu.unicore.samly2.exceptions.SAMLValidationException;
 import eu.unicore.security.wsutil.samlclient.SAMLAttributeQueryClient;
 import eu.unicore.util.httpclient.DefaultClientConfiguration;
+import eu.unicore.util.httpclient.HttpClientProperties;
+import io.imunity.deprovisionig.common.PropertiesHelper;
 import io.imunity.deprovisionig.common.exception.InternalException;
 import io.imunity.deprovisionig.common.exception.SAMLException;
 
@@ -30,16 +33,39 @@ public class AttributeQueryClient
 {
 	private static final Logger log = LogManager.getLogger(AttributeQueryClient.class);
 
-	private SAMLCredentialConfiguration credentials;
+	private static final int DEFAULT_SO_TIMEOUT = 120000;
+	private static final int DEFAULT_CONNECTION_TIMEOUT = 60000;
+	private static final String HTTP_CONFIGURATION_PREFIX = "saml.requester.http.";
+
+	private final DefaultClientConfiguration clientCfg;
+	private final NameID localIssuer;
 
 	@Autowired
-	public AttributeQueryClient(SAMLCredentialConfiguration credentials)
+	public AttributeQueryClient(SAMLCredentialConfiguration credentials, Environment env,
+			@Value("${saml.requester.requesterEntityId}") String requesterEntityId)
 	{
-		this.credentials = credentials;
-	}
+		clientCfg = new DefaultClientConfiguration();
+		clientCfg.setCredential(credentials.getCredential());
+		clientCfg.setValidator(credentials.getValidator());
+		clientCfg.setSslEnabled(true);
+		clientCfg.setSslAuthn(true);
+		clientCfg.setHttpAuthn(false);
 
-	@Value("${saml.requester.requesterEntityId}")
-	private String requesterEntityId;
+		HttpClientProperties httpClientProperties = new HttpClientProperties(HTTP_CONFIGURATION_PREFIX,
+				PropertiesHelper.getAllProperties(env));
+		if (!httpClientProperties.isSet(HttpClientProperties.SO_TIMEOUT))
+		{
+			httpClientProperties.setSocketTimeout(DEFAULT_SO_TIMEOUT);
+		}
+
+		if (!httpClientProperties.isSet(HttpClientProperties.CONNECT_TIMEOUT))
+		{
+			httpClientProperties.setConnectionTimeout(DEFAULT_CONNECTION_TIMEOUT);
+		}
+
+		clientCfg.setHttpClientProperties(httpClientProperties);
+		localIssuer = new NameID(requesterEntityId, SAMLConstants.NFORMAT_ENTITY);
+	}
 
 	public Optional<List<ParsedAttribute>> getAttributes(String attributeQueryServiceUrl, String userIdentity)
 			throws InternalException
@@ -57,13 +83,7 @@ public class AttributeQueryClient
 	public AttributeAssertionParser query(String attributeQueryServiceUrl, String userIdentity)
 			throws InternalException
 	{
-		DefaultClientConfiguration clientCfg = new DefaultClientConfiguration();
-		clientCfg.setCredential(credentials.getCredential());
-		clientCfg.setValidator(credentials.getValidator());
-		clientCfg.setSslEnabled(true);
-		clientCfg.setSslAuthn(true);
-		clientCfg.setHttpAuthn(false);
-		NameID localIssuer = new NameID(requesterEntityId, SAMLConstants.NFORMAT_ENTITY);
+
 		SAMLAttributeQueryClient attrClient;
 		try
 		{
@@ -86,7 +106,7 @@ public class AttributeQueryClient
 		} catch (Exception e)
 		{
 			throw new InternalException("Attribute query to " + attributeQueryServiceUrl + " for user "
-					+ userIdentity + "failed", e);
+					+ userIdentity + " failed", e);
 		}
 
 		return attrQueryParser;

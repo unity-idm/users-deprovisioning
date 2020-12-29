@@ -16,8 +16,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
@@ -56,7 +56,7 @@ public class SAMLMetadataManager
 	public static final Set<String> SUPPORTED_URL_SCHEMES = new HashSet<>(Arrays.asList("data", "http", "https"));
 	private static final Logger log = LogManager.getLogger(SAMLMetadataManager.class);
 
-	private final int metadataValidityTime;
+	private final Duration metadataValidityTime;
 	private final String metadataSource;
 
 	private NetworkClient networkClient;
@@ -64,8 +64,8 @@ public class SAMLMetadataManager
 
 	@Autowired
 	public SAMLMetadataManager(NetworkClient networkClient, WorkdirFileManager fileMan,
-			@Value("${saml.metadataValidityTime:1}") int metadataValidityTime,
-			@Value("${saml.metadataSource:http://www.aai.dfn.de/fileadmin/metadata/dfn-aai-basic-metadata.xml}") String metadataSource)
+			@Value("${saml.metadataValidityTime:1D}") Duration metadataValidityTime,
+			@Value("${saml.metadataSource:") String metadataSource)
 	{
 		this.networkClient = networkClient;
 		this.fileMan = fileMan;
@@ -80,7 +80,6 @@ public class SAMLMetadataManager
 		EntitiesDescriptorType meta = metaDoc.getEntitiesDescriptor();
 		searchAttributeQueryAddr(meta, attrQueryAddr);
 		return attrQueryAddr;
-
 	}
 
 	private void searchAttributeQueryAddr(EntitiesDescriptorType meta, Map<String, SAMLIdpInfo> result)
@@ -172,7 +171,7 @@ public class SAMLMetadataManager
 
 		String filePath = DigestUtils.md5Hex(uri.toString());
 		if (fileMan.exists(filePath) && fileMan.getLastModifiedTime(filePath)
-				.isAfter(Instant.now().minus(metadataValidityTime, ChronoUnit.DAYS)))
+				.isAfter(Instant.now().minus(metadataValidityTime)))
 		{
 			return parseMetadataFile(fileMan.readFile(filePath));
 

@@ -8,6 +8,7 @@ package io.imunity.deprovisionig.unity.types;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,12 +27,11 @@ public class UnityUser
 	public final LocalDateTime lastSuccessHomeIdPVerification;
 	public final LocalDateTime firstOfflineVerificationAttempt;
 	public final LocalDateTime lastOfflineVerificationAttempt;
-	
-	
 
 	public UnityUser(Long entityId, EntityState entityState, List<Identity> identities, Set<String> groups,
-			LocalDateTime lastAuthenticationTime,LocalDateTime firstHomeIdpVerificationFailure, LocalDateTime lastSuccessHomeIdPVerification,
-			LocalDateTime firstOfflineVerificationAttempt, LocalDateTime lastOfflineVerificationAttempt)
+			LocalDateTime lastAuthenticationTime, LocalDateTime firstHomeIdpVerificationFailure,
+			LocalDateTime lastSuccessHomeIdPVerification, LocalDateTime firstOfflineVerificationAttempt,
+			LocalDateTime lastOfflineVerificationAttempt)
 	{
 
 		this.entityId = entityId;
@@ -68,6 +68,35 @@ public class UnityUser
 				+ identities.stream().map(id -> id.getTypeId() + ":" + id.getValue())
 						.collect(Collectors.toList())
 				+ " lastAuthenticationTime:" + lastAuthenticationTime + " lastHomeIdPVerification:"
-				+ lastSuccessHomeIdPVerification + " lastOfflineVerification:" + lastOfflineVerificationAttempt;
+				+ lastSuccessHomeIdPVerification + " lastOfflineVerification:"
+				+ lastOfflineVerificationAttempt;
+	}
+
+	@Override
+	public boolean equals(final Object other)
+	{
+		if (!(other instanceof UnityUser))
+			return false;
+		UnityUser castOther = (UnityUser) other;
+		return Objects.equals(entityId, castOther.entityId)
+				&& Objects.equals(entityState, castOther.entityState)
+				&& Objects.equals(identities, castOther.identities)
+				&& Objects.equals(groups, castOther.groups)
+				&& Objects.equals(lastAuthenticationTime, castOther.lastAuthenticationTime)
+				&& Objects.equals(lastSuccessHomeIdPVerification,
+						castOther.lastSuccessHomeIdPVerification)
+				&& Objects.equals(firstOfflineVerificationAttempt,
+						castOther.firstOfflineVerificationAttempt)
+				&& Objects.equals(lastOfflineVerificationAttempt,
+						castOther.lastOfflineVerificationAttempt);
+
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return Objects.hash(entityId, entityState, identities, groups, lastAuthenticationTime,
+				lastSuccessHomeIdPVerification, firstOfflineVerificationAttempt,
+				lastOfflineVerificationAttempt);
 	}
 }

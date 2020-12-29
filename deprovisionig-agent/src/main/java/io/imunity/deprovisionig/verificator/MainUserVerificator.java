@@ -50,7 +50,7 @@ public class MainUserVerificator
 	private final TimesConfiguration timesConfig;
 
 	@Autowired
-	MainUserVerificator(AttributeQueryClient samlAttrQueryClient, SAMLMetadataManager samlMetadaMan,
+	public MainUserVerificator(AttributeQueryClient samlAttrQueryClient, SAMLMetadataManager samlMetadaMan,
 			UnityApiClient unityClient, TimesConfiguration timesConfig,
 			OfflineVerificator offlineVerificator, GroovyHookExecutor groovyHook,
 			@Value("${unity.identifier.relatedProfile}") String relatedTranslationProfile)
@@ -66,6 +66,7 @@ public class MainUserVerificator
 
 	public void verifyUsers(Set<UnityUser> extractUnityUsers)
 	{
+		log.debug("Starting verify " + extractUnityUsers.size() + " users");
 		Map<String, SAMLIdpInfo> attributeQueryAddressesAsMap = null;
 		try
 		{
@@ -122,11 +123,12 @@ public class MainUserVerificator
 				processNotVerifiedUser(user, samlIdpInfo);
 				continue;
 			}
-			//TODO 
+			// TODO
 			changeUserStatusIfNeeded(user, StatusAttributeExtractor
 					.getStatusFromAttributesOrFallbackToUserStatus(user, attributes), samlIdpInfo);
 			updateLastSuccessVerificationTime(user);
-
+			log.debug("Online verification successfull for user " + user.entityId);
+			
 		}
 
 	}
@@ -135,10 +137,18 @@ public class MainUserVerificator
 	{
 		unityClient.updateAttribute(user.entityId, LocalDateTimeAttribute
 				.of(Constans.LAST_SUCCESS_HOME_IDP_VERIFICATION_ATTRIBUTE, LocalDateTime.now()));
-		unityClient.updateAttribute(user.entityId, LocalDateTimeAttribute
-				.of(Constans.FIRST_HOME_IDP_VERIFICATION_FAILURE_ATTRIBUTE, null));
-		unityClient.updateAttribute(user.entityId,
-				LocalDateTimeAttribute.of(Constans.FIRST_OFFLINE_VERIFICATION_ATTEMPT_ATTRIBUTE, null));
+
+		if (user.firstHomeIdpVerificationFailure != null)
+		{
+			unityClient.updateAttribute(user.entityId, LocalDateTimeAttribute
+					.of(Constans.FIRST_HOME_IDP_VERIFICATION_FAILURE_ATTRIBUTE, null));
+		}
+
+		if (user.firstOfflineVerificationAttempt != null)
+		{
+			unityClient.updateAttribute(user.entityId, LocalDateTimeAttribute
+					.of(Constans.FIRST_OFFLINE_VERIFICATION_ATTEMPT_ATTRIBUTE, null));
+		}
 	}
 
 	private void processNotVerifiedUser(UnityUser user, SAMLIdpInfo idpInfo)
@@ -189,8 +199,7 @@ public class MainUserVerificator
 		{
 			time = getRemoveTime();
 			unityClient.scheduleRemoveUserWithLoginPermit(user.entityId, time.toEpochMilli());
-		}
-		if (newStatus.equals(EntityState.toRemove))
+		}else if (newStatus.equals(EntityState.toRemove))
 		{
 			time = getRemoveTime();
 			unityClient.setUserStatus(user.entityId, EntityState.disabled);
