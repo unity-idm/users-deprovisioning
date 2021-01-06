@@ -19,8 +19,8 @@ import io.imunity.deprovisionig.common.exception.CredentialConfigurationExceptio
 @Component
 public class SAMLCredentialConfiguration
 {
-	private X509Credential credential;
-	private Truststore truststore;
+	private final X509Credential credential;
+	private final Truststore truststore;
 
 	@Autowired
 	public SAMLCredentialConfiguration(Truststore truststore, Environment env)

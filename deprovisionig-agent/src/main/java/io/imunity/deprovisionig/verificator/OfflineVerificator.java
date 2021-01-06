@@ -43,7 +43,7 @@ public class OfflineVerificator
 
 	public boolean verify(UnityUser user, String technicalAdminEmail)
 	{
-		log.info("Goto offline verification with user " + user.entityId);
+		log.debug("Goto offline verification with user " + user.entityId);
 		LocalDateTime now = LocalDateTime.now();
 
 		LocalDateTime firstOfflineVerificationAttempt = now;
@@ -90,6 +90,7 @@ public class OfflineVerificator
 			log.debug("Skip send email to user " + user.entityId + " (emailResendPeriod)");
 		}
 
+		log.debug("Offline verification of " + user.entityId + " complete");
 		return true;
 	}
 

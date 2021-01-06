@@ -83,7 +83,6 @@ public class AttributeQueryClient
 	public AttributeAssertionParser query(String attributeQueryServiceUrl, String userIdentity)
 			throws InternalException
 	{
-
 		SAMLAttributeQueryClient attrClient;
 		try
 		{
@@ -102,7 +101,7 @@ public class AttributeQueryClient
 		} catch (SAMLValidationException e)
 		{
 			throw new SAMLException("Invalid saml attribute query response from " + attributeQueryServiceUrl
-					+ " for user  " + userIdentity + " failed", e);
+					+ " for user  " + userIdentity, e);
 		} catch (Exception e)
 		{
 			throw new InternalException("Attribute query to " + attributeQueryServiceUrl + " for user "

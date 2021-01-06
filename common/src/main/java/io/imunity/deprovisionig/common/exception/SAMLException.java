@@ -8,11 +8,8 @@ package io.imunity.deprovisionig.common.exception;
 
 public class SAMLException extends InternalException
 {
-
-
 	public SAMLException(String msg, Throwable cause)
 	{
 		super(msg, cause);
 	}
-
 }

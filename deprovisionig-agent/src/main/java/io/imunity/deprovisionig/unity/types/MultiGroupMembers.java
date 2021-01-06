@@ -68,8 +68,8 @@ public class MultiGroupMembers
 			if (!(other instanceof EntityGroupAttributes))
 				return false;
 			EntityGroupAttributes castOther = (EntityGroupAttributes) other;
-			return Objects.equals(entityId, castOther.attributes)
-					&& Objects.equals(entityId, castOther.attributes);
+			return Objects.equals(entityId, castOther.entityId)
+					&& Objects.equals(attributes, castOther.attributes);
 
 		}
 
@@ -78,6 +78,5 @@ public class MultiGroupMembers
 		{
 			return Objects.hash(entityId, attributes);
 		}
-
 	}
 }

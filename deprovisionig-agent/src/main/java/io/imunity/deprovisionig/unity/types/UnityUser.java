@@ -17,7 +17,6 @@ import io.imunity.deprovisionig.Constans;
 
 public class UnityUser
 {
-
 	public final Long entityId;
 	public final EntityState entityState;
 	public final Set<String> groups;
@@ -33,7 +32,6 @@ public class UnityUser
 			LocalDateTime lastSuccessHomeIdPVerification, LocalDateTime firstOfflineVerificationAttempt,
 			LocalDateTime lastOfflineVerificationAttempt)
 	{
-
 		this.entityId = entityId;
 		this.entityState = entityState;
 		this.identities = identities;

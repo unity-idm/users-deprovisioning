@@ -13,7 +13,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Identity
 {
-
 	private String typeId;
 	private String value;
 	private String remoteIdp;

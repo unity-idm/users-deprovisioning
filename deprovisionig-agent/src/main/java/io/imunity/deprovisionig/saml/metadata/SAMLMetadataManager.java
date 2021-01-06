@@ -59,8 +59,8 @@ public class SAMLMetadataManager
 	private final Duration metadataValidityTime;
 	private final String metadataSource;
 
-	private NetworkClient networkClient;
-	private WorkdirFileManager fileMan;
+	private final NetworkClient networkClient;
+	private final WorkdirFileManager fileMan;
 
 	@Autowired
 	public SAMLMetadataManager(NetworkClient networkClient, WorkdirFileManager fileMan,
@@ -297,5 +297,4 @@ public class SAMLMetadataManager
 
 		return false;
 	}
-
 }

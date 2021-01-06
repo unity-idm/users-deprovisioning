@@ -39,5 +39,4 @@ public class NetworkClient
 		clientCfg.setHttpAuthn(true);
 		return HttpUtils.createClient(url, clientCfg);
 	}
-
 }

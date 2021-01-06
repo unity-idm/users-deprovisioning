@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class AttributeQueryClientApplicationTests
+public class AttributeQueryClientApplicationTest
 {
 	public static void main(String[] args)
 	{
-		SpringApplication.run(AttributeQueryClientApplicationTests.class, args);
+		SpringApplication.run(AttributeQueryClientApplicationTest.class, args);
 	}
 }

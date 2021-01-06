@@ -66,7 +66,7 @@ public class MainUserVerificator
 
 	public void verifyUsers(Set<UnityUser> extractUnityUsers)
 	{
-		log.debug("Starting verify " + extractUnityUsers.size() + " users");
+		log.info("Starting verify " + extractUnityUsers.size() + " users");
 		Map<String, SAMLIdpInfo> attributeQueryAddressesAsMap = null;
 		try
 		{
@@ -80,7 +80,7 @@ public class MainUserVerificator
 		for (UnityUser user : extractUnityUsers)
 		{
 
-			log.info("Online verify user " + user.entityId);
+			log.debug("Online verify user " + user.entityId);
 			Optional<Identity> identity = user.getIdentifierIdentityByProfile(relatedTranslationProfile);
 			if (identity.isEmpty())
 			{
@@ -96,7 +96,6 @@ public class MainUserVerificator
 				log.debug("Can not find attribute query service address for IDP entity "
 						+ identity.get().getRemoteIdp() + ". Skip user verification "
 						+ user.entityId);
-				// gotoOfflineVerification(user);
 				continue;
 			}
 
@@ -114,22 +113,23 @@ public class MainUserVerificator
 					changeUserStatusIfNeeded(user, EntityState.toRemove, samlIdpInfo);
 				} else
 				{
-					processNotVerifiedUser(user, samlIdpInfo);
+					processOnlineUnverifiedUser(user, samlIdpInfo);
 
 				}
 				continue;
 			} catch (Exception e)
 			{
-				processNotVerifiedUser(user, samlIdpInfo);
+				processOnlineUnverifiedUser(user, samlIdpInfo);
 				continue;
 			}
-			// TODO
+
 			changeUserStatusIfNeeded(user, StatusAttributeExtractor
 					.getStatusFromAttributesOrFallbackToUserStatus(user, attributes), samlIdpInfo);
 			updateLastSuccessVerificationTime(user);
 			log.debug("Online verification successfull for user " + user.entityId);
-			
+
 		}
+		log.info("Verification of " + extractUnityUsers.size() + "users complete");
 
 	}
 
@@ -151,8 +151,10 @@ public class MainUserVerificator
 		}
 	}
 
-	private void processNotVerifiedUser(UnityUser user, SAMLIdpInfo idpInfo)
+	private void processOnlineUnverifiedUser(UnityUser user, SAMLIdpInfo idpInfo)
 	{
+		log.debug("Process online unverified user " + user.entityId);
+		
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime firstHomeIdpVerificationFailure = now;
 
@@ -172,7 +174,7 @@ public class MainUserVerificator
 				&& now.isBefore(firstHomeIdpVerificationFailure
 						.plus(timesConfig.onlineOnlyVerificationPeriod))))
 		{
-
+			log.debug("Skip further verification of user " + user.entityId + "(is in onlineOnlyVerificationPeriod)");
 			return;
 		}
 
@@ -189,17 +191,18 @@ public class MainUserVerificator
 	{
 		if (user.entityState.equals(newStatus))
 		{
+			log.debug("User status of " + user.entityId + " remains unchanged (" + user.entityState + ")");
 			return;
 		}
 
-		log.info("Change user status of " + user.entityId + " to " + newStatus.toString());
+		log.debug("Change user status of " + user.entityId + " to " + newStatus.toString());
 
 		Instant time = null;
 		if (newStatus.equals(EntityState.onlyLoginPermitted))
 		{
 			time = getRemoveTime();
 			unityClient.scheduleRemoveUserWithLoginPermit(user.entityId, time.toEpochMilli());
-		}else if (newStatus.equals(EntityState.toRemove))
+		} else if (newStatus.equals(EntityState.toRemove))
 		{
 			time = getRemoveTime();
 			unityClient.setUserStatus(user.entityId, EntityState.disabled);

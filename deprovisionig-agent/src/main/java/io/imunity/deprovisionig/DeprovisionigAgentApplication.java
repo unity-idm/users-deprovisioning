@@ -20,7 +20,6 @@ public class DeprovisionigAgentApplication implements CommandLineRunner
 
 	private final UnityUserExtractor extractor;
 	private final MainUserVerificator verificator;
-
 	
 	@Autowired
 	DeprovisionigAgentApplication(UnityUserExtractor extractor, MainUserVerificator verificator)

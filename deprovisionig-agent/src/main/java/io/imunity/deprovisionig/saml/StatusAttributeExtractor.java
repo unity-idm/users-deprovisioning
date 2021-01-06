@@ -67,6 +67,5 @@ public class StatusAttributeExtractor
 
 		log.debug("Can not interpret new status of user " + user.entityId + " status=" + statusL);
 		return user.entityState;
-
 	}
 }

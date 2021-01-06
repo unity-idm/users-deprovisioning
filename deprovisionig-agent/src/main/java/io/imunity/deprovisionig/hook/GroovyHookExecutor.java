@@ -31,12 +31,12 @@ public class GroovyHookExecutor
 {
 	private static final Logger log = LogManager.getLogger(GroovyHookExecutor.class);
 
-	private final String hookScript;
+	private final String groovyHookScript;
 	private final TimesConfiguration timesConfig;
 
 	public GroovyHookExecutor(TimesConfiguration timesConfig, @Value("${hookScript:}") String hookScript)
 	{
-		this.hookScript = hookScript;
+		this.groovyHookScript = hookScript;
 		this.timesConfig = timesConfig;
 	}
 
@@ -65,28 +65,28 @@ public class GroovyHookExecutor
 	{
 		try
 		{
-			InputStream is = new FileInputStream(hookScript);
+			InputStream is = new FileInputStream(groovyHookScript);
 			return new InputStreamReader(is);
 		} catch (IOException e)
 		{
-			throw new ConfigurationException("Error loading script " + hookScript, e);
+			throw new ConfigurationException("Error loading script " + groovyHookScript, e);
 		}
 	}
 
 	private void runScript(Reader scriptReader, Binding binding) throws InternalException
 	{
 		GroovyShell shell = new GroovyShell(binding);
-		log.info("Triggers invocation of Groovy script: {}", hookScript);
+		log.info("Triggers invocation of Groovy script: {}", groovyHookScript);
 
 		try
 		{
 			shell.evaluate(scriptReader);
 		} catch (Exception e)
 		{
-			throw new InternalException("Failed to execute Groovy " + " script: " + hookScript
+			throw new InternalException("Failed to execute Groovy " + " script: " + groovyHookScript
 					+ ": reason: " + e.getMessage(), e);
 		}
-		log.info("Groovy script: {} finished", hookScript);
+		log.info("Groovy script: {} finished", groovyHookScript);
 	}
 
 	private Binding getBinding(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo, Instant removeTime)

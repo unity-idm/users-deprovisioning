@@ -7,7 +7,6 @@ package io.imunity.deprovisionig.unity.types;
 
 public enum EntityState
 {
-
 	valid,
 	authenticationDisabled,
 	disabled,

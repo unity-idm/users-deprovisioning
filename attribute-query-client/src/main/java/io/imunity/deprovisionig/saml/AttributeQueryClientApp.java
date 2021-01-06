@@ -28,8 +28,8 @@ public class AttributeQueryClientApp implements CommandLineRunner
 {
 	private static final Logger log = LogManager.getLogger(AttributeQueryClientApp.class);
 
-	private AttributeQueryClient query;
-	private WorkdirFileManager fileMan;
+	private final AttributeQueryClient query;
+	private final WorkdirFileManager fileMan;
 
 	@Autowired
 	public AttributeQueryClientApp(AttributeQueryClient query, WorkdirFileManager fileMan)
@@ -81,7 +81,6 @@ public class AttributeQueryClientApp implements CommandLineRunner
 		{
 			log.error("Can not save file with attribute query result", e);
 		}
-
 	}
 
 }

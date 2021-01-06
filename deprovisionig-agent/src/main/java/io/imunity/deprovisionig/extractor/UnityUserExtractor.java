@@ -59,7 +59,7 @@ public class UnityUserExtractor
 
 		LocalDateTime now = LocalDateTime.now();
 
-		Set<UnityUser> users = client.getUsers(unityRootGroup).stream().filter(u -> u.groups
+		return client.getUsers(unityRootGroup).stream().filter(u -> u.groups
 				.contains(unityRootGroup)
 				&& !u.groups.stream().anyMatch(Set.of(excludedGroups)::contains)
 				&& !u.identities.stream().map(i -> i.getTypeId() + "::" + i.getValue())
@@ -72,7 +72,6 @@ public class UnityUserExtractor
 				&& (u.lastSuccessHomeIdPVerification == null || u.lastSuccessHomeIdPVerification
 						.plus(timesConfig.validAccountPeriod).isBefore(now)))
 				.collect(Collectors.toSet());
-		return users;
 	}
 
 }

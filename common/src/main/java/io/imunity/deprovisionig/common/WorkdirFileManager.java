@@ -3,7 +3,6 @@
  * See LICENCE.txt file for licensing information.
  */
 
-
 package io.imunity.deprovisionig.common;
 
 import java.io.ByteArrayInputStream;
@@ -22,39 +21,41 @@ import org.springframework.stereotype.Component;
 public class WorkdirFileManager
 {
 	private static final Logger log = LogManager.getLogger(WorkdirFileManager.class);
-	
-	@Value("${workdir:data}")
-	private String workdir;
-	
-	
+
+	private final String workdir;
+
+	public WorkdirFileManager(@Value("${workdir:data}") String workdir)
+	{
+		this.workdir = workdir;
+	}
+
 	public void saveFile(byte[] content, String filename) throws IOException
 	{
-		log.debug("Save file to: " + filename);
-		Path fullFilePath = getFullFilePath(filename);	
+		Path fullFilePath = getFullFilePath(filename);
+		log.debug("Save file to: " + fullFilePath.toString());
 		Files.createDirectories(fullFilePath.getParent());
 		Files.write(fullFilePath, new ByteArrayInputStream(content).readAllBytes());
 	}
-	
+
 	public boolean exists(String fileName)
 	{
 		return Files.exists(getFullFilePath(fileName));
 	}
-	
+
 	public Instant getLastModifiedTime(String fileName) throws IOException
 	{
 		return Files.getLastModifiedTime((getFullFilePath(fileName))).toInstant();
 	}
-	
-	
+
 	private Path getFullFilePath(String filename)
 	{
 		return Paths.get(workdir, filename);
 	}
-	
+
 	public ByteArrayInputStream readFile(String filename) throws IOException
 	{
-		log.info("Read file from: " + filename);
-		Path toRead = getFullFilePath(filename);
-		return new ByteArrayInputStream(Files.readAllBytes(toRead));
+		Path fileToRead = getFullFilePath(filename);
+		log.info("Read file from: " + fileToRead.toString());
+		return new ByteArrayInputStream(Files.readAllBytes(fileToRead));
 	}
 }

@@ -1,0 +1,64 @@
+<urn:Assertion ID="SAMLY2lib_assert_a087d7858be595d7cd96882c7606276eee063dc1c93752eb" IssueInstant="2021-01-06T10:49:14.394Z" Version="2.0" xmlns:urn="urn:oasis:names:tc:SAML:2.0:assertion">
+  <urn:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">http://example-saml-idp.org</urn:Issuer>
+  <dsig:Signature xmlns:dsig="http://www.w3.org/2000/09/xmldsig#">
+    <dsig:SignedInfo>
+      <dsig:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+      <dsig:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/>
+      <dsig:Reference URI="#SAMLY2lib_assert_a087d7858be595d7cd96882c7606276eee063dc1c93752eb">
+        <dsig:Transforms>
+          <dsig:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
+          <dsig:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+        </dsig:Transforms>
+        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/>
+        <dsig:DigestValue>DsGx9iWK9qA0mBwtE3DfR7mVQ1g=</dsig:DigestValue>
+      </dsig:Reference>
+    </dsig:SignedInfo>
+    <dsig:SignatureValue>rZr+zstSLeVtCVhao/o4NmfcDWBh8k0SiMxpxhzd6Yj9Wv05rYliX4+elSbLS0Xp3vJ4QTrMJbdu
+R2WeG0z2jQUxNdRF397elw65JAeyaqRywGcgQipvy1i1wd/cBcqaI1iNgrMONWCudjFI5V6g8Q79
+Mzulcozqr913oVvk+wg8sweY5hJQi1rpn7YP+Uv2wsZ/zKdZoy3uGdwOcsQKpRGbU0aPizPM3FWU
+7ir0EHHSP2t0y1OZgvC4Vyv3yK3iqwSFlD173SU48jXejrrzTCDLMirxEtJ5u0D5nHXzsaA7w7xQ
+dKu3nC2PrsK/ELMVmdXEZVvq2j9Npn94MrX7aw==</dsig:SignatureValue>
+    <dsig:KeyInfo>
+      <dsig:X509Data>
+        <dsig:X509Certificate>MIIDbDCCAlSgAwIBAgIJAPm9oVHHE5w+MA0GCSqGSIb3DQEBBQUAMDoxCzAJBgNVBAYTAkVVMQ4w
+DAYDVQQKDAVVbml0eTEbMBkGA1UEAwwSVW5pdHkgTG93IFRydXN0IENBMB4XDTE2MDMyNDEzNTk0
+NFoXDTIxMDMyMzEzNTk0NFowQjELMAkGA1UEBhMCRVUxDzANBgNVBAcMBldhcnNhdzEOMAwGA1UE
+CgwFVW5pdHkxEjAQBgNVBAMMCWxvY2FsaG9zdDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+ggEBAN6S2OegRYU11rM8w4uGwp4g3HToZ5dHjWIAeU3ngtpJ6yHMVwAqWwmPvOJTYg+Hed4tFwbr
+5+xt9kbZwNVjojbSFueoRjD6c5ycTkUjPA+ORKawflCxp8kUuggyr2abcp3+C+AuY76OcxttGBaR
+iyzkAca+I0LzcU3wdSl2/h5guEdUobyzBGmt8Kmm2lHqhj1iTPz6Chg5yFnsdCXTDUCVAoxB0Mf/
+bm0/1BDElCpA/pqE9ktGxFErUDtHr8K03eW3U5DZ48/3jKtSEPg443YfffDn81PDvvxRzebJP0T9
+qKzUYshMeZZr5kN9hwMwmpzLSYHYnL1mx+lhvZivRVkCAwEAAaNtMGswCQYDVR0TBAIwADARBglg
+hkgBhvhCAQEEBAMCBPAwCwYDVR0PBAQDAgTwMB0GA1UdDgQWBBTBrFcGtlUpRgdy9otQNqZZP/QN
+nTAfBgNVHSMEGDAWgBRm3s0c1pLap1K6RvAkez4McgfAFjANBgkqhkiG9w0BAQUFAAOCAQEAJN40
+mS+s2OU3t40h1ghTgLj3JNKtl5fucd3w8ZYawAHTgJGDw3l6eTUPwhDPGV6If1gNsIDzoGDUmb1i
+PwR27xzsP+iWZ5SO0q03tpH3lpYcFV1tnWJ8MrFYHgAvt/j7tRC1N9j2MMvRf9oSNYtlbj/pXq3f
+8MkLf4uGJK9SYTmd4EpCch5DiLYHHTkknmYLxMtdqwl2SRfpu2/Ch989Ha1yokQgkZfYJKFA3Bvg
+YgZc+Q6aeXeVUkBedE5SyDVpChGjdTN7iVgu9kL6l1aRGo1KnN78ce8JwhljjaAm9Fckt4OFMpuN
+hX879+8p8lQcNFBto0ILS+I4AjFR4Ljtlg==</dsig:X509Certificate>
+      </dsig:X509Data>
+    </dsig:KeyInfo>
+  </dsig:Signature>
+  <urn:Subject>
+    <urn1:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent" xmlns:urn="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:urn1="urn:oasis:names:tc:SAML:2.0:assertion">16c0c3d2-c7fe-47a2-b3d5-2c5370bff8d8</urn1:NameID>
+    <urn1:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:sender-vouches" xmlns:urn="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:urn1="urn:oasis:names:tc:SAML:2.0:assertion">
+      <urn1:SubjectConfirmationData NotOnOrAfter="2021-01-06T10:59:13.205Z"/>
+    </urn1:SubjectConfirmation>
+  </urn:Subject>
+  <urn:AttributeStatement>
+    <urn:Attribute Name="name">
+      <urn:AttributeValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">Default Administrator</urn:AttributeValue>
+    </urn:Attribute>
+    <urn:Attribute Name="memberOf">
+      <urn:AttributeValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">/</urn:AttributeValue>
+      <urn:AttributeValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">/zu/clients</urn:AttributeValue>
+      <urn:AttributeValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">/zu</urn:AttributeValue>
+    </urn:Attribute>
+    <urn:Attribute Name="picture">
+      <urn:AttributeValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">url</urn:AttributeValue>
+    </urn:Attribute>
+    <urn:Attribute Name="username">
+      <urn:AttributeValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">a</urn:AttributeValue>
+    </urn:Attribute>
+  </urn:AttributeStatement>
+</urn:Assertion>
