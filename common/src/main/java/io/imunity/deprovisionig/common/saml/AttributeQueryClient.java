@@ -16,12 +16,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import eu.emi.security.authn.x509.impl.FormatMode;
+import eu.emi.security.authn.x509.impl.X509Formatter;
 import eu.unicore.samly2.SAMLConstants;
 import eu.unicore.samly2.assertion.AttributeAssertionParser;
 import eu.unicore.samly2.attrprofile.ParsedAttribute;
 import eu.unicore.samly2.elements.NameID;
 import eu.unicore.samly2.exceptions.SAMLValidationException;
-import eu.unicore.security.wsutil.samlclient.SAMLAttributeQueryClient;
 import eu.unicore.util.httpclient.DefaultClientConfiguration;
 import eu.unicore.util.httpclient.HttpClientProperties;
 import io.imunity.deprovisionig.common.PropertiesHelper;
@@ -38,18 +39,35 @@ public class AttributeQueryClient
 	private static final String HTTP_CONFIGURATION_PREFIX = "saml.requester.http.";
 
 	private final DefaultClientConfiguration clientCfg;
+	private final SAMLCredentialConfiguration credential;
 	private final NameID localIssuer;
+	private final boolean signRequest;
 
 	@Autowired
-	public AttributeQueryClient(SAMLCredentialConfiguration credentials, Environment env,
-			@Value("${saml.requester.requesterEntityId}") String requesterEntityId)
+	public AttributeQueryClient(SAMLCredentialConfiguration credential, Environment env,
+			@Value("${saml.requester.requesterEntityId}") String requesterEntityId,
+			@Value("${saml.requester.signRequest:true}") Boolean signRequest,
+			@Value("${saml.requester.sslAuthn:false}") Boolean sslAuthn,
+			@Value("${saml.requester.messageLogging:false}") Boolean messageLogging)
 	{
+		this.signRequest = signRequest;
+		this.credential = credential;
+		
 		clientCfg = new DefaultClientConfiguration();
-		clientCfg.setCredential(credentials.getCredential());
-		clientCfg.setValidator(credentials.getValidator());
+		clientCfg.setCredential(credential.getCredential());
+		clientCfg.setValidator(credential.getValidator());
 		clientCfg.setSslEnabled(true);
-		clientCfg.setSslAuthn(true);
+		clientCfg.setSslAuthn(sslAuthn);
 		clientCfg.setHttpAuthn(false);
+		clientCfg.setMessageLogging(messageLogging);		
+		
+		log.debug("SSL Authn: " + sslAuthn);
+		if (sslAuthn)
+		{
+			log.debug("Certificate uses for authn: " + new X509Formatter(FormatMode.FULL)
+					.format(credential.getCredential().getCertificate()));
+		}
+		log.debug("Sign request: " + signRequest);
 
 		HttpClientProperties httpClientProperties = new HttpClientProperties(HTTP_CONFIGURATION_PREFIX,
 				PropertiesHelper.getAllProperties(env));
@@ -83,21 +101,23 @@ public class AttributeQueryClient
 	public AttributeAssertionParser query(String attributeQueryServiceUrl, String userIdentity)
 			throws InternalException
 	{
-		SAMLAttributeQueryClient attrClient;
+		SAMLAttributeQueryClientWithLog attrClient;
 		try
 		{
-			attrClient = new SAMLAttributeQueryClient(attributeQueryServiceUrl, clientCfg);
+			attrClient = new SAMLAttributeQueryClientWithLog(attributeQueryServiceUrl, clientCfg);
 		} catch (MalformedURLException e)
 		{
 			throw new InternalException("Invalid attribute service url " + attributeQueryServiceUrl, e);
 		}
+	
 
 		log.debug("Query for attributes for user " + userIdentity + " from " + attributeQueryServiceUrl);
 		AttributeAssertionParser attrQueryParser;
 		try
 		{
 			attrQueryParser = attrClient.getAssertion(
-					new NameID(userIdentity, SAMLConstants.NFORMAT_PERSISTENT), localIssuer);
+					new NameID(userIdentity, SAMLConstants.NFORMAT_PERSISTENT), localIssuer,
+					signRequest, credential.getCredential());
 		} catch (SAMLValidationException e)
 		{
 			throw new SAMLException("Invalid saml attribute query response from " + attributeQueryServiceUrl
