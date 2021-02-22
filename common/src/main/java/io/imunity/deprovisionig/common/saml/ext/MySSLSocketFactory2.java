@@ -14,8 +14,6 @@ import java.security.cert.X509Certificate;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -26,12 +24,10 @@ import eu.emi.security.authn.x509.X509CertChainValidator;
 import eu.emi.security.authn.x509.X509Credential;
 import eu.emi.security.authn.x509.impl.CertificateUtils;
 import eu.emi.security.authn.x509.impl.FormatMode;
-import eu.emi.security.authn.x509.impl.HostnameMismatchCallback;
 import eu.emi.security.authn.x509.impl.SocketFactoryCreator;
 import eu.unicore.security.canl.LoggingX509TrustManager;
 import eu.unicore.security.wsutil.client.MySSLSocketFactory;
 import eu.unicore.util.Log;
-import eu.unicore.util.httpclient.HostnameMismatchCallbackImpl;
 import eu.unicore.util.httpclient.IClientConfiguration;
 import eu.unicore.util.httpclient.NoAuthKeyManager;
 
@@ -109,30 +105,30 @@ public class MySSLSocketFactory2 extends SSLSocketFactory
 		return this.sslcontext;
 	}
 
-	private void checkHostname(SSLSocket socket) throws IOException
-	{
-		HostnameMismatchCallbackImpl hostnameMismatchCallback = 
-				new HostnameMismatchCallbackImpl(sec.getServerHostnameCheckingMode());
-		HostnameMismatchCallback callback = new HostnameMismatchCallback()
-		{
-			@Override
-			public void nameMismatch(SSLSocket socket, X509Certificate peerCertificate, String hostName)
-					throws SSLException
-			{
-				boolean nameIsOK = hostnameMismatchCallback.nameMismatch(
-						socket.getSession(), peerCertificate, hostName);
-				if (!nameIsOK)
-					try
-					{
-						socket.close();
-					} catch (IOException e)
-					{
-						throw new IllegalStateException("Can't close connection", e);
-					}
-			}
-		}; 
-		SocketFactoryCreator.connectWithHostnameChecking(socket, callback);
-	}
+//	private void checkHostname(SSLSocket socket) throws IOException
+//	{
+//		HostnameMismatchCallbackImpl hostnameMismatchCallback = 
+//				new HostnameMismatchCallbackImpl(sec.getServerHostnameCheckingMode());
+//		HostnameMismatchCallback callback = new HostnameMismatchCallback()
+//		{
+//			@Override
+//			public void nameMismatch(SSLSocket socket, X509Certificate peerCertificate, String hostName)
+//					throws SSLException
+//			{
+//				boolean nameIsOK = hostnameMismatchCallback.nameMismatch(
+//						socket.getSession(), peerCertificate, hostName);
+//				if (!nameIsOK)
+//					try
+//					{
+//						socket.close();
+//					} catch (IOException e)
+//					{
+//						throw new IllegalStateException("Can't close connection", e);
+//					}
+//			}
+//		}; 
+//		SocketFactoryCreator.connectWithHostnameChecking(socket, callback);
+//	}
 	
 	public Socket createSocket(String host, int port,
 			InetAddress clientHost, int clientPort)
@@ -140,7 +136,7 @@ public class MySSLSocketFactory2 extends SSLSocketFactory
 	{
 		Socket socket = getSSLContext().getSocketFactory().createSocket(host, 
 				port, clientHost, clientPort);
-		checkHostname((SSLSocket) socket);
+//		checkHostname((SSLSocket) socket);
 		return socket;
 	}
 
@@ -149,7 +145,7 @@ public class MySSLSocketFactory2 extends SSLSocketFactory
 	{
 		Socket socket = getSSLContext().getSocketFactory().createSocket(host,
 				port);
-		checkHostname((SSLSocket) socket);
+//		checkHostname((SSLSocket) socket);
 		return socket;
 	}
 
@@ -159,7 +155,7 @@ public class MySSLSocketFactory2 extends SSLSocketFactory
 	{
 		Socket socket2 = getSSLContext().getSocketFactory().createSocket(socket,
 				host, port, autoClose);
-		checkHostname((SSLSocket) socket2);
+//		checkHostname((SSLSocket) socket2);
 		return socket2;
 	}
 
@@ -176,7 +172,7 @@ public class MySSLSocketFactory2 extends SSLSocketFactory
 	@Override
 	public Socket createSocket(InetAddress host, int port) throws IOException {
 		Socket socket = getSSLContext().getSocketFactory().createSocket(host,port);
-		checkHostname((SSLSocket) socket);
+//		checkHostname((SSLSocket) socket);
 		return socket;
 	}
 
@@ -184,7 +180,7 @@ public class MySSLSocketFactory2 extends SSLSocketFactory
 	public Socket createSocket(InetAddress address, int port,
 			InetAddress localAddress, int localPort) throws IOException {
 		Socket socket = getSSLContext().getSocketFactory().createSocket(address, port, localAddress, localPort);
-		checkHostname((SSLSocket) socket);
+//		checkHostname((SSLSocket) socket);
 		return socket;
 	}
 }

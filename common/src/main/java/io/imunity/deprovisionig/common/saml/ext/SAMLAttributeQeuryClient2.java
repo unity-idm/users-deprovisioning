@@ -20,9 +20,7 @@ import eu.unicore.samly2.elements.Subject;
 import eu.unicore.samly2.exceptions.SAMLResponderException;
 import eu.unicore.samly2.exceptions.SAMLValidationException;
 import eu.unicore.samly2.proto.AttributeQuery;
-import eu.unicore.samly2.trust.PKISamlTrustChecker;
 import eu.unicore.samly2.validators.AssertionValidator;
-import eu.unicore.samly2.validators.AttributeAssertionResponseValidator;
 import eu.unicore.samly2.webservice.SAMLQueryInterface;
 import eu.unicore.util.httpclient.IClientConfiguration;
 import xmlbeans.org.oasis.saml2.assertion.AssertionDocument;
@@ -37,7 +35,7 @@ private SAMLQueryInterface queryProxy;
 	public SAMLAttributeQeuryClient2(String address, IClientConfiguration clientConfiguration) 
 		throws MalformedURLException
 	{
-		super(address, clientConfiguration, new PKISamlTrustChecker(clientConfiguration.getValidator(), true));
+		super(address, clientConfiguration, new TrustAllChecker());
 		queryProxy = factory.createPlainWSProxy(SAMLQueryInterface.class, address);
 	}
 	
@@ -101,7 +99,7 @@ private SAMLQueryInterface queryProxy;
 			throw new SAMLResponderException("SAML service invocation failed: " + e.getMessage(), e);
 		}
 		
-		AttributeAssertionResponseValidator validator = new AttributeAssertionResponseValidator(
+		AttributeAssertionResponseValidator2 validator = new AttributeAssertionResponseValidator2(
 				null, 
 				null, 
 				null, //no we don't want to check 'inResponseTo'
@@ -124,6 +122,22 @@ private SAMLQueryInterface queryProxy;
 		return new AttributeAssertionParser(assertion);
 	}
 
+	protected ResponseDocument performRawSAMLQuery(AttributeQuery attrQuery)
+			throws SAMLValidationException
+	{
+		ResponseDocument xmlRespDoc;
+
+		try
+		{
+			xmlRespDoc = queryProxy.attributeQuery(attrQuery.getXMLBeanDoc());
+		} catch (SOAPFaultException e)
+		{
+			throw new SAMLResponderException("SAML service invocation failed: " + e.getMessage(), e);
+		}
+		
+		return xmlRespDoc;
+	}
+	
 	protected AttributeQuery createQuery(NameID whose, NameID requesterSamlName) throws SAMLValidationException
 	{
 		NameIDType subjectN = whose.getXBean();
@@ -135,4 +149,9 @@ private SAMLQueryInterface queryProxy;
 					"possible to generate one as local credential is missing.");
 		return new AttributeQuery(requesterSamlName.getXBean(), subject.getXBean());
 	}
+	
+	
+	
+	
+	
 }

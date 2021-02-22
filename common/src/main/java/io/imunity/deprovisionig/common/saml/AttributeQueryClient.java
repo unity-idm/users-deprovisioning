@@ -28,6 +28,7 @@ import eu.unicore.util.httpclient.HttpClientProperties;
 import io.imunity.deprovisionig.common.PropertiesHelper;
 import io.imunity.deprovisionig.common.exception.InternalException;
 import io.imunity.deprovisionig.common.exception.SAMLException;
+import xmlbeans.org.oasis.saml2.protocol.ResponseDocument;
 
 @Component
 public class AttributeQueryClient
@@ -129,5 +130,39 @@ public class AttributeQueryClient
 		}
 
 		return attrQueryParser;
+	}
+	
+	//For test tool only
+	public ResponseDocument queryForRawAssertion(String attributeQueryServiceUrl, String userIdentity)
+			throws InternalException
+	{
+		SAMLAttributeQueryClientWithLog attrClient;
+		try
+		{
+			attrClient = new SAMLAttributeQueryClientWithLog(attributeQueryServiceUrl, clientCfg);
+		} catch (MalformedURLException e)
+		{
+			throw new InternalException("Invalid attribute service url " + attributeQueryServiceUrl, e);
+		}
+	
+
+		log.debug("Query for attributes for user " + userIdentity + " from " + attributeQueryServiceUrl);
+		ResponseDocument respDoc;
+		try
+		{
+			respDoc = attrClient.getRawAssertion(
+					new NameID(userIdentity, SAMLConstants.NFORMAT_PERSISTENT), localIssuer, null,
+					signRequest, credential.getCredential());
+		} catch (SAMLValidationException e)
+		{
+			throw new SAMLException("Invalid saml attribute query response from " + attributeQueryServiceUrl
+					+ " for user  " + userIdentity, e);
+		} catch (Exception e)
+		{
+			throw new InternalException("Attribute query to " + attributeQueryServiceUrl + " for user "
+					+ userIdentity + " failed", e);
+		}
+
+		return respDoc;
 	}
 }

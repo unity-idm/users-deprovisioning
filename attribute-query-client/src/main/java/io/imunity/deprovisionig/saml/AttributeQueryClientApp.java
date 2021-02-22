@@ -18,9 +18,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.ComponentScan;
 
-import eu.unicore.samly2.assertion.AttributeAssertionParser;
 import io.imunity.deprovisionig.common.WorkdirFileManager;
 import io.imunity.deprovisionig.common.saml.AttributeQueryClient;
+import xmlbeans.org.oasis.saml2.protocol.ResponseDocument;
 
 @SpringBootApplication
 @ComponentScan(basePackages = "io.imunity.deprovisionig")
@@ -56,10 +56,10 @@ public class AttributeQueryClientApp implements CommandLineRunner
 		String userIdentity = args[0];
 		String attributeQueryServiceUrl = args[1];
 
-		AttributeAssertionParser queryResult;
+		ResponseDocument queryResult;
 		try
 		{
-			queryResult = query.query(attributeQueryServiceUrl, userIdentity);
+			queryResult = query.queryForRawAssertion(attributeQueryServiceUrl, userIdentity);
 		} catch (Exception e)
 		{
 			log.error("Can not perform attribute query for user " + userIdentity, e);
@@ -69,12 +69,12 @@ public class AttributeQueryClientApp implements CommandLineRunner
 		saveFile(queryResult, userIdentity);
 	}
 
-	public void saveFile(AttributeAssertionParser attributesDoc, String userIdentity)
+	public void saveFile(ResponseDocument queryResult, String userIdentity)
 	{
 		try
 		{
 			String fileName = userIdentity + "_" + UUID.randomUUID().toString().substring(0, 5) + ".xml";
-			fileMan.saveFile(attributesDoc.getXMLBeanDoc().toString().getBytes(), fileName);
+			fileMan.saveFile(queryResult.toString().getBytes(), fileName);
 			log.info("Attribute query result for user " + userIdentity + "save in " + fileName);
 
 		} catch (IOException e)
