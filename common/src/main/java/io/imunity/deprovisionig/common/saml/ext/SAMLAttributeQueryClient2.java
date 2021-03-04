@@ -27,12 +27,12 @@ import xmlbeans.org.oasis.saml2.assertion.AssertionDocument;
 import xmlbeans.org.oasis.saml2.assertion.NameIDType;
 import xmlbeans.org.oasis.saml2.protocol.ResponseDocument;
 
-public class SAMLAttributeQeuryClient2 extends AbstractSAMLClient2
+public class SAMLAttributeQueryClient2 extends AbstractSAMLClient2
 {
 private SAMLQueryInterface queryProxy;
 
 	
-	public SAMLAttributeQeuryClient2(String address, IClientConfiguration clientConfiguration) 
+	public SAMLAttributeQueryClient2(String address, IClientConfiguration clientConfiguration) 
 		throws MalformedURLException
 	{
 		super(address, clientConfiguration, new TrustAllChecker());

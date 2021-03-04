@@ -42,17 +42,17 @@ public class StatusAttributeExtractorTest
 	}
 	
 	
-	//TODO
-	//@Test
+	
+	@Test
 	public void shouldExtractStatusAttribute() throws XmlException, SAMLValidationException, IOException
 	{
-//		AssertionDocument doc = AssertionDocument.Factory.parse(new File("src/test/resources/assertionWithoutStatusAttribute.xml"));
-//		AttributeAssertionParser parser = new AttributeAssertionParser(doc.getAssertion());
-//
-//		EntityState newStatus = StatusAttributeExtractor.getStatusFromAttributesOrFallbackToUserStatus(
-//				getUser(EntityState.disabled), Optional.of(parser.getAttributes()));
-//
-//		assertThat(newStatus, is(EntityState.valid));
+		AssertionDocument doc = AssertionDocument.Factory.parse(new File("src/test/resources/assertionWithStatusAttribute.xml"));
+		AttributeAssertionParser parser = new AttributeAssertionParser(doc.getAssertion());
+
+		EntityState newStatus = StatusAttributeExtractor.getStatusFromAttributesOrFallbackToUserStatus(
+				getUser(EntityState.disabled), Optional.of(parser.getAttributes()));
+
+		assertThat(newStatus, is(EntityState.valid));
 	}
 
 	UnityUser getUser(EntityState status)

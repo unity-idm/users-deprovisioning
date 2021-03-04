@@ -22,10 +22,10 @@ import eu.unicore.security.dsig.DSigException;
 import eu.unicore.security.dsig.DigSignatureUtil;
 import eu.unicore.util.httpclient.IClientConfiguration;
 import io.imunity.deprovisionig.common.exception.InternalException;
-import io.imunity.deprovisionig.common.saml.ext.SAMLAttributeQeuryClient2;
+import io.imunity.deprovisionig.common.saml.ext.SAMLAttributeQueryClient2;
 import xmlbeans.org.oasis.saml2.protocol.ResponseDocument;
 
-public class SAMLAttributeQueryClientWithLog extends SAMLAttributeQeuryClient2
+public class SAMLAttributeQueryClientWithLog extends SAMLAttributeQueryClient2
 {
 	private static final Logger log = LogManager.getLogger(SAMLAttributeQueryClientWithLog.class);
 

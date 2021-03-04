@@ -5,7 +5,7 @@
 
 package io.imunity.deprovisionig.saml;
 
-import java.io.IOException;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
@@ -30,12 +30,14 @@ public class AttributeQueryClientApp implements CommandLineRunner
 
 	private final AttributeQueryClient query;
 	private final WorkdirFileManager fileMan;
+	private final SimpleResponseDecryptor decryptor;
 
 	@Autowired
-	public AttributeQueryClientApp(AttributeQueryClient query, WorkdirFileManager fileMan)
+	public AttributeQueryClientApp(AttributeQueryClient query, WorkdirFileManager fileMan, SimpleResponseDecryptor decryptor)
 	{
 		this.query = query;
 		this.fileMan = fileMan;
+		this.decryptor = decryptor;
 	}
 
 	public static void main(String[] args)
@@ -73,14 +75,25 @@ public class AttributeQueryClientApp implements CommandLineRunner
 	{
 		try
 		{
-			String fileName = userIdentity + "_" + UUID.randomUUID().toString().substring(0, 5) + ".xml";
+			String filesPrefix = userIdentity + "_" + UUID.randomUUID().toString().substring(0, 5);
+			String fileName = filesPrefix + ".xml";
+			
+			
 			fileMan.saveFile(queryResult.toString().getBytes(), fileName);
 			log.info("Attribute query result for user " + userIdentity + "save in " + fileName);
-
-		} catch (IOException e)
+			
+			Optional<ResponseDocument> decrypted = decryptor.decrypt(queryResult);
+			if (!decrypted.isEmpty())
+			{	
+				String fileNameDecrypted = filesPrefix + "_decrypted.xml";
+				fileMan.saveFile(decrypted.get().toString().getBytes(), fileNameDecrypted);
+				log.info("Decrypted attribute query result for user " + userIdentity + "save in " + fileName);
+			}			
+		} catch (Exception e)
 		{
 			log.error("Can not save file with attribute query result", e);
 		}
 	}
 
 }
+

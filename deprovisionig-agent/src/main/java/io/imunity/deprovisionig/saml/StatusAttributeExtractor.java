@@ -8,6 +8,7 @@ package io.imunity.deprovisionig.saml;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,7 +22,7 @@ public class StatusAttributeExtractor
 {
 	private static final Logger log = LogManager.getLogger(MainUserVerificator.class);
 	
-	public static final String SAML_STATUS_ATTRIBUTE_NAME = "1.3.6.1.4.1.25178.1.2.19";
+	public static final String SAML_STATUS_ATTRIBUTE_NAME = "urn:oid:1.3.6.1.4.1.25178.1.2.19";
 	public static final String SAML_STATUS_ATTRIBUTE_SCHAC_PREFIX = "urn:schac:userStatus:";
 	
 	public static EntityState getStatusFromAttributesOrFallbackToUserStatus(UnityUser user,
@@ -49,7 +50,7 @@ public class StatusAttributeExtractor
 			return user.entityState;
 		}
 
-		String statusL = status.get().getStringValues().get(0).toLowerCase();
+		String statusL = Stream.of(status.get().getStringValues().get(0).toLowerCase().split(":")).reduce((first,last)->last).get();
 
 		if ("active".equals(statusL))
 		{
