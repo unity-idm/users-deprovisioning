@@ -163,7 +163,7 @@ public class MainVerificatorTest
 				new SAMLIdpInfo("http://test.pl", "http://test.pl/attr", "test@test.pl")));
 		when(samlAttrQueryClient.getAttributes(eq("http://test.pl/attr"), eq("x1"))).thenThrow(
 				new SAMLException("Error", new SAMLErrorResponseException(Status.STATUS_RESPONDER,
-						SubStatus.STATUS2_UNKNOWN_PRINCIPIAL, new Exception())));
+						SubStatus.STATUS2_UNKNOWN_PRINCIPAL, new Exception())));
 
 		verificator.verifyUsers(Set.of(u1));
 

@@ -41,7 +41,6 @@ public class StatusAttributeExtractor
 		return mapToUnityStatusOrFallbackToUserStatus(user, statusAttr);
 	}
 
-	
 	private static EntityState mapToUnityStatusOrFallbackToUserStatus(UnityUser user, Optional<ParsedAttribute> status)
 	{
 		if (status.isEmpty() || status.get().getStringValues().isEmpty())

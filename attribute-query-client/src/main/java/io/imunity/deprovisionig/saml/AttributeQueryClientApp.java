@@ -77,23 +77,21 @@ public class AttributeQueryClientApp implements CommandLineRunner
 		{
 			String filesPrefix = userIdentity + "_" + UUID.randomUUID().toString().substring(0, 5);
 			String fileName = filesPrefix + ".xml";
-			
-			
+					
 			fileMan.saveFile(queryResult.toString().getBytes(), fileName);
-			log.info("Attribute query result for user " + userIdentity + "save in " + fileName);
+			log.info("Attribute query result for user " + userIdentity + " save in " + fileName);
 			
 			Optional<ResponseDocument> decrypted = decryptor.decrypt(queryResult);
 			if (!decrypted.isEmpty())
 			{	
 				String fileNameDecrypted = filesPrefix + "_decrypted.xml";
 				fileMan.saveFile(decrypted.get().toString().getBytes(), fileNameDecrypted);
-				log.info("Decrypted attribute query result for user " + userIdentity + "save in " + fileName);
+				log.info("Decrypted attribute query result for user " + userIdentity + " save in " + fileName);
 			}			
 		} catch (Exception e)
 		{
 			log.error("Can not save file with attribute query result", e);
 		}
 	}
-
 }
 

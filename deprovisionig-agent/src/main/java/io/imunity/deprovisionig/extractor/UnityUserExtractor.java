@@ -73,5 +73,4 @@ public class UnityUserExtractor
 						.plus(timesConfig.validAccountPeriod).isBefore(now)))
 				.collect(Collectors.toSet());
 	}
-
 }

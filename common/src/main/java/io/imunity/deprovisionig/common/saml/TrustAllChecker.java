@@ -4,7 +4,7 @@
  */
 
 
-package io.imunity.deprovisionig.common.saml.ext;
+package io.imunity.deprovisionig.common.saml;
 
 import org.apache.xmlbeans.XmlObject;
 

@@ -87,10 +87,8 @@ public class UnityApiClient
 
 	public void updateAttribute(long entityId, Attribute attribute)
 	{
-
 		try
 		{
-
 			client.put("/entity/" + entityId + "/attribute", ContentType.APPLICATION_JSON,
 					Optional.of(Constans.MAPPER.writeValueAsString(attribute)));
 			log.debug("Update attribute " + attribute.getName() + " of user " + entityId + ",set value to "
@@ -104,7 +102,6 @@ public class UnityApiClient
 
 	public void sendEmail(long entityId, String template, Map<String, String> params)
 	{
-
 		try
 		{
 			client.post("/userNotification-trigger/entity/" + entityId + "/template/" + template,
@@ -117,7 +114,6 @@ public class UnityApiClient
 		{
 			log.error("Can not send email via unity", e);
 		}
-
 	}
 
 	public Set<UnityUser> getUsers(String group)

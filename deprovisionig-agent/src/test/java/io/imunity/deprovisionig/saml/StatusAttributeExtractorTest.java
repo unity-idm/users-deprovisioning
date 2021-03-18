@@ -28,11 +28,10 @@ import xmlbeans.org.oasis.saml2.assertion.AssertionDocument;
 
 public class StatusAttributeExtractorTest
 {
-
 	@Test
 	public void shouldFallbackToUserStatus() throws XmlException, SAMLValidationException, IOException
 	{
-		AssertionDocument doc = AssertionDocument.Factory.parse(new File("src/test/resources/assertionWithoutStatusAttribute.xml"));
+		AssertionDocument doc = AssertionDocument.Factory.parse(new File("src/test/resources/responses/assertionWithoutStatusAttribute.xml"));
 		AttributeAssertionParser parser = new AttributeAssertionParser(doc.getAssertion());
 
 		EntityState newStatus = StatusAttributeExtractor.getStatusFromAttributesOrFallbackToUserStatus(
@@ -40,13 +39,11 @@ public class StatusAttributeExtractorTest
 
 		assertThat(newStatus, is(EntityState.disabled));
 	}
-	
-	
-	
+		
 	@Test
 	public void shouldExtractStatusAttribute() throws XmlException, SAMLValidationException, IOException
 	{
-		AssertionDocument doc = AssertionDocument.Factory.parse(new File("src/test/resources/assertionWithStatusAttribute.xml"));
+		AssertionDocument doc = AssertionDocument.Factory.parse(new File("src/test/resources/responses/assertionWithStatusAttribute.xml"));
 		AttributeAssertionParser parser = new AttributeAssertionParser(doc.getAssertion());
 
 		EntityState newStatus = StatusAttributeExtractor.getStatusFromAttributesOrFallbackToUserStatus(
@@ -55,7 +52,7 @@ public class StatusAttributeExtractorTest
 		assertThat(newStatus, is(EntityState.valid));
 	}
 
-	UnityUser getUser(EntityState status)
+	private UnityUser getUser(EntityState status)
 	{
 		return new UnityUser(1L, status,
 				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test")),

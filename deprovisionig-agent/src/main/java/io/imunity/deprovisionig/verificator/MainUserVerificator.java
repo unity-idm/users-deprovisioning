@@ -108,7 +108,7 @@ public class MainUserVerificator
 			} catch (SAMLException e)
 			{
 				SAMLErrorResponseException cause = (SAMLErrorResponseException) e.getCause();
-				if (SubStatus.STATUS2_UNKNOWN_PRINCIPIAL.equals(cause.getSamlSubErrorId()))
+				if (SubStatus.STATUS2_UNKNOWN_PRINCIPAL.equals(cause.getSamlSubErrorId()))
 				{
 					changeUserStatusIfNeeded(user, EntityState.toRemove, samlIdpInfo);
 				} else

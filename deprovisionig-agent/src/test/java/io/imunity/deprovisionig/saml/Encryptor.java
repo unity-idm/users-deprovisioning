@@ -9,7 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.Properties;
 
-import org.junit.jupiter.api.Test;
+//import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 
 import eu.emi.security.authn.x509.X509Credential;
@@ -26,7 +26,7 @@ import xmlbeans.org.oasis.saml2.protocol.ResponseDocument;
 public class Encryptor
 {
 
-	@Test
+//	@Test
 	public void decrypt() throws Exception
 	{
 		Properties p = new Properties();
@@ -42,7 +42,7 @@ public class Encryptor
 
 	}
 
-	@Test
+//	@Test
 	public void encryptAssertion() throws DSigException, Exception
 	{
 		Properties p = new Properties();

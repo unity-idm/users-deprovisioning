@@ -28,6 +28,10 @@ public class OfflineVerificator
 {
 	private static final Logger log = LogManager.getLogger(OfflineVerificator.class);
 
+	private static final String EMAIL_MESSAGE_TEMPLATE_PARAM = "email";
+	private static final String DAYSLEFT_MESSAGE_TEMPLATE_PARAM = "daysLeft";
+	private static final String DEPROVISIONING_DATE_MESSAGE_TEMPLATE_PARAM = "deprovisionigDate";
+
 	private final String emailTemplate;
 	private final TimesConfiguration timesConfig;
 	private final UnityApiClient unityClient;
@@ -76,10 +80,10 @@ public class OfflineVerificator
 			Map<String, String> params = new HashMap<>();
 			if (technicalAdminEmail != null)
 			{
-				params.put("email", technicalAdminEmail);
+				params.put(EMAIL_MESSAGE_TEMPLATE_PARAM, technicalAdminEmail);
 			}
-			params.put("daysLeft", String.valueOf(daysLeft));
-			params.put("deprovisionigDate",
+			params.put(DAYSLEFT_MESSAGE_TEMPLATE_PARAM, String.valueOf(daysLeft));
+			params.put(DEPROVISIONING_DATE_MESSAGE_TEMPLATE_PARAM,
 					deprovisioningDate.withNano(0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 
 			unityClient.sendEmail(user.entityId, emailTemplate, params);

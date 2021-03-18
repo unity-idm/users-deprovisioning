@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import eu.emi.security.authn.x509.X509Credential;
 import eu.emi.security.authn.x509.impl.FormatMode;
 import eu.emi.security.authn.x509.impl.X509Formatter;
 import eu.unicore.samly2.SAMLConstants;
@@ -23,6 +24,7 @@ import eu.unicore.samly2.assertion.AttributeAssertionParser;
 import eu.unicore.samly2.attrprofile.ParsedAttribute;
 import eu.unicore.samly2.elements.NameID;
 import eu.unicore.samly2.exceptions.SAMLValidationException;
+import eu.unicore.security.wsutil.samlclient.SAMLAttributeQueryClient;
 import eu.unicore.util.httpclient.DefaultClientConfiguration;
 import eu.unicore.util.httpclient.HttpClientProperties;
 import io.imunity.deprovisionig.common.PropertiesHelper;
@@ -53,15 +55,15 @@ public class AttributeQueryClient
 	{
 		this.signRequest = signRequest;
 		this.credential = credential;
-		
+
 		clientCfg = new DefaultClientConfiguration();
 		clientCfg.setCredential(credential.getCredential());
 		clientCfg.setValidator(credential.getValidator());
 		clientCfg.setSslEnabled(true);
 		clientCfg.setSslAuthn(sslAuthn);
 		clientCfg.setHttpAuthn(false);
-		clientCfg.setMessageLogging(messageLogging);		
-		
+		clientCfg.setMessageLogging(messageLogging);
+
 		log.debug("SSL Authn: " + sslAuthn);
 		if (sslAuthn)
 		{
@@ -102,23 +104,16 @@ public class AttributeQueryClient
 	public AttributeAssertionParser query(String attributeQueryServiceUrl, String userIdentity)
 			throws InternalException
 	{
-		SAMLAttributeQueryClientWithLog attrClient;
-		try
-		{
-			attrClient = new SAMLAttributeQueryClientWithLog(attributeQueryServiceUrl, clientCfg);
-		} catch (MalformedURLException e)
-		{
-			throw new InternalException("Invalid attribute service url " + attributeQueryServiceUrl, e);
-		}
-	
-
+		SAMLAttributeQueryClient attrClient = prepareQueryClient(attributeQueryServiceUrl);
 		log.debug("Query for attributes for user " + userIdentity + " from " + attributeQueryServiceUrl);
 		AttributeAssertionParser attrQueryParser;
 		try
 		{
+			Optional<X509Credential> signAndDecryptCredential = Optional.of(credential.getCredential());
 			attrQueryParser = attrClient.getAssertion(
 					new NameID(userIdentity, SAMLConstants.NFORMAT_PERSISTENT), localIssuer,
-					signRequest, credential.getCredential());
+					signRequest ? signAndDecryptCredential : Optional.empty(),
+					signAndDecryptCredential);
 		} catch (SAMLValidationException e)
 		{
 			throw new SAMLException("Invalid saml attribute query response from " + attributeQueryServiceUrl
@@ -131,28 +126,20 @@ public class AttributeQueryClient
 
 		return attrQueryParser;
 	}
-	
-	//For test tool only
+
 	public ResponseDocument queryForRawAssertion(String attributeQueryServiceUrl, String userIdentity)
 			throws InternalException
 	{
-		SAMLAttributeQueryClientWithLog attrClient;
-		try
-		{
-			attrClient = new SAMLAttributeQueryClientWithLog(attributeQueryServiceUrl, clientCfg);
-		} catch (MalformedURLException e)
-		{
-			throw new InternalException("Invalid attribute service url " + attributeQueryServiceUrl, e);
-		}
-	
-
-		log.debug("Query for attributes for user " + userIdentity + " from " + attributeQueryServiceUrl);
+		SAMLAttributeQueryClient attrClient = prepareQueryClient(attributeQueryServiceUrl);
+		log.debug("Query for raw attributes document for user " + userIdentity + " from "
+				+ attributeQueryServiceUrl);
 		ResponseDocument respDoc;
 		try
 		{
-			respDoc = attrClient.getRawAssertion(
-					new NameID(userIdentity, SAMLConstants.NFORMAT_PERSISTENT), localIssuer, null,
-					signRequest, credential.getCredential());
+
+			respDoc = attrClient.getRawAssertion(new NameID(userIdentity, SAMLConstants.NFORMAT_PERSISTENT),
+					localIssuer, null,
+					signRequest ? Optional.of(credential.getCredential()) : Optional.empty());
 		} catch (SAMLValidationException e)
 		{
 			throw new SAMLException("Invalid saml attribute query response from " + attributeQueryServiceUrl
@@ -164,5 +151,16 @@ public class AttributeQueryClient
 		}
 
 		return respDoc;
+	}
+
+	private SAMLAttributeQueryClient prepareQueryClient(String attributeQueryServiceUrl) throws InternalException
+	{
+		try
+		{
+			return new SAMLAttributeQueryClient(attributeQueryServiceUrl, clientCfg, new TrustAllChecker());
+		} catch (MalformedURLException e)
+		{
+			throw new InternalException("Invalid attribute service url " + attributeQueryServiceUrl, e);
+		}
 	}
 }

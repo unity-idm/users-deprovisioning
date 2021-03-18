@@ -67,7 +67,7 @@ eoI/MSd5Zvq7d+KzUIXLVJZj8ifQMaMXkMqKszNRzmMwMSv6ow==</ds:X509Certificate>
     <saml2:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">Eq0LJU48CdQOF/+pEi2+j/TFMnk=</saml2:NameID>
     <saml2:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:sender-vouches"/>
   </saml2:Subject>
-  <saml2:Conditions NotBefore="2021-02-19T12:44:00.665Z" NotOnOrAfter="2021-02-19T12:49:00.665Z">
+  <saml2:Conditions NotBefore="2021-02-19T12:44:00.665Z" NotOnOrAfter="2099-02-19T12:49:00.665Z">
     <saml2:AudienceRestriction>
       <saml2:Audience>https://login-dev.helmholtz.de/unitygw/saml-sp-metadata</saml2:Audience>
     </saml2:AudienceRestriction>

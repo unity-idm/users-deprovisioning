@@ -54,7 +54,6 @@ public class SimpleResponseDecryptor
 			addNewAssertion.set(assertion.copy());
 		}
 	
-		return Optional.of(resp);		
-		
+		return Optional.of(resp);			
 	}
 }
