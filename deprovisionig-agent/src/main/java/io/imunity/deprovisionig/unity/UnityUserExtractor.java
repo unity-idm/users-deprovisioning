@@ -24,7 +24,7 @@ public class UnityUserExtractor
 	private static final Logger log = LogManager.getLogger(UnityUserExtractor.class);
 
 	private final UnityApiClient client;
-	
+
 	private final DeprovisioningConfiguration config;
 
 	@Autowired
@@ -44,20 +44,22 @@ public class UnityUserExtractor
 
 		LocalDateTime now = LocalDateTime.now();
 
-		return client.getUsers(config.unityRootGroup).stream().filter(u -> u.groups
-				.contains(config.unityRootGroup)
-				&& !u.groups.stream().anyMatch(config.excludedGroups::contains)
-				&& !u.identities.stream().map(i -> i.getTypeId() + "::" + i.getValue())
-						.anyMatch(config.excludedUsers::contains)
-				&& u.identities.stream()
+		return client.getUsers(config.unityRootGroup).stream()
+				.filter(u -> u.groups.contains(config.unityRootGroup))
+				.filter(u -> !u.groups.stream().anyMatch(config.excludedGroups::contains))
+
+				.filter(u -> !u.identities.stream().map(i -> i.getTypeId() + "::" + i.getValue())
+						.anyMatch(config.excludedUsers::contains))
+				.filter(u -> u.identities.stream()
 						.filter(i -> i.getTypeId().equals(Constans.IDENTIFIER_IDENTITY)
 								&& config.relatedTranslationProfile
 										.equals(i.getTranslationProfile()))
-						.count() > 0
-				&& (u.lastAuthenticationTime == null || u.lastAuthenticationTime
+						.count() > 0)
+				.filter(u -> u.lastAuthenticationTime == null || u.lastAuthenticationTime
 						.plus(config.validAccountPeriod).isBefore(now))
-				&& (u.lastSuccessHomeIdPVerification == null || u.lastSuccessHomeIdPVerification
-						.plus(config.validAccountPeriod).isBefore(now)))
+				.filter(u -> u.lastSuccessHomeIdPVerification == null
+						|| u.lastSuccessHomeIdPVerification.plus(config.validAccountPeriod)
+								.isBefore(now))
 				.collect(Collectors.toSet());
 	}
 }

@@ -25,12 +25,12 @@ public class NetworkClient
 		this.truststore = truststore;
 	}
 	
-	public HttpClient getClient(String url) throws Exception
+	public HttpClient getClient(String url) 
 	{
 		return url.startsWith("https:") ? getSSLClient(url) : HttpClientBuilder.create().build();
 	}
 
-	private HttpClient getSSLClient(String url) throws Exception
+	private HttpClient getSSLClient(String url) 
 	{
 		DefaultClientConfiguration clientCfg = new DefaultClientConfiguration();
 		clientCfg.setValidator(truststore.getValidator());

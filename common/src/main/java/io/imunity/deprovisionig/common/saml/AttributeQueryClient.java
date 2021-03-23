@@ -27,6 +27,7 @@ import eu.unicore.security.wsutil.samlclient.SAMLAttributeQueryClient;
 import eu.unicore.util.httpclient.DefaultClientConfiguration;
 import eu.unicore.util.httpclient.HttpClientProperties;
 import io.imunity.deprovisionig.common.PropertiesHelper;
+import io.imunity.deprovisionig.common.exception.SAMLComunicationException;
 import io.imunity.deprovisionig.common.exception.SAMLException;
 import xmlbeans.org.oasis.saml2.protocol.ResponseDocument;
 
@@ -123,7 +124,7 @@ public class AttributeQueryClient
 					+ " for user  " + userIdentity, e);
 		} catch (Exception e)
 		{
-			throw new RuntimeException("Attribute query to " + attributeQueryServiceUrl + " for user "
+			throw new SAMLComunicationException("Attribute query to " + attributeQueryServiceUrl + " for user "
 					+ userIdentity + " failed", e);
 		}
 
@@ -149,7 +150,7 @@ public class AttributeQueryClient
 					+ " for user  " + userIdentity, e);
 		} catch (Exception e)
 		{
-			throw new RuntimeException("Attribute query to " + attributeQueryServiceUrl + " for user "
+			throw new SAMLComunicationException("Attribute query to " + attributeQueryServiceUrl + " for user "
 					+ userIdentity + " failed", e);
 		}
 
@@ -163,7 +164,7 @@ public class AttributeQueryClient
 			return new SAMLAttributeQueryClient(attributeQueryServiceUrl, clientCfg, new TrustAllChecker());
 		} catch (MalformedURLException e)
 		{
-			throw new RuntimeException("Invalid attribute service url " + attributeQueryServiceUrl, e);
+			throw new SAMLComunicationException("Invalid attribute service url " + attributeQueryServiceUrl, e);
 		}
 	}
 }

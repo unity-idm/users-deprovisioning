@@ -12,6 +12,7 @@ import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Optional;
 
+
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -37,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.imunity.deprovisionig.NetworkClient;
+import io.imunity.deprovisionig.common.exception.ConfigurationException;
 
 @Component
 public class UnityRestClient
@@ -47,9 +49,16 @@ public class UnityRestClient
 	private final HttpClient client;
 
 	@Autowired
-	public UnityRestClient(NetworkClient networkClient, UnityConfiguration unityConfig) throws Exception
+	public UnityRestClient(NetworkClient networkClient, UnityConfiguration unityConfig)
 	{
-		URI uri = new URI(unityConfig.restUri);
+		URI uri;
+		try
+		{
+			uri = new URI(unityConfig.restUri);
+		} catch (URISyntaxException e)
+		{
+			throw new ConfigurationException("Invalid rest uri");
+		}
 		host = new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme());
 		restPath = uri.getPath();
 		context = getClientContext(host, unityConfig.restUsername, unityConfig.restPassword);
