@@ -5,7 +5,7 @@
 
 package io.imunity.deprovisionig.common.exception;
 
-public class CredentialConfigurationException extends InternalException
+public class CredentialConfigurationException extends RuntimeException
 {	
 	public CredentialConfigurationException(String msg)
 	{

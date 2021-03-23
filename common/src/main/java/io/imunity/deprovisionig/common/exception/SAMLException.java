@@ -6,7 +6,7 @@
 
 package io.imunity.deprovisionig.common.exception;
 
-public class SAMLException extends InternalException
+public class SAMLException extends Exception
 {
 	public SAMLException(String msg, Throwable cause)
 	{

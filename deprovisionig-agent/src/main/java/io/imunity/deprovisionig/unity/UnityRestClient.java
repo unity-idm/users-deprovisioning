@@ -34,11 +34,9 @@ import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import io.imunity.deprovisionig.NetworkClient;
-import io.imunity.deprovisionig.exception.UnityException;
 
 @Component
 public class UnityRestClient
@@ -49,15 +47,13 @@ public class UnityRestClient
 	private final HttpClient client;
 
 	@Autowired
-	public UnityRestClient(NetworkClient networkClient, @Value("${unity.rest.uri}") String restUri,
-			@Value("${unity.rest.client.username}") String restUsername,
-			@Value("${unity.rest.client.password}") String restPassword) throws Exception
+	public UnityRestClient(NetworkClient networkClient, UnityConfiguration unityConfig) throws Exception
 	{
-		URI uri = new URI(restUri);
+		URI uri = new URI(unityConfig.restUri);
 		host = new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme());
 		restPath = uri.getPath();
-		context = getClientContext(host, restUsername, restPassword);
-		client = networkClient.getClient(restUri);
+		context = getClientContext(host, unityConfig.restUsername, unityConfig.restPassword);
+		client = networkClient.getClient(unityConfig.restUri);
 	}
 
 	public String get(String path) throws UnityException

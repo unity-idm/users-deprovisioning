@@ -26,28 +26,30 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.imunity.deprovisionig.Constans;
-import io.imunity.deprovisionig.TimesConfiguration;
+import io.imunity.deprovisionig.DeprovisioningConfiguration;
 import io.imunity.deprovisionig.unity.UnityApiClient;
 import io.imunity.deprovisionig.unity.types.Attribute;
 import io.imunity.deprovisionig.unity.types.EntityState;
 import io.imunity.deprovisionig.unity.types.Identity;
 import io.imunity.deprovisionig.unity.types.UnityUser;
-import io.imunity.deprovisionig.verificator.OfflineVerificator;
 
 @ExtendWith(MockitoExtension.class)
 public class OfflineVerificatorTest
 {
+	private OfflineVerificator verificator;
+
 	@Mock
 	private UnityApiClient client;
-	private OfflineVerificator verificator;
 
 	@BeforeEach
 	public void init()
 	{
-		TimesConfiguration timesConfig = new TimesConfiguration(Duration.ofDays(2), Duration.ofDays(3),
-				Duration.ofDays(10), Duration.ofDays(4), Duration.ofDays(2));
 
-		verificator = new OfflineVerificator(client, timesConfig, "test");
+		DeprovisioningConfiguration config = new DeprovisioningConfiguration(Duration.ofDays(2),
+				Duration.ofDays(3), Duration.ofDays(10), Duration.ofDays(4), Duration.ofDays(2), "test",
+				"", new String[0], new String[0], "test", "", "", "", "test");
+
+		verificator = new OfflineVerificator(client, config, "test");
 	}
 
 	@Test

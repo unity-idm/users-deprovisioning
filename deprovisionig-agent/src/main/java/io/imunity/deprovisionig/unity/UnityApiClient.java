@@ -23,7 +23,6 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.imunity.deprovisionig.Constans;
-import io.imunity.deprovisionig.exception.UnityException;
 import io.imunity.deprovisionig.unity.types.Attribute;
 import io.imunity.deprovisionig.unity.types.Entity;
 import io.imunity.deprovisionig.unity.types.EntityState;

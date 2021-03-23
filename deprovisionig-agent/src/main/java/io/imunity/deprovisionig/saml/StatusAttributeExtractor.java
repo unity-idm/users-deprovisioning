@@ -16,11 +16,10 @@ import org.apache.logging.log4j.Logger;
 import eu.unicore.samly2.attrprofile.ParsedAttribute;
 import io.imunity.deprovisionig.unity.types.EntityState;
 import io.imunity.deprovisionig.unity.types.UnityUser;
-import io.imunity.deprovisionig.verificator.MainUserVerificator;
 
 public class StatusAttributeExtractor
 {
-	private static final Logger log = LogManager.getLogger(MainUserVerificator.class);
+	private static final Logger log = LogManager.getLogger(StatusAttributeExtractor.class);
 	
 	public static final String SAML_STATUS_ATTRIBUTE_NAME = "urn:oid:1.3.6.1.4.1.25178.1.2.19";
 	public static final String SAML_STATUS_ATTRIBUTE_SCHAC_PREFIX = "urn:schac:userStatus:";

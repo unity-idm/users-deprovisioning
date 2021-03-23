@@ -55,7 +55,8 @@ public class SAMLMetadataManager
 {
 	public static final Set<String> SUPPORTED_URL_SCHEMES = new HashSet<>(Arrays.asList("data", "http", "https"));
 	private static final Logger log = LogManager.getLogger(SAMLMetadataManager.class);
-
+	private static final int META_CONTENT_SIZE_LIMIT = 10240;
+	
 	private final Duration metadataValidityTime;
 	private final String metadataSource;
 
@@ -247,19 +248,19 @@ public class SAMLMetadataManager
 
 	}
 
-	public String getPathFromURI(URI uri)
+	private String getPathFromURI(URI uri)
 	{
 		return uri.isOpaque() ? uri.getSchemeSpecificPart() : uri.getPath();
 	}
 
-	public ByteArrayInputStream download(URL url) throws Exception
+	private ByteArrayInputStream download(URL url) throws Exception
 	{
 		log.info("Download file from: " + url);
 		HttpGet request = new HttpGet(url.toString());
 		HttpResponse response = networkClient.getClient(url.toString()).execute(request);
 		if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK)
 		{
-			String body = response.getEntity().getContentLength() < 10240
+			String body = response.getEntity().getContentLength() < META_CONTENT_SIZE_LIMIT
 					? EntityUtils.toString(response.getEntity())
 					: "";
 

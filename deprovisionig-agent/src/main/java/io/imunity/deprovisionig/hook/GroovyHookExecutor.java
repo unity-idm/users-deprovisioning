@@ -14,14 +14,12 @@ import java.time.Instant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import eu.unicore.util.configuration.ConfigurationException;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
-import io.imunity.deprovisionig.TimesConfiguration;
-import io.imunity.deprovisionig.common.exception.InternalException;
+import io.imunity.deprovisionig.DeprovisioningConfiguration;
 import io.imunity.deprovisionig.saml.metadata.SAMLIdpInfo;
 import io.imunity.deprovisionig.unity.types.EntityState;
 import io.imunity.deprovisionig.unity.types.UnityUser;
@@ -31,62 +29,43 @@ public class GroovyHookExecutor
 {
 	private static final Logger log = LogManager.getLogger(GroovyHookExecutor.class);
 
-	private final String groovyHookScript;
-	private final TimesConfiguration timesConfig;
+	private DeprovisioningConfiguration config;
+	
 
-	public GroovyHookExecutor(TimesConfiguration timesConfig, @Value("${hookScript:}") String hookScript)
+	public GroovyHookExecutor(DeprovisioningConfiguration config)
 	{
-		this.groovyHookScript = hookScript;
-		this.timesConfig = timesConfig;
+		this.config = config;
 	}
 
 	public void runHook(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo, Instant removeTime)
-	{
-		Reader scriptReader = getFileReader();
-		try
+	{	
+		try(Reader scriptReader = getFileReader();)
 		{
 			runScript(scriptReader, getBinding(user, newStatus, idpInfo, removeTime));
-		} catch (InternalException e)
+		} catch (Exception e)
 		{
 			log.error("Can not execute groovy script", e);
-		} finally
-		{
-			try
-			{
-				scriptReader.close();
-			} catch (IOException e)
-			{
-				log.error("Problem closing the stream used to read Groovy script", e);
-			}
-		}
+		} 
 	}
 
 	private Reader getFileReader()
 	{
 		try
 		{
-			InputStream is = new FileInputStream(groovyHookScript);
+			InputStream is = new FileInputStream(config.hookScript);
 			return new InputStreamReader(is);
 		} catch (IOException e)
 		{
-			throw new ConfigurationException("Error loading script " + groovyHookScript, e);
+			throw new ConfigurationException("Error loading script " + config.hookScript, e);
 		}
 	}
 
-	private void runScript(Reader scriptReader, Binding binding) throws InternalException
+	private void runScript(Reader scriptReader, Binding binding)
 	{
 		GroovyShell shell = new GroovyShell(binding);
-		log.info("Triggers invocation of Groovy script: {}", groovyHookScript);
-
-		try
-		{
-			shell.evaluate(scriptReader);
-		} catch (Exception e)
-		{
-			throw new InternalException("Failed to execute Groovy " + " script: " + groovyHookScript
-					+ ": reason: " + e.getMessage(), e);
-		}
-		log.info("Groovy script: {} finished", groovyHookScript);
+		log.info("Triggers invocation of Groovy script: {}", config.hookScript);
+		shell.evaluate(scriptReader);
+		log.info("Groovy script: {} finished", config.hookScript);
 	}
 
 	private Binding getBinding(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo, Instant removeTime)
@@ -98,7 +77,7 @@ public class GroovyHookExecutor
 		binding.setVariable("newUserStatus", newStatus);
 		binding.setVariable("idpInfo", idpInfo);
 		binding.setVariable("removeTime", removeTime);
-		binding.setVariable("timesConfiguration", timesConfig);
+		binding.setVariable("configuration", config);
 		return binding;
 	}
 }

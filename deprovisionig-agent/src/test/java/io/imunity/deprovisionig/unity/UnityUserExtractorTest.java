@@ -16,16 +16,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.imunity.deprovisionig.Constans;
-import io.imunity.deprovisionig.TimesConfiguration;
-import io.imunity.deprovisionig.extractor.UnityUserExtractor;
-import io.imunity.deprovisionig.unity.UnityApiClient;
+import io.imunity.deprovisionig.DeprovisioningConfiguration;
 import io.imunity.deprovisionig.unity.types.EntityState;
 import io.imunity.deprovisionig.unity.types.Identity;
 import io.imunity.deprovisionig.unity.types.UnityUser;
@@ -37,19 +34,11 @@ public class UnityUserExtractorTest
 	private UnityApiClient client;
 
 	private UnityUserExtractor extractor;
-	private TimesConfiguration timesConfig;
-
-	@BeforeEach
-	public void init()
-	{
-		timesConfig = new TimesConfiguration(Duration.ofDays(2), Duration.ofDays(2), Duration.ofDays(2),
-				Duration.ofDays(2), Duration.ofDays(2));
-	}
 
 	@Test
 	public void shouldSkipByAuthenticationDate()
 	{
-		extractor = new UnityUserExtractor(client, timesConfig, "/A", new String[0], new String[0], "test");
+		extractor = new UnityUserExtractor(client, getConfig("/A", new String[0], new String[0], "test"));
 
 		when(client.getUsers(eq("/A"))).thenReturn(Set.of(
 				getUser(1, EntityState.valid, new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test"),
@@ -68,8 +57,8 @@ public class UnityUserExtractorTest
 	@Test
 	public void shouldSkipByLastSuccessHomeIdPVerificationDate()
 	{
-		extractor = new UnityUserExtractor(client, timesConfig, "/A", new String[] { "/B" }, new String[0],
-				"test");
+		extractor = new UnityUserExtractor(client,
+				getConfig("/A", new String[] { "/B" }, new String[0], "test"));
 
 		when(client.getUsers(eq("/A"))).thenReturn(Set.of(
 				getUser(1, EntityState.valid, new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test"),
@@ -90,8 +79,8 @@ public class UnityUserExtractorTest
 	public void shouldSkipByExcludedGroups()
 	{
 
-		extractor = new UnityUserExtractor(client, timesConfig, "/A", new String[] { "/B" }, new String[0],
-				"test");
+		extractor = new UnityUserExtractor(client,
+				getConfig("/A", new String[] { "/B" }, new String[0], "test"));
 
 		when(client.getUsers(eq("/A"))).thenReturn(Set.of(
 				getUser(1, EntityState.valid, new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test"),
@@ -114,8 +103,8 @@ public class UnityUserExtractorTest
 	public void shouldSkipByExcludedIdentity()
 	{
 
-		extractor = new UnityUserExtractor(client, timesConfig, "/A", new String[0],
-				new String[] { "email::test@test.pl" }, "test");
+		extractor = new UnityUserExtractor(client,
+				getConfig("/A", new String[0], new String[] { "email::test@test.pl" }, "test"));
 
 		when(client.getUsers(eq("/A"))).thenReturn(Set.of(
 				getUser(1, EntityState.valid, new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test"),
@@ -139,7 +128,7 @@ public class UnityUserExtractorTest
 	public void shouldGetOnlyFromRootGroup()
 	{
 
-		extractor = new UnityUserExtractor(client, timesConfig, "/B", new String[0], new String[0], "test");
+		extractor = new UnityUserExtractor(client, getConfig("/B", new String[0], new String[0], "test"));
 
 		when(client.getUsers(eq("/B"))).thenReturn(Set.of(
 				getUser(1, EntityState.valid, new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test"),
@@ -172,6 +161,15 @@ public class UnityUserExtractorTest
 
 		return new UnityUser(entityId, status, ids, groups, lastAuthenticationTime, (LocalDateTime) null,
 				lastSuccessHomeIdPVerification, (LocalDateTime) null, (LocalDateTime) null);
+
+	}
+
+	DeprovisioningConfiguration getConfig(String unityRootGroup, String[] excludedGroups, String[] excludedUsers,
+			String profile)
+	{
+		return new DeprovisioningConfiguration(Duration.ofDays(2), Duration.ofDays(2), Duration.ofDays(2),
+				Duration.ofDays(2), Duration.ofDays(2), "", unityRootGroup, excludedGroups,
+				excludedUsers, profile, "", "", "", "");
 
 	}
 

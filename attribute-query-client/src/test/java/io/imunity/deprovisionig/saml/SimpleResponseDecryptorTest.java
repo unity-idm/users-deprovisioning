@@ -47,7 +47,7 @@ public class SimpleResponseDecryptorTest
 		Optional<ResponseDocument> decrypt = decryptor.decrypt(resp);
 
 		if (decrypt.isEmpty())
-			fail();
+			fail("Incorrectly decrypted attribute query response document");
 		assertThat(decrypt.get().getResponse().getAssertionArray(0).getAttributeStatementArray(0)
 				.getAttributeArray(0).getFriendlyName(), is("eduPersonAssurance"));
 

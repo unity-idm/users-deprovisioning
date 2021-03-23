@@ -12,7 +12,6 @@ import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +27,6 @@ import eu.unicore.security.wsutil.samlclient.SAMLAttributeQueryClient;
 import eu.unicore.util.httpclient.DefaultClientConfiguration;
 import eu.unicore.util.httpclient.HttpClientProperties;
 import io.imunity.deprovisionig.common.PropertiesHelper;
-import io.imunity.deprovisionig.common.exception.InternalException;
 import io.imunity.deprovisionig.common.exception.SAMLException;
 import xmlbeans.org.oasis.saml2.protocol.ResponseDocument;
 
@@ -44,34 +42,42 @@ public class AttributeQueryClient
 	private final DefaultClientConfiguration clientCfg;
 	private final SAMLCredentialConfiguration credential;
 	private final NameID localIssuer;
-	private final boolean signRequest;
+	private final SAMLRequesterConfiguration requesterConfig;
 
 	@Autowired
 	public AttributeQueryClient(SAMLCredentialConfiguration credential, Environment env,
-			@Value("${saml.requester.requesterEntityId}") String requesterEntityId,
-			@Value("${saml.requester.signRequest:true}") Boolean signRequest,
-			@Value("${saml.requester.sslAuthn:false}") Boolean sslAuthn,
-			@Value("${saml.requester.messageLogging:false}") Boolean messageLogging)
+			SAMLRequesterConfiguration requesterConfig)
 	{
-		this.signRequest = signRequest;
+		this.requesterConfig = requesterConfig;
 		this.credential = credential;
 
-		clientCfg = new DefaultClientConfiguration();
+		clientCfg = getClientConfiguration(env);
+		localIssuer = new NameID(requesterConfig.requesterEntityId, SAMLConstants.NFORMAT_ENTITY);
+	}
+
+	private DefaultClientConfiguration getClientConfiguration(Environment env)
+	{
+		DefaultClientConfiguration clientCfg = new DefaultClientConfiguration();
 		clientCfg.setCredential(credential.getCredential());
 		clientCfg.setValidator(credential.getValidator());
 		clientCfg.setSslEnabled(true);
-		clientCfg.setSslAuthn(sslAuthn);
+		clientCfg.setSslAuthn(requesterConfig.sslAuthn);
 		clientCfg.setHttpAuthn(false);
-		clientCfg.setMessageLogging(messageLogging);
+		clientCfg.setMessageLogging(requesterConfig.messageLogging);
 
-		log.debug("SSL Authn: " + sslAuthn);
-		if (sslAuthn)
+		log.debug("SSL Authn: " + requesterConfig.sslAuthn);
+		if (requesterConfig.sslAuthn)
 		{
 			log.debug("Certificate uses for authn: " + new X509Formatter(FormatMode.FULL)
 					.format(credential.getCredential().getCertificate()));
 		}
-		log.debug("Sign request: " + signRequest);
+		log.debug("Sign request: " + requesterConfig.signRequest);
+		clientCfg.setHttpClientProperties(getHttpClientProperties(env));
+		return clientCfg;
+	}
 
+	private HttpClientProperties getHttpClientProperties(Environment env)
+	{
 		HttpClientProperties httpClientProperties = new HttpClientProperties(HTTP_CONFIGURATION_PREFIX,
 				PropertiesHelper.getAllProperties(env));
 		if (!httpClientProperties.isSet(HttpClientProperties.SO_TIMEOUT))
@@ -83,13 +89,11 @@ public class AttributeQueryClient
 		{
 			httpClientProperties.setConnectionTimeout(DEFAULT_CONNECTION_TIMEOUT);
 		}
-
-		clientCfg.setHttpClientProperties(httpClientProperties);
-		localIssuer = new NameID(requesterEntityId, SAMLConstants.NFORMAT_ENTITY);
+		return httpClientProperties;
 	}
 
-	public Optional<List<ParsedAttribute>> getAttributes(String attributeQueryServiceUrl, String userIdentity)
-			throws InternalException
+	public Optional<List<ParsedAttribute>> getAttributes(String attributeQueryServiceUrl, NameID userIdentity)
+			throws SAMLException
 	{
 		log.debug("Get attributes for user " + userIdentity + " from " + attributeQueryServiceUrl);
 		try
@@ -101,8 +105,7 @@ public class AttributeQueryClient
 		}
 	}
 
-	public AttributeAssertionParser query(String attributeQueryServiceUrl, String userIdentity)
-			throws InternalException
+	public AttributeAssertionParser query(String attributeQueryServiceUrl, NameID userIdentity) throws SAMLException
 	{
 		SAMLAttributeQueryClient attrClient = prepareQueryClient(attributeQueryServiceUrl);
 		log.debug("Query for attributes for user " + userIdentity + " from " + attributeQueryServiceUrl);
@@ -111,8 +114,8 @@ public class AttributeQueryClient
 		{
 			Optional<X509Credential> signAndDecryptCredential = Optional.of(credential.getCredential());
 			attrQueryParser = attrClient.getAssertion(
-					new NameID(userIdentity, SAMLConstants.NFORMAT_PERSISTENT), localIssuer,
-					signRequest ? signAndDecryptCredential : Optional.empty(),
+					userIdentity, localIssuer,
+					requesterConfig.signRequest ? signAndDecryptCredential : Optional.empty(),
 					signAndDecryptCredential);
 		} catch (SAMLValidationException e)
 		{
@@ -120,7 +123,7 @@ public class AttributeQueryClient
 					+ " for user  " + userIdentity, e);
 		} catch (Exception e)
 		{
-			throw new InternalException("Attribute query to " + attributeQueryServiceUrl + " for user "
+			throw new RuntimeException("Attribute query to " + attributeQueryServiceUrl + " for user "
 					+ userIdentity + " failed", e);
 		}
 
@@ -128,7 +131,7 @@ public class AttributeQueryClient
 	}
 
 	public ResponseDocument queryForRawAssertion(String attributeQueryServiceUrl, String userIdentity)
-			throws InternalException
+			throws SAMLException
 	{
 		SAMLAttributeQueryClient attrClient = prepareQueryClient(attributeQueryServiceUrl);
 		log.debug("Query for raw attributes document for user " + userIdentity + " from "
@@ -139,28 +142,28 @@ public class AttributeQueryClient
 
 			respDoc = attrClient.getRawAssertion(new NameID(userIdentity, SAMLConstants.NFORMAT_PERSISTENT),
 					localIssuer, null,
-					signRequest ? Optional.of(credential.getCredential()) : Optional.empty());
+					requesterConfig.signRequest ? Optional.of(credential.getCredential()) : Optional.empty());
 		} catch (SAMLValidationException e)
 		{
 			throw new SAMLException("Invalid saml attribute query response from " + attributeQueryServiceUrl
 					+ " for user  " + userIdentity, e);
 		} catch (Exception e)
 		{
-			throw new InternalException("Attribute query to " + attributeQueryServiceUrl + " for user "
+			throw new RuntimeException("Attribute query to " + attributeQueryServiceUrl + " for user "
 					+ userIdentity + " failed", e);
 		}
 
 		return respDoc;
 	}
 
-	private SAMLAttributeQueryClient prepareQueryClient(String attributeQueryServiceUrl) throws InternalException
+	private SAMLAttributeQueryClient prepareQueryClient(String attributeQueryServiceUrl)
 	{
 		try
 		{
 			return new SAMLAttributeQueryClient(attributeQueryServiceUrl, clientCfg, new TrustAllChecker());
 		} catch (MalformedURLException e)
 		{
-			throw new InternalException("Invalid attribute service url " + attributeQueryServiceUrl, e);
+			throw new RuntimeException("Invalid attribute service url " + attributeQueryServiceUrl, e);
 		}
 	}
 }

@@ -3,16 +3,11 @@
  * See LICENCE.txt file for licensing information.
  */
 
-package io.imunity.deprovisionig.exception;
+package io.imunity.deprovisionig.unity;
 
-import io.imunity.deprovisionig.common.exception.InternalException;
 
-public class UnityException extends InternalException
+public class UnityException extends Exception
 {
-	public UnityException()
-	{
-	}
-
 	public UnityException(String msg)
 	{
 		super(msg);

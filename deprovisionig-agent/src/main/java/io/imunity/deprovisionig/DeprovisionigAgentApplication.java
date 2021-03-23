@@ -9,8 +9,8 @@ import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 
-import io.imunity.deprovisionig.extractor.UnityUserExtractor;
-import io.imunity.deprovisionig.verificator.MainUserVerificator;
+import io.imunity.deprovisionig.unity.UnityUserExtractor;
+import io.imunity.deprovisionig.verificator.UserVerificator;
 
 @SpringBootApplication
 public class DeprovisionigAgentApplication implements CommandLineRunner
@@ -19,10 +19,10 @@ public class DeprovisionigAgentApplication implements CommandLineRunner
 	private static final Logger log = LogManager.getLogger(DeprovisionigAgentApplication.class);
 
 	private final UnityUserExtractor extractor;
-	private final MainUserVerificator verificator;
+	private final UserVerificator verificator;
 	
 	@Autowired
-	DeprovisionigAgentApplication(UnityUserExtractor extractor, MainUserVerificator verificator)
+	DeprovisionigAgentApplication(UnityUserExtractor extractor, UserVerificator verificator)
 	{	
 		this.extractor = extractor;
 		this.verificator = verificator;
