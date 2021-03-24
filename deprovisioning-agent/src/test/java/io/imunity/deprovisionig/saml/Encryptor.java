@@ -9,7 +9,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.Properties;
 
-//import org.junit.jupiter.api.Test;
+
+import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 
 import eu.emi.security.authn.x509.X509Credential;
@@ -42,7 +43,7 @@ public class Encryptor
 
 	}
 
-//	@Test
+	@Test
 	public void encryptAssertion() throws DSigException, Exception
 	{
 		Properties p = new Properties();

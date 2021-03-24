@@ -18,6 +18,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.ComponentScan;
 
+import eu.unicore.samly2.SAMLConstants;
+import eu.unicore.samly2.elements.NameID;
 import io.imunity.deprovisionig.common.WorkdirFileManager;
 import io.imunity.deprovisionig.common.saml.AttributeQueryClient;
 import xmlbeans.org.oasis.saml2.protocol.ResponseDocument;
@@ -61,7 +63,7 @@ public class AttributeQueryClientApp implements CommandLineRunner
 		ResponseDocument queryResult;
 		try
 		{
-			queryResult = query.queryForRawAssertion(attributeQueryServiceUrl, userIdentity);
+			queryResult = query.queryForRawAssertion(attributeQueryServiceUrl, new NameID(userIdentity, SAMLConstants.NFORMAT_PERSISTENT));
 		} catch (Exception e)
 		{
 			log.error("Can not perform attribute query for user " + userIdentity, e);

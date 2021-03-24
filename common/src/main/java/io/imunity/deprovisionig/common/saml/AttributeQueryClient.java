@@ -96,7 +96,8 @@ public class AttributeQueryClient
 	public Optional<List<ParsedAttribute>> getAttributes(String attributeQueryServiceUrl, NameID userIdentity)
 			throws SAMLException
 	{
-		log.debug("Get attributes for user " + userIdentity + " from " + attributeQueryServiceUrl);
+		log.debug("Get attributes for user " + userIdentity.getXBean().getStringValue() + " from "
+				+ attributeQueryServiceUrl);
 		try
 		{
 			return Optional.of(query(attributeQueryServiceUrl, userIdentity).getAttributes());
@@ -109,49 +110,49 @@ public class AttributeQueryClient
 	public AttributeAssertionParser query(String attributeQueryServiceUrl, NameID userIdentity) throws SAMLException
 	{
 		SAMLAttributeQueryClient attrClient = prepareQueryClient(attributeQueryServiceUrl);
-		log.debug("Query for attributes for user " + userIdentity + " from " + attributeQueryServiceUrl);
+		log.debug("Query for attributes for user " + userIdentity.getXBean().getStringValue() + " from "
+				+ attributeQueryServiceUrl);
 		AttributeAssertionParser attrQueryParser;
 		try
 		{
 			Optional<X509Credential> signAndDecryptCredential = Optional.of(credential.getCredential());
-			attrQueryParser = attrClient.getAssertion(
-					userIdentity, localIssuer,
+			attrQueryParser = attrClient.getAssertion(userIdentity, localIssuer,
 					requesterConfig.signRequest ? signAndDecryptCredential : Optional.empty(),
 					signAndDecryptCredential);
 		} catch (SAMLValidationException e)
 		{
 			throw new SAMLException("Invalid saml attribute query response from " + attributeQueryServiceUrl
-					+ " for user  " + userIdentity, e);
+					+ " for user  " + userIdentity.getXBean().getStringValue(), e);
 		} catch (Exception e)
 		{
-			throw new SAMLComunicationException("Attribute query to " + attributeQueryServiceUrl + " for user "
-					+ userIdentity + " failed", e);
+			throw new SAMLComunicationException("Attribute query to " + attributeQueryServiceUrl
+					+ " for user " + userIdentity.getXBean().getStringValue() + " failed", e);
 		}
 
 		return attrQueryParser;
 	}
 
-	public ResponseDocument queryForRawAssertion(String attributeQueryServiceUrl, String userIdentity)
+	public ResponseDocument queryForRawAssertion(String attributeQueryServiceUrl, NameID userIdentity)
 			throws SAMLException
 	{
 		SAMLAttributeQueryClient attrClient = prepareQueryClient(attributeQueryServiceUrl);
-		log.debug("Query for raw attributes document for user " + userIdentity + " from "
-				+ attributeQueryServiceUrl);
+		log.debug("Query for raw attributes document for user " + userIdentity.getXBean().getStringValue()
+				+ " from " + attributeQueryServiceUrl);
 		ResponseDocument respDoc;
 		try
 		{
 
-			respDoc = attrClient.getRawAssertion(new NameID(userIdentity, SAMLConstants.NFORMAT_PERSISTENT),
-					localIssuer, null,
-					requesterConfig.signRequest ? Optional.of(credential.getCredential()) : Optional.empty());
+			respDoc = attrClient.getRawAssertion(userIdentity, localIssuer, null,
+					requesterConfig.signRequest ? Optional.of(credential.getCredential())
+							: Optional.empty());
 		} catch (SAMLValidationException e)
 		{
 			throw new SAMLException("Invalid saml attribute query response from " + attributeQueryServiceUrl
-					+ " for user  " + userIdentity, e);
+					+ " for user  " + userIdentity.getXBean().getStringValue(), e);
 		} catch (Exception e)
 		{
-			throw new SAMLComunicationException("Attribute query to " + attributeQueryServiceUrl + " for user "
-					+ userIdentity + " failed", e);
+			throw new SAMLComunicationException("Attribute query to " + attributeQueryServiceUrl
+					+ " for user " + userIdentity.getXBean().getStringValue() + " failed", e);
 		}
 
 		return respDoc;
@@ -164,7 +165,8 @@ public class AttributeQueryClient
 			return new SAMLAttributeQueryClient(attributeQueryServiceUrl, clientCfg, new TrustAllChecker());
 		} catch (MalformedURLException e)
 		{
-			throw new SAMLComunicationException("Invalid attribute service url " + attributeQueryServiceUrl, e);
+			throw new SAMLComunicationException("Invalid attribute service url " + attributeQueryServiceUrl,
+					e);
 		}
 	}
 }

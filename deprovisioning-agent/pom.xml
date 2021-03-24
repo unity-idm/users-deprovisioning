@@ -10,7 +10,7 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>imunity.io</groupId>
-	<artifactId>deprovisionig-agent</artifactId>
+	<artifactId>deprovisioning-agent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>deprovisionig-agent</name>
 	<description>Unity user deprovisioning agent</description>

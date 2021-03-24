@@ -16,7 +16,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
@@ -37,7 +36,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.xmlbeans.XmlException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import eu.unicore.samly2.SAMLConstants;
@@ -57,27 +55,24 @@ public class SAMLMetadataManager
 	private static final Logger log = LogManager.getLogger(SAMLMetadataManager.class);
 	private static final int META_CONTENT_SIZE_LIMIT = 10240;
 	
-	private final Duration metadataValidityTime;
-	private final String metadataSource;
+	private SAMLMetadataConfiguration config;
 
 	private final NetworkClient networkClient;
 	private final WorkdirFileManager fileMan;
 
 	@Autowired
 	public SAMLMetadataManager(NetworkClient networkClient, WorkdirFileManager fileMan,
-			@Value("${saml.metadataValidityTime:1D}") Duration metadataValidityTime,
-			@Value("${saml.metadataSource:") String metadataSource)
+			SAMLMetadataConfiguration config)
 	{
 		this.networkClient = networkClient;
 		this.fileMan = fileMan;
-		this.metadataValidityTime = metadataValidityTime;
-		this.metadataSource = metadataSource;
+		this.config = config;
 	}
 
 	public Map<String, SAMLIdpInfo> getAttributeQueryAddressesAsMap() throws Exception
 	{
 		Map<String, SAMLIdpInfo> attrQueryAddr = new HashMap<>();
-		EntitiesDescriptorDocument metaDoc = getMetadaFromUri(metadataSource);
+		EntitiesDescriptorDocument metaDoc = getMetadaFromUri(config.metadataSource);
 		EntitiesDescriptorType meta = metaDoc.getEntitiesDescriptor();
 		searchAttributeQueryAddr(meta, attrQueryAddr);
 		return attrQueryAddr;
@@ -163,6 +158,8 @@ public class SAMLMetadataManager
 
 	public EntitiesDescriptorDocument getMetadaFromUri(String rawUri) throws Exception
 	{
+		log.debug("Getting saml metada from uri " + rawUri);
+		
 		URI uri = parseURI(rawUri);
 
 		if (!isWebReady(uri))
@@ -172,7 +169,7 @@ public class SAMLMetadataManager
 
 		String filePath = DigestUtils.md5Hex(uri.toString());
 		if (fileMan.exists(filePath) && fileMan.getLastModifiedTime(filePath)
-				.isAfter(Instant.now().minus(metadataValidityTime)))
+				.isAfter(Instant.now().minus(config.metadataValidityTime)))
 		{
 			return parseMetadataFile(fileMan.readFile(filePath));
 
@@ -205,7 +202,27 @@ public class SAMLMetadataManager
 	{
 		InputStream is = new BufferedInputStream(file);
 		String metadata = IOUtils.toString(is, Charset.defaultCharset());
-		EntitiesDescriptorDocument doc = EntitiesDescriptorDocument.Factory.parse(metadata);
+		EntitiesDescriptorDocument doc;
+		try
+		{
+			doc = EntitiesDescriptorDocument.Factory.parse(metadata);
+		} catch (XmlException e)
+		{
+			log.debug("Can not parse metadata as entities descriptor document, try parse to single entity descriptor");
+			try
+			{
+				EntityDescriptorType descType = EntityDescriptorType.Factory.parse(metadata);
+				doc = EntitiesDescriptorDocument.Factory.newInstance();
+				EntitiesDescriptorType newEntitiesDescriptor = doc.addNewEntitiesDescriptor();
+				newEntitiesDescriptor.set(descType.copy());
+
+			} catch (XmlException e2)
+			{
+				log.error("Can not parse metadata", e);
+				throw e;
+			}
+
+		}
 		is.close();
 		return doc;
 	}

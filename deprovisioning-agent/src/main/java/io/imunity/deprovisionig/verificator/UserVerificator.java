@@ -85,7 +85,7 @@ public class UserVerificator
 			}
 		}
 
-		log.info("Verification of " + extractedUnityUsers.size() + "users complete");
+		log.info("Verification of " + extractedUnityUsers.size() + " users complete");
 
 	}
 

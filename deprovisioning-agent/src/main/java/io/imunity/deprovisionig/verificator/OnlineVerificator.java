@@ -59,6 +59,12 @@ class OnlineVerificator
 
 		} catch (SAMLException e)
 		{
+			log.trace("Can not get user attributes from attribute query service", e);
+			if (!(e.getCause() instanceof SAMLErrorResponseException))
+			{
+				return false;
+			}
+			
 			SAMLErrorResponseException cause = (SAMLErrorResponseException) e.getCause();
 			if (SubStatus.STATUS2_UNKNOWN_PRINCIPAL.equals(cause.getSamlSubErrorId()))
 			{
