@@ -15,6 +15,7 @@ import java.time.Instant;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 
 import eu.unicore.util.configuration.ConfigurationException;
 import groovy.lang.Binding;
@@ -30,15 +31,21 @@ public class GroovyHookExecutor
 	private static final Logger log = LogManager.getLogger(GroovyHookExecutor.class);
 
 	private DeprovisioningConfiguration config;
+
+	private boolean hookEnabled;
 	
 
 	public GroovyHookExecutor(DeprovisioningConfiguration config)
 	{
 		this.config = config;
+		hookEnabled = !ObjectUtils.isEmpty(config.hookScript);
+			
 	}
 
 	public void runHook(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo, Instant scheduledRemovalTime)
 	{	
+		if (!hookEnabled)
+			return;
 		try (Reader scriptReader = getFileReader())
 		{
 			log.info("Trigger invocation of Groovy script {} on {}", config.hookScript, user.toLogString());
