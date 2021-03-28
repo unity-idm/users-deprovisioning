@@ -94,7 +94,7 @@ class OnlineVerificator
 	{
 		userStatusUpdater.changeUserStatusIfNeeded(user, identity, state, samlIdpInfo);
 		updateLastSuccessVerificationTime(user);
-		log.debug("Online verification successfull for user " + user.entityId);
+		log.info("Online verification successfull for user " + user.entityId);
 		return true;
 	}
 

@@ -50,7 +50,7 @@ public class UnityApiClient
 		try
 		{
 			client.put("/entity/" + entityId + "/status/" + state.toString(), Optional.empty());
-			log.debug("Set status of user " + entityId + " to " + state);
+			log.info("Set status of user " + entityId + " to " + state + " in linked Unity");
 		} catch (UnityException e)
 		{
 			log.error("Can not set status " + state.toString() + " of user" + entityId, e);
@@ -63,8 +63,8 @@ public class UnityApiClient
 		{
 			client.put("/entity/" + entityId + "/admin-schedule",
 					Optional.of(Map.of("when", String.valueOf(when), "operation", "REMOVE")));
-			log.debug("Shedule remove of user (login permit) " + entityId + " to "
-					+ Instant.ofEpochMilli(when));
+			log.info("Schedule remove of user (login permit) " + entityId + " to "
+					+ Instant.ofEpochMilli(when) + " in linked Unity");
 		} catch (UnityException e)
 		{
 			log.error("Can not shedule remove user", e);
@@ -77,7 +77,8 @@ public class UnityApiClient
 		{
 			client.put("/entity/" + entityId + "/removal-schedule",
 					Optional.of(Map.of("when", String.valueOf(when))));
-			log.debug("Shedule remove of user (with login permit) " + entityId + " to " + Instant.ofEpochMilli(when));
+			log.info("Schedule remove of user (with login permit) " + entityId + " to " 
+					+ Instant.ofEpochMilli(when) + " in linked Unity");
 		} catch (UnityException e)
 		{
 			log.error("Can not shedule remove user with login permit option", e);
@@ -90,8 +91,8 @@ public class UnityApiClient
 		{
 			client.put("/entity/" + entityId + "/attribute", ContentType.APPLICATION_JSON,
 					Optional.of(Constans.MAPPER.writeValueAsString(attribute)));
-			log.debug("Update attribute " + attribute.getName() + " of user " + entityId + ",set value to "
-					+ attribute.getValues());
+			log.info("Update attribute " + attribute.getName() + " of user " + entityId + ",set value to "
+					+ attribute.getValues() + " in linked Unity");
 		} catch (UnityException | JsonProcessingException e)
 		{
 			log.error("Can not update attribute " + attribute.getName() + " for user " + entityId, e);
@@ -108,7 +109,7 @@ public class UnityApiClient
 							.collect(Collectors.toMap(
 									e -> CUSTOM_EMAIL_VAR_PREFIX + e.getKey(),
 									Map.Entry::getValue)));
-			log.debug("Send email to the user " + entityId + " with params " + params);
+			log.info("Send email to the user " + entityId + " with params " + params);
 		} catch (UnityException e)
 		{
 			log.error("Can not send email via unity", e);
@@ -117,7 +118,7 @@ public class UnityApiClient
 
 	public Set<UnityUser> getUsers(String group)
 	{
-		log.debug("Get users from group " + group);
+		log.info("Getting users from group " + group);
 		MultiGroupMembers groupMemebers = null;
 		try
 		{

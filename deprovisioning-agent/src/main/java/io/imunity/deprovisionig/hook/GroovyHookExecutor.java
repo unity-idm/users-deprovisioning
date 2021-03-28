@@ -15,6 +15,7 @@ import java.time.Instant;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 
 import eu.unicore.util.configuration.ConfigurationException;
 import groovy.lang.Binding;
@@ -30,18 +31,25 @@ public class GroovyHookExecutor
 	private static final Logger log = LogManager.getLogger(GroovyHookExecutor.class);
 
 	private DeprovisioningConfiguration config;
+
+	private boolean hookEnabled;
 	
 
 	public GroovyHookExecutor(DeprovisioningConfiguration config)
 	{
 		this.config = config;
+		hookEnabled = !ObjectUtils.isEmpty(config.hookScript);
+			
 	}
 
-	public void runHook(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo, Instant removeTime)
+	public void runHook(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo, Instant scheduledRemovalTime)
 	{	
-		try(Reader scriptReader = getFileReader();)
+		if (!hookEnabled)
+			return;
+		try (Reader scriptReader = getFileReader())
 		{
-			runScript(scriptReader, getBinding(user, newStatus, idpInfo, removeTime));
+			log.info("Trigger invocation of Groovy script {} on {}", config.hookScript, user.toLogString());
+			runScript(scriptReader, getBinding(user, newStatus, idpInfo, scheduledRemovalTime));
 		} catch (Exception e)
 		{
 			log.error("Can not execute groovy script", e);
@@ -63,7 +71,6 @@ public class GroovyHookExecutor
 	private void runScript(Reader scriptReader, Binding binding)
 	{
 		GroovyShell shell = new GroovyShell(binding);
-		log.info("Triggers invocation of Groovy script: {}", config.hookScript);
 		shell.evaluate(scriptReader);
 		log.info("Groovy script: {} finished", config.hookScript);
 	}

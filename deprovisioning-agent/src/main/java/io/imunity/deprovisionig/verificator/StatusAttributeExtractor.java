@@ -71,7 +71,7 @@ class StatusAttributeExtractor
 			return EntityState.onlyLoginPermitted;
 		}
 
-		log.debug("Can not interpret new status of user " + user.entityId + " status=" + statusL);
+		log.warn("Can not interpret new status of user " + user.entityId + " status=" + statusL);
 		return user.entityState;
 	}
 }
