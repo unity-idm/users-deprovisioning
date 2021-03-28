@@ -78,10 +78,17 @@ public class UserVerificator
 			{
 				continue;
 			}
-
-			if (!onlineVerificator.verify(user, identity.get(), samlIdpInfo.get()))
+			
+			if (samlIdpInfo.get().attributeQueryServiceUrl.isEmpty())
 			{
-				processOnlineUnverifiedUser(user, identity.get(), samlIdpInfo.get());
+				offlineVerificator.verify(user, identity.get(), samlIdpInfo.get().technicalAdminEmail);
+			} else
+			{
+
+				if (!onlineVerificator.verify(user, identity.get(), samlIdpInfo.get()))
+				{
+					processOnlineUnverifiedUser(user, identity.get(), samlIdpInfo.get());
+				}
 			}
 		}
 

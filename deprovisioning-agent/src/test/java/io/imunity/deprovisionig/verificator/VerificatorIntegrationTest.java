@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -52,7 +53,8 @@ public class VerificatorIntegrationTest
 	@Mock
 	private UserStatusUpdater userStatusUpdater;
 
-	private SAMLIdpInfo samlIdpInfo;
+	private SAMLIdpInfo fullSamlIdpInfo;
+	private SAMLIdpInfo samlIdpInfoWithotAttrQuery;
 
 	@BeforeEach
 	public void init()
@@ -63,7 +65,8 @@ public class VerificatorIntegrationTest
 
 		verificator = new UserVerificator(samlMetadaMan, client, offlineVerificator, config, userStatusUpdater,
 				onlineVerificator);
-		samlIdpInfo = new SAMLIdpInfo("http://test.pl", "http://test.pl/attr", "test@test.pl");
+		fullSamlIdpInfo = new SAMLIdpInfo("http://test.pl", Optional.of("http://test.pl/attr"), "test@test.pl");
+		samlIdpInfoWithotAttrQuery = new SAMLIdpInfo("http://test.pl", Optional.empty(), "test@test.pl");
 	}
 
 	@Test
@@ -75,13 +78,12 @@ public class VerificatorIntegrationTest
 				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(7), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
-		when(samlMetadaMan.getAttributeQueryAddressesAsMap()).thenReturn(Map.of("http://test.pl", samlIdpInfo));
-		when(onlineVerificator.verify(eq(u1), eq(u1.identities.get(0)), eq(samlIdpInfo))).thenReturn(true);
+		when(samlMetadaMan.getAttributeQueryAddressesAsMap())
+				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
+		when(onlineVerificator.verify(eq(u1), eq(u1.identities.get(0)), eq(fullSamlIdpInfo))).thenReturn(true);
 
 		verificator.verifyUsers(Set.of(u1));
-
 		verify(offlineVerificator, never()).verify(eq(u1), eq(u1.identities.get(0)), eq("test@test.pl"));
-
 	}
 
 	@Test
@@ -92,11 +94,12 @@ public class VerificatorIntegrationTest
 						"http://test.pl")),
 				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(2), LocalDateTime.now().minusDays(8), null, null);
-		when(samlMetadaMan.getAttributeQueryAddressesAsMap()).thenReturn(Map.of("http://test.pl", samlIdpInfo));
+		when(samlMetadaMan.getAttributeQueryAddressesAsMap())
+				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
 
 		verificator.verifyUsers(Set.of(u1));
-		verify(userStatusUpdater, never()).changeUserStatusIfNeeded(eq(u1), eq(u1.identities.get(0)), eq(EntityState.onlyLoginPermitted),
-				eq(samlIdpInfo));
+		verify(userStatusUpdater, never()).changeUserStatusIfNeeded(eq(u1), eq(u1.identities.get(0)),
+				eq(EntityState.onlyLoginPermitted), eq(fullSamlIdpInfo));
 	}
 
 	@Test
@@ -113,12 +116,13 @@ public class VerificatorIntegrationTest
 						"http://test.pl")),
 				Set.of("/"), LocalDateTime.now().minusDays(2), null, LocalDateTime.now().minusDays(2),
 				null, null);
-		when(samlMetadaMan.getAttributeQueryAddressesAsMap()).thenReturn(Map.of("http://test.pl", samlIdpInfo));
+		when(samlMetadaMan.getAttributeQueryAddressesAsMap())
+				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
 
 		verificator.verifyUsers(Set.of(u1, u2));
 
-		verify(userStatusUpdater).changeUserStatusIfNeeded(eq(u1), eq(u1.identities.get(0)), eq(EntityState.onlyLoginPermitted),
-				eq(samlIdpInfo));
+		verify(userStatusUpdater).changeUserStatusIfNeeded(eq(u1), eq(u1.identities.get(0)),
+				eq(EntityState.onlyLoginPermitted), eq(fullSamlIdpInfo));
 
 	}
 
@@ -132,13 +136,32 @@ public class VerificatorIntegrationTest
 				LocalDateTime.now().minusDays(7), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
 
-		when(samlMetadaMan.getAttributeQueryAddressesAsMap()).thenReturn(Map.of("http://test.pl", samlIdpInfo));
+		when(samlMetadaMan.getAttributeQueryAddressesAsMap())
+				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
 
-		when(onlineVerificator.verify(eq(u1), eq(u1.identities.get(0)), eq(samlIdpInfo))).thenReturn(false);
+		when(onlineVerificator.verify(eq(u1), eq(u1.identities.get(0)), eq(fullSamlIdpInfo))).thenReturn(false);
 
 		verificator.verifyUsers(Set.of(u1));
 
 		verify(offlineVerificator).verify(eq(u1), eq(u1.identities.get(0)), eq("test@test.pl"));
-
 	}
+
+	@Test
+	public void shouldSkipOnlineVerificationWhenAttrQueryServiceIsEmpty() throws Exception
+	{
+		UnityUser u1 = new UnityUser(1L, EntityState.disabled,
+				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test",
+						"http://test.pl")),
+				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(8),
+				LocalDateTime.now().minusDays(7), LocalDateTime.now().minusDays(8),
+				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
+		when(samlMetadaMan.getAttributeQueryAddressesAsMap())
+				.thenReturn(Map.of("http://test.pl", samlIdpInfoWithotAttrQuery));
+
+		verificator.verifyUsers(Set.of(u1));
+
+		verify(onlineVerificator, never()).verify(eq(u1), eq(u1.identities.get(0)), eq(fullSamlIdpInfo));
+		verify(offlineVerificator).verify(eq(u1), eq(u1.identities.get(0)), eq("test@test.pl"));
+	}
+
 }

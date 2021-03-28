@@ -6,14 +6,15 @@
 package io.imunity.deprovisionig.saml.metadata;
 
 import java.util.Objects;
+import java.util.Optional;
 
 public class SAMLIdpInfo
 {
 	public final String id;
-	public final String attributeQueryServiceUrl;
+	public final Optional<String> attributeQueryServiceUrl;
 	public final String technicalAdminEmail;
 
-	public SAMLIdpInfo(String id, String attributeQueryServiceUrl, String technicalAdminEmail)
+	public SAMLIdpInfo(String id, Optional<String> attributeQueryServiceUrl, String technicalAdminEmail)
 	{
 		this.id = id;
 		this.attributeQueryServiceUrl = attributeQueryServiceUrl;
@@ -23,7 +24,8 @@ public class SAMLIdpInfo
 	@Override
 	public String toString()
 	{
-		return "SAML IDP " + id + " [attributeQueryService:" + attributeQueryServiceUrl
+		return "SAML IDP " + id + " [attributeQueryService:"
+				+ (attributeQueryServiceUrl.isPresent() ? attributeQueryServiceUrl.get() : "empty")
 				+ ", technicalAdminEmail:" + technicalAdminEmail + "]";
 	}
 

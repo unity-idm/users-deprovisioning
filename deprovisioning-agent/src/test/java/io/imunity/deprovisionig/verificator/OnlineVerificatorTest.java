@@ -81,7 +81,7 @@ public class OnlineVerificatorTest
 						"", Arrays.asList("active")))));
 
 		verificator.verify(u1, u1.identities.get(0),
-				new SAMLIdpInfo("http://test.pl", "http://test.pl/attr", "test@test.pl"));
+				new SAMLIdpInfo("http://test.pl", Optional.of("http://test.pl/attr"), "test@test.pl"));
 
 		verify(client).setUserStatus(eq(1L), eq(EntityState.valid));
 		ArgumentCaptor<Attribute> argument = ArgumentCaptor.forClass(Attribute.class);
@@ -111,7 +111,7 @@ public class OnlineVerificatorTest
 						SubStatus.STATUS2_UNKNOWN_PRINCIPAL, new Exception())));
 
 		verificator.verify(u1, u1.identities.get(0),
-				new SAMLIdpInfo("http://test.pl", "http://test.pl/attr", "test@test.pl"));
+				new SAMLIdpInfo("http://test.pl", Optional.of("http://test.pl/attr"), "test@test.pl"));
 
 		verify(client).setUserStatus(eq(1L), eq(EntityState.disabled));
 		verify(client).scheduleRemoveUser(eq(1L), anyLong());

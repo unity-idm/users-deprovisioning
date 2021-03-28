@@ -54,7 +54,7 @@ class OnlineVerificator
 		Optional<List<ParsedAttribute>> attributes;
 		try
 		{
-			attributes = samlAttrQueryClient.getAttributes(samlIdpInfo.attributeQueryServiceUrl,
+			attributes = samlAttrQueryClient.getAttributes(samlIdpInfo.attributeQueryServiceUrl.get(),
 					new NameID(identity.getValue(), SAMLConstants.NFORMAT_PERSISTENT));
 
 		} catch (SAMLException e)

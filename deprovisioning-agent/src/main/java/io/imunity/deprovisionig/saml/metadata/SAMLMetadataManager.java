@@ -54,7 +54,7 @@ public class SAMLMetadataManager
 	public static final Set<String> SUPPORTED_URL_SCHEMES = new HashSet<>(Arrays.asList("data", "http", "https"));
 	private static final Logger log = LogManager.getLogger(SAMLMetadataManager.class);
 	private static final int META_CONTENT_SIZE_LIMIT = 10240;
-	
+
 	private SAMLMetadataConfiguration config;
 
 	private final NetworkClient networkClient;
@@ -103,29 +103,27 @@ public class SAMLMetadataManager
 		AttributeAuthorityDescriptorType[] idpDefs = meta.getAttributeAuthorityDescriptorArray();
 		for (AttributeAuthorityDescriptorType idpDef : idpDefs)
 		{
-
-			Optional<EndpointType> saml2AttrService = getSaml2AttributeService(idpDef);
-
-			if (saml2AttrService.isEmpty())
-			{
-				log.debug("IDP of entity " + meta.getEntityID() + " doesn't support SAML2 - ignoring.");
-				continue;
-			}
-
-			result.put(meta.getEntityID(), new SAMLIdpInfo(meta.getEntityID(),
-					getSOAPEndpointLocation(saml2AttrService.get()), getTechnicalPersonEmail(meta)));
-
+			result.put(meta.getEntityID(),
+					new SAMLIdpInfo(meta.getEntityID(),
+							getSOAPEndpointLocation(getSaml2AttributeService(meta, idpDef)),
+							getTechnicalPersonEmail(meta)));
 		}
 	}
 
-	private String getSOAPEndpointLocation(EndpointType endpointType)
+	private Optional<String> getSOAPEndpointLocation(Optional<EndpointType> endpointType)
 	{
+		if (endpointType.isEmpty())
+		{
+			return Optional.empty();
+		}
+
 		final String UNITY_OLD_ENDPOINT_SUFFIX = "/saml2idp-soap";
 		final String UNITY_MISSING_ENDPOINT_PATH = "/AssertionQueryService";
-		String location = endpointType.getLocation();
-		return location.endsWith(UNITY_OLD_ENDPOINT_SUFFIX) ? location + UNITY_MISSING_ENDPOINT_PATH : location;
+		String location = endpointType.get().getLocation();
+		return Optional.of(location.endsWith(UNITY_OLD_ENDPOINT_SUFFIX) ? location + UNITY_MISSING_ENDPOINT_PATH
+				: location);
 	}
-	
+
 	private String getTechnicalPersonEmail(EntityDescriptorType idpDef)
 	{
 		Optional<ContactType> contactTechnical = Stream.of(idpDef.getContactPersonArray())
@@ -151,23 +149,31 @@ public class SAMLMetadataManager
 	}
 
 	@SuppressWarnings("unchecked")
-	public Optional<EndpointType> getSaml2AttributeService(AttributeAuthorityDescriptorType idpDef)
+	public Optional<EndpointType> getSaml2AttributeService(EntityDescriptorType meta,
+			AttributeAuthorityDescriptorType idpDef)
 	{
 		if (idpDef.getProtocolSupportEnumeration().stream().filter(s -> SAMLConstants.PROTOCOL_NS.equals(s))
 				.findAny().isEmpty())
 		{
+			log.debug("IDP of entity " + meta.getEntityID() + " doesn't support SAML2 - ignoring.");
 			return Optional.empty();
 		}
 
-		return Stream.of(idpDef.getAttributeServiceArray())
+		Optional<EndpointType> soapAttrQuery = Stream.of(idpDef.getAttributeServiceArray())
 				.filter(a -> a.getBinding().equals(SAMLConstants.BINDING_SOAP)).findAny();
 
+		if (soapAttrQuery.isEmpty())
+		{
+			log.debug("IDP of entity " + meta.getEntityID() + " doesn't support soap attribute query.");
+		}
+
+		return soapAttrQuery;
 	}
 
 	public EntitiesDescriptorDocument getMetadaFromUri(String rawUri) throws Exception
 	{
 		log.debug("Getting saml metada from uri " + rawUri);
-		
+
 		URI uri = parseURI(rawUri);
 
 		if (!isWebReady(uri))
