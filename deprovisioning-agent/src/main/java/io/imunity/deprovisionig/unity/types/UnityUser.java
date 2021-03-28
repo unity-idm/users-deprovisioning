@@ -70,6 +70,13 @@ public class UnityUser
 				+ lastOfflineVerificationAttempt;
 	}
 
+	public String toLogString()
+	{
+		return "User [" + entityId + "] status: " + entityState + " identities:"
+				+ identities.stream().map(id -> id.getTypeId() + ":" + id.getValue())
+						.collect(Collectors.toList());
+	}
+	
 	@Override
 	public boolean equals(final Object other)
 	{

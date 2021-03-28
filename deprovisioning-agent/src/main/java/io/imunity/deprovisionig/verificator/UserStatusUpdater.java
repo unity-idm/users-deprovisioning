@@ -48,23 +48,23 @@ class UserStatusUpdater
 
 		log.info("Change user status of " + identity + " to " + newStatus.toString());
 
-		Instant time = null;
+		Instant scheduledRemovalTime = null;
 		if (newStatus.equals(EntityState.onlyLoginPermitted))
 		{
-			time = getRemoveTime();
-			unityClient.scheduleRemoveUserWithLoginPermit(user.entityId, time.toEpochMilli());
+			scheduledRemovalTime = getRemoveTime();
+			unityClient.scheduleRemoveUserWithLoginPermit(user.entityId, scheduledRemovalTime.toEpochMilli());
 		} else if (newStatus.equals(EntityState.toRemove))
 		{
-			time = getRemoveTime();
+			scheduledRemovalTime = getRemoveTime();
 			unityClient.setUserStatus(user.entityId, EntityState.disabled);
-			unityClient.scheduleRemoveUser(user.entityId, time.toEpochMilli());
+			unityClient.scheduleRemoveUser(user.entityId, scheduledRemovalTime.toEpochMilli());
 
 		} else
 		{
 			unityClient.setUserStatus(user.entityId, newStatus);
 		}
 
-		groovyHook.runHook(user, newStatus, idpInfo, time);
+		groovyHook.runHook(user, newStatus, idpInfo, scheduledRemovalTime);
 	}
 
 	

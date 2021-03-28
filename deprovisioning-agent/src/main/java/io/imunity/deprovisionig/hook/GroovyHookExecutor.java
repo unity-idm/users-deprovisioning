@@ -37,11 +37,12 @@ public class GroovyHookExecutor
 		this.config = config;
 	}
 
-	public void runHook(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo, Instant removeTime)
+	public void runHook(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo, Instant scheduledRemovalTime)
 	{	
-		try(Reader scriptReader = getFileReader();)
+		try (Reader scriptReader = getFileReader())
 		{
-			runScript(scriptReader, getBinding(user, newStatus, idpInfo, removeTime));
+			log.info("Trigger invocation of Groovy script {} on {}", config.hookScript, user.toLogString());
+			runScript(scriptReader, getBinding(user, newStatus, idpInfo, scheduledRemovalTime));
 		} catch (Exception e)
 		{
 			log.error("Can not execute groovy script", e);
@@ -63,7 +64,6 @@ public class GroovyHookExecutor
 	private void runScript(Reader scriptReader, Binding binding)
 	{
 		GroovyShell shell = new GroovyShell(binding);
-		log.info("Triggers invocation of Groovy script: {}", config.hookScript);
 		shell.evaluate(scriptReader);
 		log.info("Groovy script: {} finished", config.hookScript);
 	}
