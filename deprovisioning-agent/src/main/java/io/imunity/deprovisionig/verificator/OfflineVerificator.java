@@ -45,7 +45,7 @@ class OfflineVerificator
 
 	boolean verify(UnityUser user, Identity identity, String technicalAdminEmail)
 	{
-		log.debug("Attempting offline verification of user " + user.entityId);
+		log.info("Attempting offline verification of user {} {}", user, identity);
 		LocalDateTime now = LocalDateTime.now();
 
 		LocalDateTime firstOfflineVerificationAttempt = now;
@@ -62,8 +62,8 @@ class OfflineVerificator
 		if (!now.isEqual(firstOfflineVerificationAttempt) && (now.isBefore(firstOfflineVerificationAttempt)
 				|| now.isAfter(firstOfflineVerificationAttempt.plus(config.offlineVerificationPeriod))))
 		{
-			log.debug("Skip offline verification for user " + identity
-					+ "(offlineVerificationPeriod has passed)");
+			log.debug("Skip offline verification for user {} {} (offlineVerificationPeriod has passed)",
+					user, identity);
 			return false;
 		}
 
@@ -89,10 +89,10 @@ class OfflineVerificator
 					.of(Constans.LAST_OFFLINE_VERIFICATION_ATTEMPT_ATTRIBUTE, now));
 		} else
 		{
-			log.debug("Skip send email to user " + identity + " (emailResendPeriod)");
+			log.debug("Skip send email to user {}{} (emailResendPeriod)", user, identity);
 		}
 
-		log.debug("Offline verification of " + identity + " complete");
+		log.debug("Offline verification of {} {} complete", user, identity);
 		return true;
 	}
 

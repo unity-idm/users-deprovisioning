@@ -38,9 +38,9 @@ public class UnityUserExtractor
 	public Set<UnityUser> extractUnityUsers()
 	{
 		log.info("Starting extraction of users from unity");
-		log.info("Excluded groups: " + config.excludedGroups);
-		log.info("Excluded users: " + config.excludedUsers);
-		log.info("Related users profile: " + config.relatedTranslationProfile);
+		log.info("Excluded groups: {}", config.excludedGroups);
+		log.info("Excluded users: {}", config.excludedUsers);
+		log.info("Related users profile: {}", config.relatedTranslationProfile);
 
 		LocalDateTime now = LocalDateTime.now();
 

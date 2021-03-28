@@ -50,7 +50,7 @@ public class UnityApiClient
 		try
 		{
 			client.put("/entity/" + entityId + "/status/" + state.toString(), Optional.empty());
-			log.info("Set status of user " + entityId + " to " + state + " in linked Unity");
+			log.info("Set status of user {} to {}", entityId, state);
 		} catch (UnityException e)
 		{
 			log.error("Can not set status " + state.toString() + " of user" + entityId, e);
@@ -63,8 +63,8 @@ public class UnityApiClient
 		{
 			client.put("/entity/" + entityId + "/admin-schedule",
 					Optional.of(Map.of("when", String.valueOf(when), "operation", "REMOVE")));
-			log.info("Schedule remove of user (login permit) " + entityId + " to "
-					+ Instant.ofEpochMilli(when) + " in linked Unity");
+			log.info("Schedule remove of user (login permit) {} to {}", entityId,
+					Instant.ofEpochMilli(when));
 		} catch (UnityException e)
 		{
 			log.error("Can not shedule remove user", e);
@@ -77,8 +77,8 @@ public class UnityApiClient
 		{
 			client.put("/entity/" + entityId + "/removal-schedule",
 					Optional.of(Map.of("when", String.valueOf(when))));
-			log.info("Schedule remove of user (with login permit) " + entityId + " to " 
-					+ Instant.ofEpochMilli(when) + " in linked Unity");
+			log.info("Schedule remove of user (with login permit) to {} in linked Unity", entityId,
+					Instant.ofEpochMilli(when));
 		} catch (UnityException e)
 		{
 			log.error("Can not shedule remove user with login permit option", e);
@@ -91,8 +91,8 @@ public class UnityApiClient
 		{
 			client.put("/entity/" + entityId + "/attribute", ContentType.APPLICATION_JSON,
 					Optional.of(Constans.MAPPER.writeValueAsString(attribute)));
-			log.info("Update attribute " + attribute.getName() + " of user " + entityId + ",set value to "
-					+ attribute.getValues() + " in linked Unity");
+			log.info("Update attribute {} of user {},set value to {} in linked Unity", attribute.getName(),
+					entityId, attribute.getValues());
 		} catch (UnityException | JsonProcessingException e)
 		{
 			log.error("Can not update attribute " + attribute.getName() + " for user " + entityId, e);
@@ -109,7 +109,7 @@ public class UnityApiClient
 							.collect(Collectors.toMap(
 									e -> CUSTOM_EMAIL_VAR_PREFIX + e.getKey(),
 									Map.Entry::getValue)));
-			log.info("Send email to the user " + entityId + " with params " + params);
+			log.info("Send email to the user {} with params {}", entityId, params);
 		} catch (UnityException e)
 		{
 			log.error("Can not send email via unity", e);
@@ -135,7 +135,8 @@ public class UnityApiClient
 	private Set<UnityUser> mapToUnityUsers(MultiGroupMembers groupMemebers, String group)
 	{
 		Set<UnityUser> users = new HashSet<>();
-		if (groupMemebers == null || groupMemebers.entities.isEmpty() || groupMemebers.members.get(group) == null)
+		if (groupMemebers == null || groupMemebers.entities.isEmpty()
+				|| groupMemebers.members.get(group) == null)
 		{
 			return users;
 		}
@@ -151,8 +152,9 @@ public class UnityApiClient
 			Entity entityFull = groupMemebers.entities.stream()
 					.filter(e -> e.getEntityInformation().getEntityId() == entity).findAny().get();
 
-			users.add(new UnityUser(entity, entityFull.getEntityInformation().getState(),
-					entityFull.getIdentities(),
+			users.add(new UnityUser(entity,
+					extractStringAttribute(Constans.DISPLAY_NAME_ATTRIBUTE, entityRootAttrs),
+					entityFull.getEntityInformation().getState(), entityFull.getIdentities(),
 					groupMemebers.members.entrySet().stream().filter(e -> e.getValue().stream()
 							.filter(ea -> ea.entityId == entity).findAny().isPresent())
 							.map(e -> e.getKey()).collect(Collectors.toSet()),
@@ -171,10 +173,22 @@ public class UnityApiClient
 		return users;
 	}
 
+	private String extractStringAttribute(String attrName, Optional<EntityGroupAttributes> entityGroupAttributes)
+	{
+		if (entityGroupAttributes.isEmpty())
+			return null;
+
+		Optional<Attribute> attr = entityGroupAttributes.get().attributes.stream()
+				.filter(a -> a.getName().equals(attrName)).findAny();
+		if (attr.isPresent() && attr.get().getValues() != null && attr.get().getValues().size() > 0)
+			return attr.get().getValues().get(0);
+
+		return null;
+	}
+
 	private LocalDateTime extractDataTimeAttribute(String attrName,
 			Optional<EntityGroupAttributes> entityGroupAttributes)
 	{
-
 		if (entityGroupAttributes.isEmpty())
 			return null;
 

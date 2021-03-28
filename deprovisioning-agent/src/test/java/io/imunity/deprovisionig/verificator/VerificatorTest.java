@@ -35,7 +35,7 @@ import io.imunity.deprovisionig.unity.types.Identity;
 import io.imunity.deprovisionig.unity.types.UnityUser;
 
 @ExtendWith(MockitoExtension.class)
-public class VerificatorIntegrationTest
+public class VerificatorTest
 {
 	private UserVerificator verificator;
 	@Mock
@@ -72,7 +72,7 @@ public class VerificatorIntegrationTest
 	@Test
 	public void shouldGotoOnlineVerification() throws Exception
 	{
-		UnityUser u1 = new UnityUser(1L, EntityState.disabled,
+		UnityUser u1 = new UnityUser(1L, "u1", EntityState.disabled,
 				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test",
 						"http://test.pl")),
 				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(8),
@@ -89,7 +89,7 @@ public class VerificatorIntegrationTest
 	@Test
 	public void shouldSkipDeprovisioningWhenInOnlinePeriod() throws Exception
 	{
-		UnityUser u1 = new UnityUser(1L, EntityState.disabled,
+		UnityUser u1 = new UnityUser(1L, "u1", EntityState.disabled,
 				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test",
 						"http://test.pl")),
 				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(8),
@@ -105,13 +105,13 @@ public class VerificatorIntegrationTest
 	@Test
 	public void shouldDisableUserAfterOfflinePeriod() throws Exception
 	{
-		UnityUser u1 = new UnityUser(1L, EntityState.valid,
+		UnityUser u1 = new UnityUser(1L, "u1", EntityState.valid,
 				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test",
 						"http://test.pl")),
 				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(7), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
-		UnityUser u2 = new UnityUser(2L, EntityState.valid,
+		UnityUser u2 = new UnityUser(2L, "u2", EntityState.valid,
 				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x2", "test",
 						"http://test.pl")),
 				Set.of("/"), LocalDateTime.now().minusDays(2), null, LocalDateTime.now().minusDays(2),
@@ -129,7 +129,7 @@ public class VerificatorIntegrationTest
 	@Test
 	public void shouldGoToOfflineVerificationAfterIneffectiveOnlineVerification() throws Exception
 	{
-		UnityUser u1 = new UnityUser(1L, EntityState.disabled,
+		UnityUser u1 = new UnityUser(1L, "u1",  EntityState.disabled,
 				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test",
 						"http://test.pl")),
 				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(8),
@@ -149,7 +149,7 @@ public class VerificatorIntegrationTest
 	@Test
 	public void shouldSkipOnlineVerificationWhenAttrQueryServiceIsEmpty() throws Exception
 	{
-		UnityUser u1 = new UnityUser(1L, EntityState.disabled,
+		UnityUser u1 = new UnityUser(1L, "u1", EntityState.disabled,
 				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test",
 						"http://test.pl")),
 				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(8),

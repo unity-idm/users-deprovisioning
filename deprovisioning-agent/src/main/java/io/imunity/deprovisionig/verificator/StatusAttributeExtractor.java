@@ -3,7 +3,6 @@
  * See LICENCE.txt file for licensing information.
  */
 
-
 package io.imunity.deprovisionig.verificator;
 
 import java.util.List;
@@ -20,16 +19,16 @@ import io.imunity.deprovisionig.unity.types.UnityUser;
 class StatusAttributeExtractor
 {
 	private static final Logger log = LogManager.getLogger(StatusAttributeExtractor.class);
-	
+
 	public static final String SAML_STATUS_ATTRIBUTE_NAME = "urn:oid:1.3.6.1.4.1.25178.1.2.19";
 	public static final String SAML_STATUS_ATTRIBUTE_SCHAC_PREFIX = "urn:schac:userStatus:";
-	
+
 	static EntityState getStatusFromAttributesOrFallbackToUserStatus(UnityUser user,
 			Optional<List<ParsedAttribute>> attributes)
 	{
 		if (attributes.isEmpty())
 		{
-			log.debug("No status attributes in saml response  for user " + user.entityId);
+			log.debug("No status attributes in saml response  for user {}", user);
 			return user.entityState;
 		}
 
@@ -41,21 +40,23 @@ class StatusAttributeExtractor
 		return mapToUnityStatusOrFallbackToUserStatus(user, statusAttr);
 	}
 
-	private static EntityState mapToUnityStatusOrFallbackToUserStatus(UnityUser user, Optional<ParsedAttribute> status)
+	private static EntityState mapToUnityStatusOrFallbackToUserStatus(UnityUser user,
+			Optional<ParsedAttribute> status)
 	{
-		if (!status.isPresent()) 
+		if (!status.isPresent())
 		{
-			log.debug("No status attributes in saml response  for user " + user.entityId);
+			log.debug("No status attributes in saml response  for user {}", user);
 			return EntityState.valid;
 		}
-		
+
 		if (status.get().getStringValues().isEmpty())
 		{
-			log.debug("Empty status attribute values in saml response  for user " + user.entityId);
+			log.debug("Empty status attribute values in saml response  for user {}" + user);
 			return user.entityState;
 		}
 
-		String statusL = Stream.of(status.get().getStringValues().get(0).toLowerCase().split(":")).reduce((first,last)->last).get();
+		String statusL = Stream.of(status.get().getStringValues().get(0).toLowerCase().split(":"))
+				.reduce((first, last) -> last).get();
 
 		if ("active".equals(statusL))
 		{
@@ -71,7 +72,7 @@ class StatusAttributeExtractor
 			return EntityState.onlyLoginPermitted;
 		}
 
-		log.warn("Can not interpret new status of user " + user.entityId + " status=" + statusL);
+		log.warn("Can not interpret new status of user {} status={}", user, statusL);
 		return user.entityState;
 	}
 }

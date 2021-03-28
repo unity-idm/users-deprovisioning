@@ -50,7 +50,7 @@ class OnlineVerificator
 
 	boolean verify(UnityUser user, Identity identity, SAMLIdpInfo samlIdpInfo)
 	{
-		log.debug("Online verification attempt of user " + identity);
+		log.info("Online verification attempt of user {} {}", user, identity);
 		Optional<List<ParsedAttribute>> attributes;
 		try
 		{
@@ -59,10 +59,9 @@ class OnlineVerificator
 
 		} catch (SAMLException e)
 		{
-			log.debug("Can not get user attributes from attribute query service", e);
 			if (!(e.getCause() instanceof SAMLErrorResponseException))
 			{
-				return false;
+				return fail(user, identity, e);
 			}
 
 			SAMLErrorResponseException cause = (SAMLErrorResponseException) e.getCause();
@@ -71,30 +70,39 @@ class OnlineVerificator
 				return success(user, identity, EntityState.toRemove, samlIdpInfo);
 			} else
 			{
-				return false;
+				return fail(user, identity, e);
 
 			}
 		} catch (Exception e)
 		{
-			log.debug("Online verification failure", e);
-			return false;
+			return fail(user, identity, e);
 		}
-		log.debug("Collected attributes for user " + identity + ": "
-				+ (attributes.isPresent()
+		log.debug("Collected attributes for user {} {}: {}", user, identity,
+				attributes.isPresent()
 						? attributes.get().stream()
 								.map(a -> a.getName() + "=" + a.getStringValues())
 								.collect(Collectors.toList())
-						: "empty"));
+						: "empty");
 
 		return success(user, identity, StatusAttributeExtractor
 				.getStatusFromAttributesOrFallbackToUserStatus(user, attributes), samlIdpInfo);
 	}
 
+	private boolean fail(UnityUser user, Identity identity, Exception e)
+	{
+		log.info("Online verification failed for user {} {} ", user, identity);
+		if (e != null)
+		{
+			log.debug("Online verification error:", e);
+		}
+		return false;
+	}
+	
 	private boolean success(UnityUser user, Identity identity, EntityState state, SAMLIdpInfo samlIdpInfo)
 	{
 		userStatusUpdater.changeUserStatusIfNeeded(user, identity, state, samlIdpInfo);
 		updateLastSuccessVerificationTime(user);
-		log.info("Online verification successfull for user " + user.entityId);
+		log.info("Online verification successfull for user {} {} ", user, identity);
 		return true;
 	}
 

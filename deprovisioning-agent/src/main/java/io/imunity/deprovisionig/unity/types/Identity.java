@@ -82,10 +82,10 @@ public class Identity
 	@Override
 	public String toString()
 	{
-		
-		return "[" + typeId + "]" + value;
+
+		return "[" + typeId + "=" + value + "]";
 	}
-	
+
 	@Override
 	public boolean equals(final Object other)
 	{

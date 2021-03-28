@@ -67,7 +67,7 @@ public class StatusAttributeExtractorTest
 
 	private UnityUser getUser(EntityState status)
 	{
-		return new UnityUser(1L, status,
+		return new UnityUser(1L, "u1", status,
 				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test")),
 				Set.of("/", "/A", "/B"), LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(),
 				LocalDateTime.now(), LocalDateTime.now());

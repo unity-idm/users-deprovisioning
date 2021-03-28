@@ -159,7 +159,7 @@ public class UnityUserExtractorTest
 			LocalDateTime lastAuthenticationTime, LocalDateTime lastSuccessHomeIdPVerification)
 	{
 
-		return new UnityUser(entityId, status, ids, groups, lastAuthenticationTime, (LocalDateTime) null,
+		return new UnityUser(entityId, "u1", status, ids, groups, lastAuthenticationTime, (LocalDateTime) null,
 				lastSuccessHomeIdPVerification, (LocalDateTime) null, (LocalDateTime) null);
 
 	}

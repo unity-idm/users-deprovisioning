@@ -155,7 +155,7 @@ public class SAMLMetadataManager
 		if (idpDef.getProtocolSupportEnumeration().stream().filter(s -> SAMLConstants.PROTOCOL_NS.equals(s))
 				.findAny().isEmpty())
 		{
-			log.debug("IDP of entity " + meta.getEntityID() + " doesn't support SAML2 - ignoring.");
+			log.debug("IDP of entity {} doesn't support SAML2 - ignoring.", meta.getEntityID());
 			return Optional.empty();
 		}
 
@@ -164,7 +164,7 @@ public class SAMLMetadataManager
 
 		if (soapAttrQuery.isEmpty())
 		{
-			log.debug("IDP of entity " + meta.getEntityID() + " doesn't support soap attribute query.");
+			log.debug("IDP of entity {} doesn't support soap attribute query.", meta.getEntityID());
 		}
 
 		return soapAttrQuery;
@@ -172,7 +172,7 @@ public class SAMLMetadataManager
 
 	public EntitiesDescriptorDocument getMetadaFromUri(String rawUri) throws Exception
 	{
-		log.debug("Getting saml metada from uri " + rawUri);
+		log.debug("Getting saml metada from uri {}", rawUri);
 
 		URI uri = parseURI(rawUri);
 

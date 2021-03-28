@@ -12,6 +12,8 @@ public interface Constans
 	public static final ObjectMapper MAPPER = new ObjectMapper();
 
 	public static final String LAST_AUTHENTICATION_ATTRIBUTE = "sys:LastAuthentication";
+	public static final String DISPLAY_NAME_ATTRIBUTE = "displayName";
+
 	
 	public static final String LAST_SUCCESS_HOME_IDP_VERIFICATION_ATTRIBUTE = "deprovisioning:lastSuccessHomeIdPVerificationTS";
 	public static final String FIRST_HOME_IDP_VERIFICATION_FAILURE_ATTRIBUTE = "deprovisioning:firstHomeIdpVerificationFailureTS";	

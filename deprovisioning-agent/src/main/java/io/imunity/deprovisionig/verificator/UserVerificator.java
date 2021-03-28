@@ -39,12 +39,11 @@ public class UserVerificator
 	private final OnlineVerificator onlineVerificator;
 
 	@Autowired
-	UserVerificator(SAMLMetadataManager samlMetadaMan,
-			UnityApiClient unityClient, OfflineVerificator offlineVerificator,
-			DeprovisioningConfiguration config, UserStatusUpdater userStatusUpdater,
-			OnlineVerificator onlineVerificator)
+	UserVerificator(SAMLMetadataManager samlMetadaMan, UnityApiClient unityClient,
+			OfflineVerificator offlineVerificator, DeprovisioningConfiguration config,
+			UserStatusUpdater userStatusUpdater, OnlineVerificator onlineVerificator)
 	{
-		
+
 		this.samlMetadaMan = samlMetadaMan;
 		this.unityClient = unityClient;
 		this.offlineVerificator = offlineVerificator;
@@ -55,32 +54,39 @@ public class UserVerificator
 
 	public void verifyUsers(Set<UnityUser> extractedUnityUsers)
 	{
-		log.info("Starting verification of " + extractedUnityUsers.size() + " users");
-		
+		log.info("Starting verification of {} users", extractedUnityUsers.size());
+
 		Optional<Map<String, SAMLIdpInfo>> attributeQueryAddressesAsMap = getAttributeQueryAddresses();
 		if (attributeQueryAddressesAsMap.isEmpty())
 			return;
-	
+
 		for (UnityUser user : extractedUnityUsers)
 		{
-			log.debug("Verify user " + user.entityId);
+			log.info("Verify user {}", user);
 			Optional<Identity> identity = user
 					.getIdentifierIdentityByProfile(config.relatedTranslationProfile);
 			if (identity.isEmpty())
 			{
-				log.info("Skipping user " + user.entityId + " without identifier identity from profile "
-						+ config.relatedTranslationProfile);
+				log.info("Skipping user {} without identifier identity from profile {}", user.entityId,
+						config.relatedTranslationProfile);
 				continue;
 			}
-			log.debug("Associated identity " + identity.get());
-			Optional<SAMLIdpInfo> samlIdpInfo = getSamlIdpInfoForUser(attributeQueryAddressesAsMap.get(), user, identity.get());
+			log.info("User identity associated with profile {}: {}", config.relatedTranslationProfile,
+					identity.get());
+			Optional<SAMLIdpInfo> samlIdpInfo = getSamlIdpInfoForUser(attributeQueryAddressesAsMap.get(),
+					user, identity.get());
 			if (samlIdpInfo.isEmpty())
 			{
+				log.warn("Can not find IDP with id {} in SAML metadata . Skip user verification {} {}",
+						identity.get().getRemoteIdp(), user, identity);
 				continue;
 			}
-			
+
 			if (samlIdpInfo.get().attributeQueryServiceUrl.isEmpty())
 			{
+
+				log.warn("Attribute query service for IDP  {} is not available, only offline verification is possible",
+						samlIdpInfo.get().id);
 				offlineVerificator.verify(user, identity.get(), samlIdpInfo.get().technicalAdminEmail);
 			} else
 			{
@@ -96,19 +102,14 @@ public class UserVerificator
 
 	}
 
-	private Optional<SAMLIdpInfo> getSamlIdpInfoForUser(Map<String, SAMLIdpInfo> attributeQueryAddressesAsMap, UnityUser user, Identity identity)
+	private Optional<SAMLIdpInfo> getSamlIdpInfoForUser(Map<String, SAMLIdpInfo> attributeQueryAddressesAsMap,
+			UnityUser user, Identity identity)
 	{
 		SAMLIdpInfo samlIdpInfo = attributeQueryAddressesAsMap.get(identity.getRemoteIdp());
-		if (samlIdpInfo == null)
-		{
-			log.debug("Can not find attribute query service address for IDP entity "
-					+ identity.getRemoteIdp() + ". Skip user verification "
-					+ user.entityId);
-		}
 		return Optional.ofNullable(samlIdpInfo);
 
 	}
-	
+
 	private Optional<Map<String, SAMLIdpInfo>> getAttributeQueryAddresses()
 	{
 		try
@@ -117,14 +118,14 @@ public class UserVerificator
 		} catch (Exception e)
 		{
 			log.error("Can not get saml metadata", e);
-			
+
 		}
 		return Optional.empty();
 	}
-	
+
 	private void processOnlineUnverifiedUser(UnityUser user, Identity identity, SAMLIdpInfo idpInfo)
 	{
-		log.debug("Process online unverified user " + identity);
+		log.info("Process online unverified user {} {}", user, identity);
 
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime firstHomeIdpVerificationFailure = now;
@@ -134,7 +135,7 @@ public class UserVerificator
 			firstHomeIdpVerificationFailure = user.firstHomeIdpVerificationFailure;
 		}
 
-		if (checkIsInOnlineOnlyVerificationTime(now, firstHomeIdpVerificationFailure, user))
+		if (checkIsInOnlineOnlyVerificationTime(now, firstHomeIdpVerificationFailure, user, identity))
 		{
 			return;
 		}
@@ -147,7 +148,7 @@ public class UserVerificator
 
 		userStatusUpdater.changeUserStatusIfNeeded(user, identity, EntityState.onlyLoginPermitted, idpInfo);
 	}
-	
+
 	private boolean updateFirstHomeIdpVerificationFailureAttributeIfNeeded(LocalDateTime now, UnityUser user)
 	{
 		if (user.firstHomeIdpVerificationFailure == null
@@ -162,14 +163,15 @@ public class UserVerificator
 		}
 		return true;
 	}
-	
-	private boolean checkIsInOnlineOnlyVerificationTime(LocalDateTime now, LocalDateTime firstHomeIdpVerificationFailure, UnityUser user)
+
+	private boolean checkIsInOnlineOnlyVerificationTime(LocalDateTime now,
+			LocalDateTime firstHomeIdpVerificationFailure, UnityUser user, Identity identity)
 	{
 		if (now.isEqual(firstHomeIdpVerificationFailure) || (now.isAfter(firstHomeIdpVerificationFailure) && now
 				.isBefore(firstHomeIdpVerificationFailure.plus(config.onlineOnlyVerificationPeriod))))
 		{
-			log.debug("Skip further verification of user " + user.entityId
-					+ "(is in onlineOnlyVerificationPeriod)");
+			log.info("Skip further verification of user {} {} (is in onlineOnlyVerificationPeriod)", user,
+					identity);
 			return true;
 		}
 		return false;

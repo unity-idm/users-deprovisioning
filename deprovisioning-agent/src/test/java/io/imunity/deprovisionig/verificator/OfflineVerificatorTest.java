@@ -56,7 +56,7 @@ public class OfflineVerificatorTest
 	public void shouldSkipWhenAfterOfflinePeriod()
 	{
 
-		UnityUser u1 = new UnityUser(1L, EntityState.disabled,
+		UnityUser u1 = new UnityUser(1L, "u1", EntityState.disabled,
 				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test",
 						"http://test.pl")),
 				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(11),
@@ -73,7 +73,7 @@ public class OfflineVerificatorTest
 	public void shouldSendEmailAndUpdateAttribute()
 	{
 
-		UnityUser u1 = new UnityUser(1L, EntityState.disabled,
+		UnityUser u1 = new UnityUser(1L, "u1", EntityState.disabled,
 				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test",
 						"http://test.pl")),
 				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(11),
@@ -99,7 +99,7 @@ public class OfflineVerificatorTest
 	public void shouldSkipSendEmailDueToEmailResendPeriod()
 	{
 
-		UnityUser u1 = new UnityUser(1L, EntityState.disabled,
+		UnityUser u1 = new UnityUser(1L, "u1", EntityState.disabled,
 				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test",
 						"http://test.pl")),
 				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(11),

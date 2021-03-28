@@ -3,7 +3,6 @@
  * See LICENCE.txt file for licensing information.
  */
 
-
 package io.imunity.deprovisionig.verificator;
 
 import java.time.Instant;
@@ -28,7 +27,7 @@ class UserStatusUpdater
 	private final GroovyHookExecutor groovyHook;
 	private final UnityApiClient unityClient;
 	private final DeprovisioningConfiguration config;
-	
+
 	@Autowired
 	UserStatusUpdater(GroovyHookExecutor groovyHook, UnityApiClient unityClient, DeprovisioningConfiguration config)
 	{
@@ -37,22 +36,22 @@ class UserStatusUpdater
 		this.config = config;
 	}
 
-
 	void changeUserStatusIfNeeded(UnityUser user, Identity identity, EntityState newStatus, SAMLIdpInfo idpInfo)
 	{
 		if (user.entityState.equals(newStatus))
 		{
-			log.debug("User status of " + identity + " remains unchanged (" + user.entityState + ")");
+			log.debug("User status of {} {} remains unchanged ({})", user, identity, user.entityState);
 			return;
 		}
 
-		log.info("Change user status of " + identity + " to " + newStatus.toString());
+		log.info("Change user status of {} {} to {}", user, identity, newStatus.toString());
 
 		Instant scheduledRemovalTime = null;
 		if (newStatus.equals(EntityState.onlyLoginPermitted))
 		{
 			scheduledRemovalTime = getRemoveTime();
-			unityClient.scheduleRemoveUserWithLoginPermit(user.entityId, scheduledRemovalTime.toEpochMilli());
+			unityClient.scheduleRemoveUserWithLoginPermit(user.entityId,
+					scheduledRemovalTime.toEpochMilli());
 		} else if (newStatus.equals(EntityState.toRemove))
 		{
 			scheduledRemovalTime = getRemoveTime();
@@ -67,7 +66,6 @@ class UserStatusUpdater
 		groovyHook.runHook(user, newStatus, idpInfo, scheduledRemovalTime);
 	}
 
-	
 	private Instant getRemoveTime()
 	{
 		return Instant.now().plus(config.removeUserCompletlyPeriod);

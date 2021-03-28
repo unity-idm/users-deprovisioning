@@ -69,7 +69,7 @@ public class OnlineVerificatorTest
 	@Test
 	public void shouldChangeUserStatusToValidAfterSuccessfullOnlineVerification() throws Exception
 	{
-		UnityUser u1 = new UnityUser(1L, EntityState.disabled,
+		UnityUser u1 = new UnityUser(1L, "u1", EntityState.disabled,
 				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test",
 						"http://test.pl")),
 				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(8),
@@ -99,7 +99,7 @@ public class OnlineVerificatorTest
 	@Test
 	public void shouldDisableUserWhenUnknownPrincipal() throws Exception
 	{
-		UnityUser u1 = new UnityUser(1L, EntityState.valid,
+		UnityUser u1 = new UnityUser(1L, "u1",  EntityState.valid,
 				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test",
 						"http://test.pl")),
 				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(8),
