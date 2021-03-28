@@ -108,7 +108,7 @@ public class SAMLMetadataManager
 
 			if (saml2AttrService.isEmpty())
 			{
-				log.debug("IDP of entity " + meta.getEntityID() + " doesn't support SAML2 - ignoring.");
+				log.info("IDP of entity " + meta.getEntityID() + " doesn't support SAML2 - ignoring");
 				continue;
 			}
 
@@ -216,7 +216,7 @@ public class SAMLMetadataManager
 			doc = EntitiesDescriptorDocument.Factory.parse(metadata);
 		} catch (XmlException e)
 		{
-			log.debug("Can not parse metadata as entities descriptor document, try parse to single entity descriptor");
+			log.debug("Can not parse metadata as entities descriptor document, trying to parse as a single entity descriptor");
 			try
 			{
 				EntityDescriptorType descType = EntityDescriptorType.Factory.parse(metadata);

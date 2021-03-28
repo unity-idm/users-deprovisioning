@@ -46,7 +46,7 @@ class UserStatusUpdater
 			return;
 		}
 
-		log.debug("Change user status of " + identity + " to " + newStatus.toString());
+		log.info("Change user status of " + identity + " to " + newStatus.toString());
 
 		Instant time = null;
 		if (newStatus.equals(EntityState.onlyLoginPermitted))

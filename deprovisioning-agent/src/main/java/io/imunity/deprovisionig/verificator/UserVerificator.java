@@ -68,7 +68,7 @@ public class UserVerificator
 					.getIdentifierIdentityByProfile(config.relatedTranslationProfile);
 			if (identity.isEmpty())
 			{
-				log.debug("Skippin user " + user.entityId + " without identifier identity from profile "
+				log.info("Skipping user " + user.entityId + " without identifier identity from profile "
 						+ config.relatedTranslationProfile);
 				continue;
 			}
