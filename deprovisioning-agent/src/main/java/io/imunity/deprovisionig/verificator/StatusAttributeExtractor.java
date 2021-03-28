@@ -29,6 +29,7 @@ class StatusAttributeExtractor
 	{
 		if (attributes.isEmpty())
 		{
+			log.debug("No status attributes in saml response  for user " + user.entityId);
 			return user.entityState;
 		}
 
@@ -42,9 +43,15 @@ class StatusAttributeExtractor
 
 	private static EntityState mapToUnityStatusOrFallbackToUserStatus(UnityUser user, Optional<ParsedAttribute> status)
 	{
-		if (status.isEmpty() || status.get().getStringValues().isEmpty())
+		if (!status.isPresent()) 
 		{
 			log.debug("No status attributes in saml response  for user " + user.entityId);
+			return EntityState.valid;
+		}
+		
+		if (status.get().getStringValues().isEmpty())
+		{
+			log.debug("Empty status attribute values in saml response  for user " + user.entityId);
 			return user.entityState;
 		}
 
