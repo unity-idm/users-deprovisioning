@@ -48,7 +48,7 @@ public class GroovyHookExecutor
 			return;
 		try (Reader scriptReader = getFileReader())
 		{
-			log.info("Trigger invocation of Groovy script {} on {}", config.hookScript, user.toLogString());
+			log.info("Trigger invocation of Groovy script {} on {}", config.hookScript, user);
 			runScript(scriptReader, getBinding(user, newStatus, idpInfo, scheduledRemovalTime));
 		} catch (Exception e)
 		{

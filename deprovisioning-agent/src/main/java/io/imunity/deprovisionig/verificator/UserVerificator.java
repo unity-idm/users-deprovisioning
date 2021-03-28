@@ -71,13 +71,13 @@ public class UserVerificator
 						config.relatedTranslationProfile);
 				continue;
 			}
-			log.info("User identity associated with profile {}: {}", config.relatedTranslationProfile,
+			log.debug("User identity associated with profile {}: {}", config.relatedTranslationProfile,
 					identity.get());
 			Optional<SAMLIdpInfo> samlIdpInfo = getSamlIdpInfoForUser(IdpsAsMap.get(),
 					user, identity.get());
 			if (samlIdpInfo.isEmpty())
 			{
-				log.warn("Can not find IDP with id {} in SAML metadata . Skip user verification {} {}",
+				log.info("Can not find IDP with id {} in SAML metadata . Skip user verification {} {}",
 						identity.get().getRemoteIdp(), user, identity);
 				continue;
 			}
@@ -85,7 +85,7 @@ public class UserVerificator
 			if (samlIdpInfo.get().attributeQueryServiceUrl.isEmpty())
 			{
 
-				log.warn("Attribute query service for IDP  {} is not available, only offline verification is possible",
+				log.info("Attribute query service for IDP  {} is not available, only offline verification is possible",
 						samlIdpInfo.get().id);
 				offlineVerificator.verify(user, identity.get(), samlIdpInfo.get().technicalAdminEmail);
 			} else

@@ -62,7 +62,7 @@ class OfflineVerificator
 		if (!now.isEqual(firstOfflineVerificationAttempt) && (now.isBefore(firstOfflineVerificationAttempt)
 				|| now.isAfter(firstOfflineVerificationAttempt.plus(config.offlineVerificationPeriod))))
 		{
-			log.debug("Skip offline verification for user {} {} (offlineVerificationPeriod has passed)",
+			log.info("Skip offline verification for user {} {} (offlineVerificationPeriod has passed)",
 					user, identity);
 			return false;
 		}
@@ -84,12 +84,14 @@ class OfflineVerificator
 			params.put(DEPROVISIONING_DATE_MESSAGE_TEMPLATE_PARAM,
 					deprovisioningDate.withNano(0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 
+			log.info("Sending offline verification email to user {} {}", user, identity);
+
 			unityClient.sendEmail(user.entityId, config.emailTemplate, params);
 			unityClient.updateAttribute(user.entityId, LocalDateTimeAttribute
 					.of(Constans.LAST_OFFLINE_VERIFICATION_ATTEMPT_ATTRIBUTE, now));
 		} else
 		{
-			log.debug("Skip send email to user {}{} (emailResendPeriod)", user, identity);
+			log.info("Skip send email to user {} {} (emailResendPeriod)", user, identity);
 		}
 
 		log.debug("Offline verification of {} {} complete", user, identity);

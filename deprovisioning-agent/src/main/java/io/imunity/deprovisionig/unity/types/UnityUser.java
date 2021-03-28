@@ -77,14 +77,6 @@ public class UnityUser
 		return "[" + entityId + "] " + (displayedName != null ? "[" + displayedName + "]" : "");	
 	}
 	
-	public String toLogString()
-	{
-		return "User [" + entityId + "] " + (displayedName != null ? "[" + displayedName + "]" : "")
-				+ " status: " + entityState + " identities:"
-				+ identities.stream().map(id -> id.getTypeId() + ":" + id.getValue())
-						.collect(Collectors.toList());
-	}
-
 	@Override
 	public boolean equals(final Object other)
 	{
