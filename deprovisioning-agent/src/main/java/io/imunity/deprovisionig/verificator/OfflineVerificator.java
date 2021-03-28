@@ -30,7 +30,7 @@ class OfflineVerificator
 
 	private static final String EMAIL_MESSAGE_TEMPLATE_PARAM = "email";
 	private static final String DAYSLEFT_MESSAGE_TEMPLATE_PARAM = "daysLeft";
-	private static final String DEPROVISIONING_DATE_MESSAGE_TEMPLATE_PARAM = "deprovisionigDate";
+	private static final String DEPROVISIONING_DATE_MESSAGE_TEMPLATE_PARAM = "deprovisioningDate";
 
 	private final DeprovisioningConfiguration config;
 	private final UnityApiClient unityClient;
