@@ -18,6 +18,7 @@ import io.imunity.deprovisionig.hook.GroovyHookExecutor;
 import io.imunity.deprovisionig.saml.metadata.SAMLIdpInfo;
 import io.imunity.deprovisionig.unity.UnityApiClient;
 import io.imunity.deprovisionig.unity.types.EntityState;
+import io.imunity.deprovisionig.unity.types.Identity;
 import io.imunity.deprovisionig.unity.types.UnityUser;
 
 @Component
@@ -37,15 +38,15 @@ class UserStatusUpdater
 	}
 
 
-	void changeUserStatusIfNeeded(UnityUser user, EntityState newStatus, SAMLIdpInfo idpInfo)
+	void changeUserStatusIfNeeded(UnityUser user, Identity identity, EntityState newStatus, SAMLIdpInfo idpInfo)
 	{
 		if (user.entityState.equals(newStatus))
 		{
-			log.debug("User status of " + user.entityId + " remains unchanged (" + user.entityState + ")");
+			log.debug("User status of " + identity + " remains unchanged (" + user.entityState + ")");
 			return;
 		}
 
-		log.debug("Change user status of " + user.entityId + " to " + newStatus.toString());
+		log.debug("Change user status of " + identity + " to " + newStatus.toString());
 
 		Instant time = null;
 		if (newStatus.equals(EntityState.onlyLoginPermitted))

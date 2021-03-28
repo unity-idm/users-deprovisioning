@@ -8,6 +8,7 @@ package io.imunity.deprovisionig.verificator;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,7 +51,7 @@ class OnlineVerificator
 
 	boolean verify(UnityUser user, Identity identity, SAMLIdpInfo samlIdpInfo)
 	{
-		log.debug("Online verification attempt of user " + user.entityId);
+		log.debug("Online verification attempt of user " + identity);
 		Optional<List<ParsedAttribute>> attributes;
 		try
 		{
@@ -59,16 +60,16 @@ class OnlineVerificator
 
 		} catch (SAMLException e)
 		{
-			log.trace("Can not get user attributes from attribute query service", e);
+			log.debug("Can not get user attributes from attribute query service", e);
 			if (!(e.getCause() instanceof SAMLErrorResponseException))
 			{
 				return false;
 			}
-			
+
 			SAMLErrorResponseException cause = (SAMLErrorResponseException) e.getCause();
 			if (SubStatus.STATUS2_UNKNOWN_PRINCIPAL.equals(cause.getSamlSubErrorId()))
 			{
-				return success(user, EntityState.toRemove, samlIdpInfo);
+				return success(user, identity, EntityState.toRemove, samlIdpInfo);
 			} else
 			{
 				return false;
@@ -76,17 +77,23 @@ class OnlineVerificator
 			}
 		} catch (Exception e)
 		{
-			log.trace("Online verification failure", e);
+			log.debug("Online verification failure", e);
 			return false;
 		}
+		log.debug("Collected attributes for user " + identity + ": "
+				+ (attributes.isPresent()
+						? attributes.get().stream()
+								.map(a -> a.getName() + "=" + a.getStringValues())
+								.collect(Collectors.toList())
+						: "empty"));
 
-		return success(user, StatusAttributeExtractor.getStatusFromAttributesOrFallbackToUserStatus(user,
-				attributes), samlIdpInfo);
+		return success(user, identity, StatusAttributeExtractor
+				.getStatusFromAttributesOrFallbackToUserStatus(user, attributes), samlIdpInfo);
 	}
 
-	private boolean success(UnityUser user, EntityState state, SAMLIdpInfo samlIdpInfo)
+	private boolean success(UnityUser user, Identity identity, EntityState state, SAMLIdpInfo samlIdpInfo)
 	{
-		userStatusUpdater.changeUserStatusIfNeeded(user, state, samlIdpInfo);
+		userStatusUpdater.changeUserStatusIfNeeded(user, identity, state, samlIdpInfo);
 		updateLastSuccessVerificationTime(user);
 		log.debug("Online verification successfull for user " + user.entityId);
 		return true;

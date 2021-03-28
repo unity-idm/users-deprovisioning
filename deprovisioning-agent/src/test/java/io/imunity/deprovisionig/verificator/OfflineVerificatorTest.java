@@ -49,7 +49,7 @@ public class OfflineVerificatorTest
 				Duration.ofDays(3), Duration.ofDays(10), Duration.ofDays(4), Duration.ofDays(2), "test",
 				"", new String[0], new String[0], "test", "", "", "", "test");
 
-		verificator = new OfflineVerificator(client, config, "test");
+		verificator = new OfflineVerificator(client, config);
 	}
 
 	@Test
@@ -63,7 +63,7 @@ public class OfflineVerificatorTest
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(4));
 
-		verificator.verify(u1, "test@test.pl");
+		verificator.verify(u1, u1.identities.get(0), "test@test.pl");
 
 		verify(client, never()).sendEmail(eq(1L), eq("test"), any());
 
@@ -80,7 +80,7 @@ public class OfflineVerificatorTest
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
 				LocalDateTime.now().minusDays(5), LocalDateTime.now().minusDays(4));
 
-		verificator.verify(u1, "test@test.pl");
+		verificator.verify(u1, u1.identities.get(0), "test@test.pl");
 
 		@SuppressWarnings("unchecked")
 		ArgumentCaptor<Map<String, String>> emailArgs = ArgumentCaptor.forClass(Map.class);
@@ -106,7 +106,7 @@ public class OfflineVerificatorTest
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
 				LocalDateTime.now().minusDays(9), LocalDateTime.now().minusDays(3));
 
-		verificator.verify(u1, "test@test.pl");
+		verificator.verify(u1, u1.identities.get(0), "test@test.pl");
 
 		verify(client, never()).sendEmail(eq(1L), eq("test"), any());
 	}

@@ -80,7 +80,7 @@ public class VerificatorIntegrationTest
 
 		verificator.verifyUsers(Set.of(u1));
 
-		verify(offlineVerificator, never()).verify(eq(u1), eq("test@test.pl"));
+		verify(offlineVerificator, never()).verify(eq(u1), eq(u1.identities.get(0)), eq("test@test.pl"));
 
 	}
 
@@ -95,7 +95,7 @@ public class VerificatorIntegrationTest
 		when(samlMetadaMan.getAttributeQueryAddressesAsMap()).thenReturn(Map.of("http://test.pl", samlIdpInfo));
 
 		verificator.verifyUsers(Set.of(u1));
-		verify(userStatusUpdater, never()).changeUserStatusIfNeeded(eq(u1), eq(EntityState.onlyLoginPermitted),
+		verify(userStatusUpdater, never()).changeUserStatusIfNeeded(eq(u1), eq(u1.identities.get(0)), eq(EntityState.onlyLoginPermitted),
 				eq(samlIdpInfo));
 	}
 
@@ -117,7 +117,7 @@ public class VerificatorIntegrationTest
 
 		verificator.verifyUsers(Set.of(u1, u2));
 
-		verify(userStatusUpdater).changeUserStatusIfNeeded(eq(u1), eq(EntityState.onlyLoginPermitted),
+		verify(userStatusUpdater).changeUserStatusIfNeeded(eq(u1), eq(u1.identities.get(0)), eq(EntityState.onlyLoginPermitted),
 				eq(samlIdpInfo));
 
 	}
@@ -138,7 +138,7 @@ public class VerificatorIntegrationTest
 
 		verificator.verifyUsers(Set.of(u1));
 
-		verify(offlineVerificator).verify(eq(u1), eq("test@test.pl"));
+		verify(offlineVerificator).verify(eq(u1), eq(u1.identities.get(0)), eq("test@test.pl"));
 
 	}
 }

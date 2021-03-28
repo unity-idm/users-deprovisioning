@@ -72,7 +72,7 @@ public class UserVerificator
 						+ config.relatedTranslationProfile);
 				continue;
 			}
-
+			log.debug("Associated identity " + identity.get());
 			Optional<SAMLIdpInfo> samlIdpInfo = getSamlIdpInfoForUser(attributeQueryAddressesAsMap.get(), user, identity.get());
 			if (samlIdpInfo.isEmpty())
 			{
@@ -81,7 +81,7 @@ public class UserVerificator
 
 			if (!onlineVerificator.verify(user, identity.get(), samlIdpInfo.get()))
 			{
-				processOnlineUnverifiedUser(user, samlIdpInfo.get());
+				processOnlineUnverifiedUser(user, identity.get(), samlIdpInfo.get());
 			}
 		}
 
@@ -115,9 +115,9 @@ public class UserVerificator
 		return Optional.empty();
 	}
 	
-	private void processOnlineUnverifiedUser(UnityUser user, SAMLIdpInfo idpInfo)
+	private void processOnlineUnverifiedUser(UnityUser user, Identity identity, SAMLIdpInfo idpInfo)
 	{
-		log.debug("Process online unverified user " + user.entityId);
+		log.debug("Process online unverified user " + identity);
 
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime firstHomeIdpVerificationFailure = now;
@@ -132,13 +132,13 @@ public class UserVerificator
 			return;
 		}
 
-		if (offlineVerificator.verify(user, idpInfo.technicalAdminEmail))
+		if (offlineVerificator.verify(user, identity, idpInfo.technicalAdminEmail))
 		{
 
 			return;
 		}
 
-		userStatusUpdater.changeUserStatusIfNeeded(user, EntityState.onlyLoginPermitted, idpInfo);
+		userStatusUpdater.changeUserStatusIfNeeded(user, identity, EntityState.onlyLoginPermitted, idpInfo);
 	}
 	
 	private boolean updateFirstHomeIdpVerificationFailureAttributeIfNeeded(LocalDateTime now, UnityUser user)

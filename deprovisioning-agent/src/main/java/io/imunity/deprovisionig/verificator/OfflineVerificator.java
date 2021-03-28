@@ -14,12 +14,12 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import io.imunity.deprovisionig.Constans;
 import io.imunity.deprovisionig.DeprovisioningConfiguration;
 import io.imunity.deprovisionig.unity.UnityApiClient;
+import io.imunity.deprovisionig.unity.types.Identity;
 import io.imunity.deprovisionig.unity.types.LocalDateTimeAttribute;
 import io.imunity.deprovisionig.unity.types.UnityUser;
 
@@ -36,15 +36,14 @@ class OfflineVerificator
 	private final UnityApiClient unityClient;
 
 	@Autowired
-	OfflineVerificator(UnityApiClient unityClient, DeprovisioningConfiguration config,
-			@Value("${unity.email.template:userDeprovisioning}") String emailTemplate)
+	OfflineVerificator(UnityApiClient unityClient, DeprovisioningConfiguration config)
 	{
 		this.unityClient = unityClient;
 		this.config = config;
 
 	}
 
-	boolean verify(UnityUser user, String technicalAdminEmail)
+	boolean verify(UnityUser user, Identity identity, String technicalAdminEmail)
 	{
 		log.debug("Attempting offline verification of user " + user.entityId);
 		LocalDateTime now = LocalDateTime.now();
@@ -63,7 +62,7 @@ class OfflineVerificator
 		if (!now.isEqual(firstOfflineVerificationAttempt) && (now.isBefore(firstOfflineVerificationAttempt)
 				|| now.isAfter(firstOfflineVerificationAttempt.plus(config.offlineVerificationPeriod))))
 		{
-			log.debug("Skip offline verification for user " + user.entityId
+			log.debug("Skip offline verification for user " + identity
 					+ "(offlineVerificationPeriod has passed)");
 			return false;
 		}
@@ -90,10 +89,10 @@ class OfflineVerificator
 					.of(Constans.LAST_OFFLINE_VERIFICATION_ATTEMPT_ATTRIBUTE, now));
 		} else
 		{
-			log.debug("Skip send email to user " + user.entityId + " (emailResendPeriod)");
+			log.debug("Skip send email to user " + identity + " (emailResendPeriod)");
 		}
 
-		log.debug("Offline verification of " + user.entityId + " complete");
+		log.debug("Offline verification of " + identity + " complete");
 		return true;
 	}
 
