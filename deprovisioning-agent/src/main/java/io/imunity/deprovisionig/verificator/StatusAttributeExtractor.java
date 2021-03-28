@@ -4,7 +4,7 @@
  */
 
 
-package io.imunity.deprovisionig.saml;
+package io.imunity.deprovisionig.verificator;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,14 +17,14 @@ import eu.unicore.samly2.attrprofile.ParsedAttribute;
 import io.imunity.deprovisionig.unity.types.EntityState;
 import io.imunity.deprovisionig.unity.types.UnityUser;
 
-public class StatusAttributeExtractor
+class StatusAttributeExtractor
 {
 	private static final Logger log = LogManager.getLogger(StatusAttributeExtractor.class);
 	
 	public static final String SAML_STATUS_ATTRIBUTE_NAME = "urn:oid:1.3.6.1.4.1.25178.1.2.19";
 	public static final String SAML_STATUS_ATTRIBUTE_SCHAC_PREFIX = "urn:schac:userStatus:";
 	
-	public static EntityState getStatusFromAttributesOrFallbackToUserStatus(UnityUser user,
+	static EntityState getStatusFromAttributesOrFallbackToUserStatus(UnityUser user,
 			Optional<List<ParsedAttribute>> attributes)
 	{
 		if (attributes.isEmpty())
