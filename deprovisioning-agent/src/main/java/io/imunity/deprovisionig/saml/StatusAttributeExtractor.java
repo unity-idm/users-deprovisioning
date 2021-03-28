@@ -37,12 +37,17 @@ public class StatusAttributeExtractor
 						|| a.getName().startsWith(SAML_STATUS_ATTRIBUTE_SCHAC_PREFIX))
 				.findAny();
 
-		return mapToUnityStatusOrFallbackToUserStatus(user, statusAttr);
+		return mapToUnityStatusOrFallbackToDefault(user, statusAttr);
 	}
 
-	private static EntityState mapToUnityStatusOrFallbackToUserStatus(UnityUser user, Optional<ParsedAttribute> status)
+	private static EntityState mapToUnityStatusOrFallbackToDefault(UnityUser user, Optional<ParsedAttribute> status)
 	{
-		if (status.isEmpty() || status.get().getStringValues().isEmpty())
+		if (status.isEmpty()) 
+		{
+			return EntityState.valid;
+		}
+		
+		if (status.get().getStringValues().isEmpty())
 		{
 			log.debug("No status attributes in saml response  for user " + user.entityId);
 			return user.entityState;

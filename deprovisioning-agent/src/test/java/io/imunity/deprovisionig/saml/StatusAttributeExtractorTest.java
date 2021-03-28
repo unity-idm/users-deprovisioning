@@ -28,10 +28,23 @@ import xmlbeans.org.oasis.saml2.assertion.AssertionDocument;
 
 public class StatusAttributeExtractorTest
 {
+	
 	@Test
-	public void shouldFallbackToUserStatus() throws XmlException, SAMLValidationException, IOException
+	public void shouldFallbackToActiveWhenEmptyStatusAttr() throws XmlException, SAMLValidationException, IOException
 	{
 		AssertionDocument doc = AssertionDocument.Factory.parse(new File("src/test/resources/responses/assertionWithoutStatusAttribute.xml"));
+		AttributeAssertionParser parser = new AttributeAssertionParser(doc.getAssertion());
+
+		EntityState newStatus = StatusAttributeExtractor.getStatusFromAttributesOrFallbackToUserStatus(
+				getUser(EntityState.disabled), Optional.of(parser.getAttributes()));
+
+		assertThat(newStatus, is(EntityState.valid));
+	}
+	
+	@Test
+	public void shouldFallbackToUserStatusWhenUnknownStatus() throws XmlException, SAMLValidationException, IOException
+	{
+		AssertionDocument doc = AssertionDocument.Factory.parse(new File("src/test/resources/responses/assertionWithUnknownStatusAttribute.xml"));
 		AttributeAssertionParser parser = new AttributeAssertionParser(doc.getAssertion());
 
 		EntityState newStatus = StatusAttributeExtractor.getStatusFromAttributesOrFallbackToUserStatus(
