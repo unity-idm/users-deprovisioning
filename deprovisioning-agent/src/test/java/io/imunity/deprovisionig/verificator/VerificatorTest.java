@@ -78,7 +78,7 @@ public class VerificatorTest
 				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(7), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
-		when(samlMetadaMan.getAttributeQueryAddressesAsMap())
+		when(samlMetadaMan.getIDPsAsMap())
 				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
 		when(onlineVerificator.verify(eq(u1), eq(u1.identities.get(0)), eq(fullSamlIdpInfo))).thenReturn(true);
 
@@ -94,7 +94,7 @@ public class VerificatorTest
 						"http://test.pl")),
 				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(2), LocalDateTime.now().minusDays(8), null, null);
-		when(samlMetadaMan.getAttributeQueryAddressesAsMap())
+		when(samlMetadaMan.getIDPsAsMap())
 				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
 
 		verificator.verifyUsers(Set.of(u1));
@@ -116,7 +116,7 @@ public class VerificatorTest
 						"http://test.pl")),
 				Set.of("/"), LocalDateTime.now().minusDays(2), null, LocalDateTime.now().minusDays(2),
 				null, null);
-		when(samlMetadaMan.getAttributeQueryAddressesAsMap())
+		when(samlMetadaMan.getIDPsAsMap())
 				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
 
 		verificator.verifyUsers(Set.of(u1, u2));
@@ -136,7 +136,7 @@ public class VerificatorTest
 				LocalDateTime.now().minusDays(7), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
 
-		when(samlMetadaMan.getAttributeQueryAddressesAsMap())
+		when(samlMetadaMan.getIDPsAsMap())
 				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
 
 		when(onlineVerificator.verify(eq(u1), eq(u1.identities.get(0)), eq(fullSamlIdpInfo))).thenReturn(false);
@@ -155,7 +155,7 @@ public class VerificatorTest
 				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(7), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
-		when(samlMetadaMan.getAttributeQueryAddressesAsMap())
+		when(samlMetadaMan.getIDPsAsMap())
 				.thenReturn(Map.of("http://test.pl", samlIdpInfoWithotAttrQuery));
 
 		verificator.verifyUsers(Set.of(u1));

@@ -69,22 +69,22 @@ public class SAMLMetadataManager
 		this.config = config;
 	}
 
-	public Map<String, SAMLIdpInfo> getAttributeQueryAddressesAsMap() throws Exception
+	public Map<String, SAMLIdpInfo> getIDPsAsMap() throws Exception
 	{
 		Map<String, SAMLIdpInfo> attrQueryAddr = new HashMap<>();
 		EntitiesDescriptorDocument metaDoc = getMetadaFromUri(config.metadataSource);
 		EntitiesDescriptorType meta = metaDoc.getEntitiesDescriptor();
-		searchAttributeQueryAddr(meta, attrQueryAddr);
+		getIDP(meta, attrQueryAddr);
 		return attrQueryAddr;
 	}
 
-	private void searchAttributeQueryAddr(EntitiesDescriptorType meta, Map<String, SAMLIdpInfo> result)
+	private void getIDP(EntitiesDescriptorType meta, Map<String, SAMLIdpInfo> result)
 	{
 		EntitiesDescriptorType[] nested = meta.getEntitiesDescriptorArray();
 		if (nested != null)
 		{
 			for (EntitiesDescriptorType nestedD : nested)
-				searchAttributeQueryAddr(nestedD, result);
+				getIDP(nestedD, result);
 		}
 		EntityDescriptorType[] entities = meta.getEntityDescriptorArray();
 
@@ -92,21 +92,11 @@ public class SAMLMetadataManager
 		{
 			for (EntityDescriptorType entity : entities)
 			{
-				searchAttributeQueryAddr(entity, result);
+				result.put(entity.getEntityID(), new SAMLIdpInfo(entity.getEntityID(),
+						getSOAPEndpointLocation(getSaml2AttributeService(entity,
+								entity.getAttributeAuthorityDescriptorArray())),
+						getTechnicalPersonEmail(entity)));
 			}
-		}
-	}
-
-	private void searchAttributeQueryAddr(EntityDescriptorType meta, Map<String, SAMLIdpInfo> result)
-	{
-
-		AttributeAuthorityDescriptorType[] idpDefs = meta.getAttributeAuthorityDescriptorArray();
-		for (AttributeAuthorityDescriptorType idpDef : idpDefs)
-		{
-			result.put(meta.getEntityID(),
-					new SAMLIdpInfo(meta.getEntityID(),
-							getSOAPEndpointLocation(getSaml2AttributeService(meta, idpDef)),
-							getTechnicalPersonEmail(meta)));
 		}
 	}
 
@@ -150,21 +140,28 @@ public class SAMLMetadataManager
 
 	@SuppressWarnings("unchecked")
 	public Optional<EndpointType> getSaml2AttributeService(EntityDescriptorType meta,
-			AttributeAuthorityDescriptorType idpDef)
+			AttributeAuthorityDescriptorType[] idpDefs)
 	{
-		if (idpDef.getProtocolSupportEnumeration().stream().filter(s -> SAMLConstants.PROTOCOL_NS.equals(s))
-				.findAny().isEmpty())
+		Optional<EndpointType> soapAttrQuery = Optional.empty();
+		for (AttributeAuthorityDescriptorType idpDef : idpDefs)
 		{
-			log.debug("IDP of entity {} doesn't support SAML2 - ignoring.", meta.getEntityID());
-			return Optional.empty();
-		}
+			if (idpDef.getProtocolSupportEnumeration().stream()
+					.filter(s -> SAMLConstants.PROTOCOL_NS.equals(s)).findAny().isEmpty())
+			{
+				log.debug("Attribute query services of {} doesn't support SAML2 - ignoring.",
+						meta.getEntityID());
+				return Optional.empty();
+			}
 
-		Optional<EndpointType> soapAttrQuery = Stream.of(idpDef.getAttributeServiceArray())
-				.filter(a -> a.getBinding().equals(SAMLConstants.BINDING_SOAP)).findAny();
+			soapAttrQuery = Stream.of(idpDef.getAttributeServiceArray())
+					.filter(a -> a.getBinding().equals(SAMLConstants.BINDING_SOAP)).findAny();
+			if (soapAttrQuery.isPresent())
+				break;
+		}
 
 		if (soapAttrQuery.isEmpty())
 		{
-			log.debug("IDP of entity {} doesn't support soap attribute query.", meta.getEntityID());
+			log.debug("IDP {} doesn't support soap attribute query.", meta.getEntityID());
 		}
 
 		return soapAttrQuery;

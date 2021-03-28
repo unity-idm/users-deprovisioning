@@ -56,8 +56,8 @@ public class UserVerificator
 	{
 		log.info("Starting verification of {} users", extractedUnityUsers.size());
 
-		Optional<Map<String, SAMLIdpInfo>> attributeQueryAddressesAsMap = getAttributeQueryAddresses();
-		if (attributeQueryAddressesAsMap.isEmpty())
+		Optional<Map<String, SAMLIdpInfo>> IdpsAsMap = getIDPs();
+		if (IdpsAsMap.isEmpty())
 			return;
 
 		for (UnityUser user : extractedUnityUsers)
@@ -73,7 +73,7 @@ public class UserVerificator
 			}
 			log.info("User identity associated with profile {}: {}", config.relatedTranslationProfile,
 					identity.get());
-			Optional<SAMLIdpInfo> samlIdpInfo = getSamlIdpInfoForUser(attributeQueryAddressesAsMap.get(),
+			Optional<SAMLIdpInfo> samlIdpInfo = getSamlIdpInfoForUser(IdpsAsMap.get(),
 					user, identity.get());
 			if (samlIdpInfo.isEmpty())
 			{
@@ -110,11 +110,11 @@ public class UserVerificator
 
 	}
 
-	private Optional<Map<String, SAMLIdpInfo>> getAttributeQueryAddresses()
+	private Optional<Map<String, SAMLIdpInfo>> getIDPs()
 	{
 		try
 		{
-			return Optional.of(samlMetadaMan.getAttributeQueryAddressesAsMap());
+			return Optional.of(samlMetadaMan.getIDPsAsMap());
 		} catch (Exception e)
 		{
 			log.error("Can not get saml metadata", e);
