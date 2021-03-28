@@ -113,11 +113,19 @@ public class SAMLMetadataManager
 			}
 
 			result.put(meta.getEntityID(), new SAMLIdpInfo(meta.getEntityID(),
-					saml2AttrService.get().getLocation(), getTechnicalPersonEmail(meta)));
+					getSOAPEndpointLocation(saml2AttrService.get()), getTechnicalPersonEmail(meta)));
 
 		}
 	}
 
+	private String getSOAPEndpointLocation(EndpointType endpointType)
+	{
+		final String UNITY_OLD_ENDPOINT_SUFFIX = "/saml2idp-soap";
+		final String UNITY_MISSING_ENDPOINT_PATH = "/AssertionQueryService";
+		String location = endpointType.getLocation();
+		return location.endsWith(UNITY_OLD_ENDPOINT_SUFFIX) ? location + UNITY_MISSING_ENDPOINT_PATH : location;
+	}
+	
 	private String getTechnicalPersonEmail(EntityDescriptorType idpDef)
 	{
 		Optional<ContactType> contactTechnical = Stream.of(idpDef.getContactPersonArray())

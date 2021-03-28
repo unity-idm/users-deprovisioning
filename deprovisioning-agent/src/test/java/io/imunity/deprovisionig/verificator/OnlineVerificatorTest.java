@@ -36,7 +36,6 @@ import io.imunity.deprovisionig.DeprovisioningConfiguration;
 import io.imunity.deprovisionig.common.exception.SAMLException;
 import io.imunity.deprovisionig.common.saml.AttributeQueryClient;
 import io.imunity.deprovisionig.hook.GroovyHookExecutor;
-import io.imunity.deprovisionig.saml.StatusAttributeExtractor;
 import io.imunity.deprovisionig.saml.metadata.SAMLIdpInfo;
 import io.imunity.deprovisionig.unity.UnityApiClient;
 import io.imunity.deprovisionig.unity.types.Attribute;

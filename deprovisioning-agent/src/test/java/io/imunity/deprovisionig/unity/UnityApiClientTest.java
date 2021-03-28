@@ -25,8 +25,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.imunity.deprovisionig.Constans;
-import io.imunity.deprovisionig.unity.UnityApiClient;
-import io.imunity.deprovisionig.unity.UnityRestClient;
 import io.imunity.deprovisionig.unity.types.Attribute;
 import io.imunity.deprovisionig.unity.types.EntityState;
 import io.imunity.deprovisionig.unity.types.MultiGroupMembers;
