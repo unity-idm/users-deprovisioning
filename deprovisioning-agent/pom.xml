@@ -88,6 +88,14 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<executable>true</executable>
+					<embeddedLaunchScriptProperties>
+						<logFilename>std_out.log</logFilename>
+						<logFolder>.</logFolder>
+						<pidFolder>.</pidFolder>
+					</embeddedLaunchScriptProperties>
+				</configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>

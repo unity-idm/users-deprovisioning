@@ -16,6 +16,7 @@
 		<fileSet>
 			<directory>target</directory>
 			<outputDirectory>/</outputDirectory>
+			<fileMode>0744</fileMode>
 			<includes>
 				<include>*.jar</include>
 			</includes>
