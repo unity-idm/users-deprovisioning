@@ -19,7 +19,7 @@
 		</dependency>
 		<dependency>
 			<groupId>io.imunity.deprovisioning</groupId>
-			<artifactId>common</artifactId>
+			<artifactId>deprovisioning-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>

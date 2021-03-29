@@ -11,7 +11,7 @@
 	<artifactId>deprovisioning-common</artifactId>
 	<packaging>jar</packaging>
 
-	<name>common</name>
+	<name>deprovisioning-common</name>
 
 	<dependencies>
 		<dependency>
