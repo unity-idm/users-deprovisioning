@@ -49,7 +49,7 @@ public class UnityApiClient
 	{
 		try
 		{
-			client.put("/entity/" + entityId + "/status/" + state.toString(), Optional.empty());
+			client.put("/v1/entity/" + entityId + "/status/" + state.toString(), Optional.empty());
 			log.info("Set status of user {} to {}", entityId, state);
 		} catch (UnityException e)
 		{
@@ -61,7 +61,7 @@ public class UnityApiClient
 	{
 		try
 		{
-			client.put("/entity/" + entityId + "/admin-schedule",
+			client.put("/v1/entity/" + entityId + "/admin-schedule",
 					Optional.of(Map.of("when", String.valueOf(when), "operation", "REMOVE")));
 			log.info("Schedule remove of user (login permit) {} to {}", entityId,
 					Instant.ofEpochMilli(when));
@@ -75,7 +75,7 @@ public class UnityApiClient
 	{
 		try
 		{
-			client.put("/entity/" + entityId + "/removal-schedule",
+			client.put("/v1/entity/" + entityId + "/removal-schedule",
 					Optional.of(Map.of("when", String.valueOf(when))));
 			log.info("Schedule remove of user (with login permit) to {} in linked Unity", entityId,
 					Instant.ofEpochMilli(when));
@@ -89,7 +89,7 @@ public class UnityApiClient
 	{
 		try
 		{
-			client.put("/entity/" + entityId + "/attribute", ContentType.APPLICATION_JSON,
+			client.put("/v1/entity/" + entityId + "/attribute", ContentType.APPLICATION_JSON,
 					Optional.of(Constans.MAPPER.writeValueAsString(attribute)));
 			log.info("Update attribute {} of user {},set value to {} in linked Unity", attribute.getName(),
 					entityId, attribute.getValues());
@@ -104,7 +104,7 @@ public class UnityApiClient
 	{
 		try
 		{
-			client.post("/userNotification-trigger/entity/" + entityId + "/template/" + template,
+			client.post("/v1/userNotification-trigger/entity/" + entityId + "/template/" + template,
 					params.entrySet().stream()
 							.collect(Collectors.toMap(
 									e -> CUSTOM_EMAIL_VAR_PREFIX + e.getKey(),
@@ -122,7 +122,7 @@ public class UnityApiClient
 		MultiGroupMembers groupMemebers = null;
 		try
 		{
-			groupMemebers = Constans.MAPPER.readValue(client.post("/group-members-multi/%2F",
+			groupMemebers = Constans.MAPPER.readValue(client.post("/v1/group-members-multi/%2F",
 					ContentType.APPLICATION_JSON, Optional.of("[]")), MultiGroupMembers.class);
 		} catch (UnityException | JsonProcessingException e)
 		{

@@ -12,7 +12,6 @@ import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Optional;
 
-
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -23,7 +22,6 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.protocol.HttpClientContext;
@@ -34,22 +32,20 @@ import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.util.EntityUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.imunity.deprovisionig.NetworkClient;
 import io.imunity.deprovisionig.common.exception.ConfigurationException;
 
 @Component
-public class UnityRestClient
+class UnityRestClient
 {
 	private final HttpHost host;
 	private final String restPath;
 	private final HttpClientContext context;
 	private final HttpClient client;
 
-	@Autowired
-	public UnityRestClient(NetworkClient networkClient, UnityConfiguration unityConfig)
+	UnityRestClient(NetworkClient networkClient, UnityConfiguration unityConfig)
 	{
 		URI uri;
 		try
@@ -65,28 +61,7 @@ public class UnityRestClient
 		client = networkClient.getClient(unityConfig.restUri);
 	}
 
-	public String get(String path) throws UnityException
-	{
-		HttpGet getReg;
-		try
-		{
-			getReg = new HttpGet(new URIBuilder(restPath + path).build());
-		} catch (URISyntaxException e)
-		{
-			throw new UnityException("Invalid unity url", e);
-		}
-		HttpResponse response = execute(getReg);
-
-		try
-		{
-			return EntityUtils.toString(response.getEntity());
-		} catch (ParseException | IOException e)
-		{
-			throw new UnityException("Can not parse unity response", e);
-		}
-	}
-
-	public String post(String path, ContentType contentType, Optional<String> content) throws UnityException
+	String post(String path, ContentType contentType, Optional<String> content) throws UnityException
 
 	{
 		HttpPost postReq;
@@ -124,7 +99,7 @@ public class UnityRestClient
 		}
 	}
 
-	public HttpResponse post(String path, Map<String, String> params) throws UnityException
+	HttpResponse post(String path, Map<String, String> params) throws UnityException
 
 	{
 		URIBuilder builder;
@@ -150,7 +125,7 @@ public class UnityRestClient
 		return response;
 	}
 
-	public HttpResponse put(String path, Optional<Map<String, String>> params) throws UnityException
+	HttpResponse put(String path, Optional<Map<String, String>> params) throws UnityException
 
 	{
 		URIBuilder builder;
@@ -179,7 +154,7 @@ public class UnityRestClient
 		return response;
 	}
 
-	public HttpResponse put(String path, ContentType contentType, Optional<String> content) throws UnityException
+	HttpResponse put(String path, ContentType contentType, Optional<String> content) throws UnityException
 	{
 		HttpPut putReq;
 		try

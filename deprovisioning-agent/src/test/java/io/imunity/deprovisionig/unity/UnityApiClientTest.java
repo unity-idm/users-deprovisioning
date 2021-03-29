@@ -48,7 +48,7 @@ public class UnityApiClientTest
 	{
 
 		apiClient.setUserStatus(1, EntityState.valid);
-		verify(restClient).put(eq("/entity/1/status/" + EntityState.valid.toString()), eq(Optional.empty()));
+		verify(restClient).put(eq("/v1/entity/1/status/" + EntityState.valid.toString()), eq(Optional.empty()));
 	}
 
 	@Test
@@ -56,7 +56,7 @@ public class UnityApiClientTest
 	{
 
 		apiClient.scheduleRemoveUser(1, 2);
-		verify(restClient).put(eq("/entity/1/admin-schedule"),
+		verify(restClient).put(eq("/v1/entity/1/admin-schedule"),
 				eq(Optional.of(Map.of("operation", "REMOVE", "when", String.valueOf(2)))));
 	}
 
@@ -65,7 +65,7 @@ public class UnityApiClientTest
 	{
 
 		apiClient.scheduleRemoveUserWithLoginPermit(1, 2);
-		verify(restClient).put(eq("/entity/1/removal-schedule"),
+		verify(restClient).put(eq("/v1/entity/1/removal-schedule"),
 				eq(Optional.of(Map.of("when", String.valueOf(2)))));
 	}
 
@@ -79,7 +79,7 @@ public class UnityApiClientTest
 
 		apiClient.updateAttribute(1, attr);
 
-		verify(restClient).put(eq("/entity/1/attribute"), eq(ContentType.APPLICATION_JSON),
+		verify(restClient).put(eq("/v1/entity/1/attribute"), eq(ContentType.APPLICATION_JSON),
 				eq(Optional.of(Constans.MAPPER.writeValueAsString(attr))));
 	}
 
@@ -88,19 +88,19 @@ public class UnityApiClientTest
 	{
 
 		apiClient.sendEmail(1, "x", Maps.of("days", "1"));
-		verify(restClient).post(eq("/userNotification-trigger/entity/1/template/x"),
+		verify(restClient).post(eq("/v1/userNotification-trigger/entity/1/template/x"),
 				eq(Maps.of("custom.days", "1")));
 	}
 
 	@Test
 	public void shouldCallGroupMembersMulti() throws UnityException, JsonProcessingException
 	{
-		when(restClient.post(eq("/group-members-multi/%2F"), eq(ContentType.APPLICATION_JSON),
+		when(restClient.post(eq("/v1/group-members-multi/%2F"), eq(ContentType.APPLICATION_JSON),
 				eq(Optional.of("[]"))))
 						.thenReturn(Constans.MAPPER.writeValueAsString(new MultiGroupMembers(
 								Collections.emptyList(), Collections.emptyMap())));
 		apiClient.getUsers("/A");
-		verify(restClient).post(eq("/group-members-multi/%2F"), eq(ContentType.APPLICATION_JSON),
+		verify(restClient).post(eq("/v1/group-members-multi/%2F"), eq(ContentType.APPLICATION_JSON),
 				eq(Optional.of("[]")));
 	}
 }
