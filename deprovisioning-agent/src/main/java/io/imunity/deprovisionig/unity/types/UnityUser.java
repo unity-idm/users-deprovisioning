@@ -74,7 +74,7 @@ public class UnityUser
 	@Override
 	public String toString()
 	{
-		return "[" + entityId + "] " + (displayedName != null ? "[" + displayedName + "]" : "");	
+		return "[" + entityId + "]" + (displayedName != null ? " [" + displayedName + "]" : "");	
 	}
 	
 	@Override

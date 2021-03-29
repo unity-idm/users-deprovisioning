@@ -63,8 +63,8 @@ public class UnityApiClient
 		{
 			client.put("/v1/entity/" + entityId + "/admin-schedule",
 					Optional.of(Map.of("when", String.valueOf(when), "operation", "REMOVE")));
-			log.info("Schedule remove of user (login permit) {} to {}", entityId,
-					Instant.ofEpochMilli(when));
+			log.info("Schedule remove on {} of {} user (login permit)", 
+					Instant.ofEpochMilli(when), entityId);
 		} catch (UnityException e)
 		{
 			log.error("Can not shedule remove user", e);
@@ -77,8 +77,8 @@ public class UnityApiClient
 		{
 			client.put("/v1/entity/" + entityId + "/removal-schedule",
 					Optional.of(Map.of("when", String.valueOf(when))));
-			log.info("Schedule remove of user (with login permit) to {} in linked Unity", entityId,
-					Instant.ofEpochMilli(when));
+			log.info("Schedule remove on {} of {} user (with login permit) in Unity", 
+					Instant.ofEpochMilli(when), entityId);
 		} catch (UnityException e)
 		{
 			log.error("Can not shedule remove user with login permit option", e);

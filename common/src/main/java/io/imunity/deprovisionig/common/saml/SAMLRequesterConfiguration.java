@@ -15,7 +15,7 @@ public class SAMLRequesterConfiguration
 	public final String requesterEntityId;
 	public final boolean signRequest;
 	public final boolean sslAuthn;
-	public final boolean  messageLogging;
+	public final boolean messageLogging;
 	
 	public SAMLRequesterConfiguration(@Value("${saml.requester.requesterEntityId}") String requesterEntityId,
 			@Value("${saml.requester.signRequest:true}") Boolean signRequest,
