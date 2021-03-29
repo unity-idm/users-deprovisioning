@@ -11,7 +11,7 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.imunity.deprovisioning</groupId>
-	<artifactId>parent</artifactId>
+	<artifactId>deprovisioning-parent</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Users deprovisioning aggregation and parent module</name>
@@ -35,7 +35,7 @@
 	</scm>
 
 	<modules>
-		<module>common</module>
+		<module>deprovisioning-common</module>
 		<module>attribute-query-client</module>
 		<module>deprovisioning-agent</module>
 	</modules>
