@@ -63,37 +63,57 @@ public class UserVerificator
 		for (UnityUser user : extractedUnityUsers)
 		{
 			log.info("Verify user {}", user);
-			Optional<Identity> identity = user
-					.getIdentifierIdentityByProfile(config.relatedTranslationProfile);
-			if (identity.isEmpty())
+
+			Optional<Identity> onlineVerifiableIdentity = user
+					.getIdentifierIdentityByProfile(config.inputProfilesForOnlineProcessing);
+			Optional<Identity> offlineOnlyVerifiableIdentity = user
+					.getIdentifierIdentityByProfile(config.inputProfilesForOfflineProcessingOnly);
+
+			if (onlineVerifiableIdentity.isEmpty() && offlineOnlyVerifiableIdentity.isEmpty())
 			{
-				log.info("Skipping user {} without identifier identity from profile {}", user.entityId,
-						config.relatedTranslationProfile);
-				continue;
-			}
-			log.debug("User identity associated with profile {}: {}", config.relatedTranslationProfile,
-					identity.get());
-			Optional<SAMLIdpInfo> samlIdpInfo = getSamlIdpInfoForUser(IdpsAsMap.get(),
-					user, identity.get());
-			if (samlIdpInfo.isEmpty())
-			{
-				log.info("Can not find IDP with id {} in SAML metadata . Skip user verification {} {}",
-						identity.get().getRemoteIdp(), user, identity);
+				log.info("Skipping user {} without identifier identity from online or offline processing profiles: {}, {}",
+						user, config.inputProfilesForOnlineProcessing,
+						config.inputProfilesForOfflineProcessingOnly);
 				continue;
 			}
 
-			if (samlIdpInfo.get().attributeQueryServiceUrl.isEmpty())
+			if (onlineVerifiableIdentity.isEmpty() && !offlineOnlyVerifiableIdentity.isEmpty())
 			{
+				log.info("User {} with identifier identity from offline only verification profile {}",
+						user, offlineOnlyVerifiableIdentity.get().getTranslationProfile());
 
+				offlineVerificator.verify(user, offlineOnlyVerifiableIdentity.get(),
+						config.fallbackOfflineVerificationAdminEmail);
+				continue;
+			}
+
+			log.debug("User identity associated with online processing profile {}: {}",
+					onlineVerifiableIdentity.get().getTranslationProfile(),
+					onlineVerifiableIdentity.get());
+			SAMLIdpInfo samlIdpInfo = getSamlIdpInfoForUser(IdpsAsMap.get(), user,
+					onlineVerifiableIdentity.get()).orElse(null);
+			if (samlIdpInfo == null)
+			{
+				log.info("Can not find IDP with id {} in SAML metadata . Go to offline user verification {} {}",
+						onlineVerifiableIdentity.get().getRemoteIdp(), user,
+						onlineVerifiableIdentity);
+				offlineVerificator.verify(user, onlineVerifiableIdentity.get(),
+						config.fallbackOfflineVerificationAdminEmail);
+				continue;
+			}
+
+			if (samlIdpInfo.attributeQueryServiceUrl.isEmpty())
+			{
 				log.info("Attribute query service for IDP  {} is not available, only offline verification is possible",
-						samlIdpInfo.get().id);
-				offlineVerificator.verify(user, identity.get(), samlIdpInfo.get().technicalAdminEmail);
+						samlIdpInfo.id);
+				offlineVerificator.verify(user, onlineVerifiableIdentity.get(),
+						getTechnicalAdminEmailFallbackToDefault(samlIdpInfo));
 			} else
 			{
 
-				if (!onlineVerificator.verify(user, identity.get(), samlIdpInfo.get()))
+				if (!onlineVerificator.verify(user, onlineVerifiableIdentity.get(), samlIdpInfo))
 				{
-					processOnlineUnverifiedUser(user, identity.get(), samlIdpInfo.get());
+					processOnlineUnverifiedUser(user, onlineVerifiableIdentity.get(), samlIdpInfo);
 				}
 			}
 		}
@@ -140,13 +160,20 @@ public class UserVerificator
 			return;
 		}
 
-		if (offlineVerificator.verify(user, identity, idpInfo.technicalAdminEmail))
+		if (offlineVerificator.verify(user, identity, getTechnicalAdminEmailFallbackToDefault(idpInfo)))
 		{
 
 			return;
 		}
 
 		userStatusUpdater.changeUserStatusIfNeeded(user, identity, EntityState.onlyLoginPermitted, idpInfo);
+	}
+
+	String getTechnicalAdminEmailFallbackToDefault(SAMLIdpInfo samlIdpInfo)
+	{
+		return samlIdpInfo.technicalAdminEmail == null || samlIdpInfo.technicalAdminEmail.isEmpty()
+				? config.fallbackOfflineVerificationAdminEmail
+				: samlIdpInfo.technicalAdminEmail;
 	}
 
 	private boolean updateFirstHomeIdpVerificationFailureAttributeIfNeeded(LocalDateTime now, UnityUser user)

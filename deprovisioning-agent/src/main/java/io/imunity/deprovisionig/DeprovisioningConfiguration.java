@@ -25,7 +25,8 @@ public class DeprovisioningConfiguration
 	public final String unityRootGroup;
 	public final Set<String> excludedGroups;
 	public final Set<String> excludedUsers;
-	public final String relatedTranslationProfile;
+	public final Set<String> inputProfilesForOnlineProcessing;
+	public final Set<String> inputProfilesForOfflineProcessingOnly;
 	public final String restUri;
 	public final String restUsername;
 	public final String restPassword;
@@ -34,6 +35,8 @@ public class DeprovisioningConfiguration
 	//HOOK
 	public final String hookScript;
 
+	public final String fallbackOfflineVerificationAdminEmail;
+	
 	public DeprovisioningConfiguration(@Value("${time.validAccountPeriod:14}") Duration validAccountPeriod,
 			@Value("${time.onlineOnlyVerificationPeriod:14}") Duration onlineOnlyVerificationPeriod,
 			@Value("${time.offlineVerificationPeriod:14}") Duration offlineVerificationPeriod,
@@ -43,16 +46,20 @@ public class DeprovisioningConfiguration
 			@Value("${unity.root.group:/}") String unityRootGroup,
 			@Value("${unity.exclude.groups:}") String[] excludedGroups,
 			@Value("${unity.exclude.users:}") String[] excludedUsers,
-			@Value("${unity.identifier.relatedProfile:}") String relatedTranslationProfile,
+			@Value("${unity.identifier.inputProfilesForOnlineProcessing:}") Set<String> inputProfilesForOnlineProcessing,
+			@Value("${unity.identifier.inputProfilesForOfflineProcessingOnly:}") Set<String> inputProfilesForOfflineProcessingOnly,
 			@Value("${unity.rest.uri}") String restUri,
 			@Value("${unity.rest.client.username}") String restUsername,
 			@Value("${unity.rest.client.password}") String restPassword,
-			@Value("${unity.email.template:userDeprovisioning}") String emailTemplate)
+			@Value("${unity.email.template:userDeprovisioning}") String emailTemplate,
+			@Value("${fallbackOfflineVerificationAdminEmail:}") String fallbackOfflineVerificationAdminEmail
+			)
 	{
 		this.unityRootGroup = unityRootGroup;
 		this.excludedGroups = Set.of(excludedGroups);
 		this.excludedUsers  = Set.of(excludedUsers);
-		this.relatedTranslationProfile = relatedTranslationProfile;
+		this.inputProfilesForOnlineProcessing = inputProfilesForOnlineProcessing;
+		this.inputProfilesForOfflineProcessingOnly = inputProfilesForOfflineProcessingOnly;
 		this.restUri = restUri;
 		this.restUsername = restUsername;
 		this.restPassword = restPassword;
@@ -65,6 +72,8 @@ public class DeprovisioningConfiguration
 		this.removeUserCompletlyPeriod = removeUserCompletlyPeriod;
 		
 		this.hookScript = hookScript;
+		
+		this.fallbackOfflineVerificationAdminEmail = fallbackOfflineVerificationAdminEmail;
 	}
 
 }

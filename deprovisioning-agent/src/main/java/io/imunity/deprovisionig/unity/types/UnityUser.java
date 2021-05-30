@@ -45,10 +45,10 @@ public class UnityUser
 		this.firstOfflineVerificationAttempt = firstOfflineVerificationAttempt;
 	}
 
-	public Optional<Identity> getIdentifierIdentityByProfile(String profile)
+	public Optional<Identity> getIdentifierIdentityByProfile(Set<String> profiles)
 	{
 		return identities.stream().filter(i -> i.getTypeId().equals(Constans.IDENTIFIER_IDENTITY)
-				&& profile.equals(i.getTranslationProfile())).findAny();
+				&& profiles.contains(i.getTranslationProfile())).findAny();
 	}
 
 	public LocalDateTime getLastSuccessfullOnlineVerificationTime()

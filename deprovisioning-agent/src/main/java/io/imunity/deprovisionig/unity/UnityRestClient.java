@@ -34,6 +34,7 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Component;
 
+import io.imunity.deprovisionig.DeprovisioningConfiguration;
 import io.imunity.deprovisionig.NetworkClient;
 import io.imunity.deprovisionig.common.exception.ConfigurationException;
 
@@ -45,7 +46,7 @@ class UnityRestClient
 	private final HttpClientContext context;
 	private final HttpClient client;
 
-	UnityRestClient(NetworkClient networkClient, UnityConfiguration unityConfig)
+	UnityRestClient(NetworkClient networkClient, DeprovisioningConfiguration unityConfig)
 	{
 		URI uri;
 		try

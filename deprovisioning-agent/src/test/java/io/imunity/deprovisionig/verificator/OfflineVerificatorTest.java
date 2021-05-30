@@ -15,6 +15,7 @@ import static org.mockito.Mockito.verify;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,7 +48,7 @@ public class OfflineVerificatorTest
 
 		DeprovisioningConfiguration config = new DeprovisioningConfiguration(Duration.ofDays(2),
 				Duration.ofDays(3), Duration.ofDays(10), Duration.ofDays(4), Duration.ofDays(2), "test",
-				"", new String[0], new String[0], "test", "", "", "", "test");
+				"", new String[0], new String[0], Set.of("test"), Collections.emptySet(), "", "", "", "test", "test@demo.com");
 
 		verificator = new OfflineVerificator(client, config);
 	}

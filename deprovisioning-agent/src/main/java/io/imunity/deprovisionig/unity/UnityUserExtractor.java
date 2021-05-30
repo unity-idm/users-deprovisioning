@@ -19,8 +19,7 @@ import io.imunity.deprovisionig.DeprovisioningConfiguration;
 import io.imunity.deprovisionig.unity.types.UnityUser;
 
 @Component
-public class UnityUserExtractor
-{
+public class UnityUserExtractor {
 	private static final Logger log = LogManager.getLogger(UnityUserExtractor.class);
 
 	private final UnityApiClient client;
@@ -35,13 +34,14 @@ public class UnityUserExtractor
 		this.config = config;
 	}
 
-	public Set<UnityUser> extractUnityUsers()
-	{
+	public Set<UnityUser> extractUnityUsers() {
 		log.info("Starting extraction of users from unity");
 		log.info("Excluded groups: {}", config.excludedGroups);
 		log.info("Excluded users: {}", config.excludedUsers);
-		log.info("Related users profile: {}", config.relatedTranslationProfile);
+		log.info("Input profiles for online processing: {}", config.inputProfilesForOnlineProcessing);
+		log.info("Input profiles for offline processing only: {}", config.inputProfilesForOfflineProcessingOnly);
 
+		
 		LocalDateTime now = LocalDateTime.now();
 
 		return client.getUsers(config.unityRootGroup).stream()
@@ -50,10 +50,12 @@ public class UnityUserExtractor
 
 				.filter(u -> !u.identities.stream().map(i -> i.getTypeId() + "::" + i.getValue())
 						.anyMatch(config.excludedUsers::contains))
-				.filter(u -> u.identities.stream()
-						.filter(i -> i.getTypeId().equals(Constans.IDENTIFIER_IDENTITY)
-								&& config.relatedTranslationProfile
-										.equals(i.getTranslationProfile()))
+				.filter(u -> u.identities.stream().filter(i -> i.getTypeId()
+						.equals(Constans.IDENTIFIER_IDENTITY)
+						&& (config.inputProfilesForOnlineProcessing
+								.contains(i.getTranslationProfile())
+								|| config.inputProfilesForOfflineProcessingOnly
+										.contains(i.getTranslationProfile())))
 						.count() > 0)
 				.filter(u -> u.lastAuthenticationTime == null || u.lastAuthenticationTime
 						.plus(config.validAccountPeriod).isBefore(now))
