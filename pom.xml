@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
@@ -11,8 +9,8 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.imunity.deprovisioning</groupId>
-	<artifactId>parent</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<artifactId>deprovisioning-parent</artifactId>
+	<version>1.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Users deprovisioning aggregation and parent module</name>
 	<organization>
@@ -25,7 +23,14 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<spring.boot.version>2.4.0</spring.boot.version>
 		<groovy.version>3.0.7</groovy.version>
+		<scm.base>scm:git:git@github.com:unity-idm/users-deprovisioning.git</scm.base>
 	</properties>
+
+	<scm>
+		<connection>${scm.base}</connection>
+		<developerConnection>${scm.base}</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
 
 	<modules>
 		<module>common</module>
@@ -34,6 +39,14 @@
 	</modules>
 
 	<build>
+		<extensions>
+			<extension>
+				<groupId>com.allogy.maven.wagon</groupId>
+				<artifactId>maven-s3-wagon</artifactId>
+				<version>1.2.0</version>
+			</extension>
+		</extensions>
+
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -148,31 +161,6 @@
 		
 		</dependencies>
 	</dependencyManagement>
-
-	<repositories>
-		<repository>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<id>central</id>
-			<name>Central Repository</name>
-			<url>https://repo.maven.apache.org/maven2</url>
-		</repository>
-		<repository>
-			<id>oss.sonatype.org-snapshot</id>
-			<url>http://oss.sonatype.org/content/repositories/snapshots</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>vaadin-addons</id>
-			<url>http://maven.vaadin.com/vaadin-addons</url>
-		</repository>
-	</repositories>
 
 	<distributionManagement>
 		<snapshotRepository>
