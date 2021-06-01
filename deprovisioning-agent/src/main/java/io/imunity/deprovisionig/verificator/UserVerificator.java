@@ -69,24 +69,27 @@ public class UserVerificator
 			Optional<Identity> offlineOnlyVerifiableIdentity = user
 					.getIdentifierIdentityByProfile(config.inputProfilesForOfflineProcessingOnly);
 
-			if (onlineVerifiableIdentity.isEmpty() && offlineOnlyVerifiableIdentity.isEmpty())
+			if (onlineVerifiableIdentity.isEmpty())
 			{
-				log.info("Skipping user {} without identifier identity from online or offline processing profiles: {}, {}",
-						user, config.inputProfilesForOnlineProcessing,
-						config.inputProfilesForOfflineProcessingOnly);
-				continue;
+				if (offlineOnlyVerifiableIdentity.isEmpty())
+				{
+					log.info("Skipping user {} without identifier identity from online or offline processing profiles: {}, {}",
+							user, config.inputProfilesForOnlineProcessing,
+							config.inputProfilesForOfflineProcessingOnly);
+					continue;
+				}
+
+				else
+				{
+					log.info("User {} with identifier identity from offline only verification profile {}",
+							user,
+							offlineOnlyVerifiableIdentity.get().getTranslationProfile());
+
+					offlineVerificator.verify(user, offlineOnlyVerifiableIdentity.get(),
+							config.fallbackOfflineVerificationAdminEmail);
+					continue;
+				}
 			}
-
-			if (onlineVerifiableIdentity.isEmpty() && !offlineOnlyVerifiableIdentity.isEmpty())
-			{
-				log.info("User {} with identifier identity from offline only verification profile {}",
-						user, offlineOnlyVerifiableIdentity.get().getTranslationProfile());
-
-				offlineVerificator.verify(user, offlineOnlyVerifiableIdentity.get(),
-						config.fallbackOfflineVerificationAdminEmail);
-				continue;
-			}
-
 			log.debug("User identity associated with online processing profile {}: {}",
 					onlineVerifiableIdentity.get().getTranslationProfile(),
 					onlineVerifiableIdentity.get());

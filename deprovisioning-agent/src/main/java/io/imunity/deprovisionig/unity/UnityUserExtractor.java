@@ -7,6 +7,7 @@ package io.imunity.deprovisionig.unity;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -46,22 +47,44 @@ public class UnityUserExtractor {
 
 		return client.getUsers(config.unityRootGroup).stream()
 				.filter(u -> u.groups.contains(config.unityRootGroup))
-				.filter(u -> !u.groups.stream().anyMatch(config.excludedGroups::contains))
-
-				.filter(u -> !u.identities.stream().map(i -> i.getTypeId() + "::" + i.getValue())
-						.anyMatch(config.excludedUsers::contains))
-				.filter(u -> u.identities.stream().filter(i -> i.getTypeId()
-						.equals(Constans.IDENTIFIER_IDENTITY)
-						&& (config.inputProfilesForOnlineProcessing
-								.contains(i.getTranslationProfile())
-								|| config.inputProfilesForOfflineProcessingOnly
-										.contains(i.getTranslationProfile())))
-						.count() > 0)
-				.filter(u -> u.lastAuthenticationTime == null || u.lastAuthenticationTime
-						.plus(config.validAccountPeriod).isBefore(now))
-				.filter(u -> u.lastSuccessHomeIdPVerification == null
-						|| u.lastSuccessHomeIdPVerification.plus(config.validAccountPeriod)
-								.isBefore(now))
+				.filter(notInExludedGroups())
+				.filter(notInExludedUsers())
+				.filter(hasIdentitiesWithInputProfiles())
+				.filter(hasValidAuthenticationTime(now))
+				.filter(hasValidLastSuccessHomeIdPVerificationTime(now))
 				.collect(Collectors.toSet());
 	}
+	
+	private Predicate<UnityUser> hasIdentitiesWithInputProfiles()
+	{
+		return u -> u.identities.stream().filter(i -> i.getTypeId().equals(Constans.IDENTIFIER_IDENTITY)
+				&& (config.inputProfilesForOnlineProcessing.contains(i.getTranslationProfile())
+						|| config.inputProfilesForOfflineProcessingOnly
+								.contains(i.getTranslationProfile())))
+				.count() > 0;
+	}
+
+	private Predicate<UnityUser> hasValidAuthenticationTime(LocalDateTime now)
+	{
+		return u -> u.lastAuthenticationTime == null
+				|| u.lastAuthenticationTime.plus(config.validAccountPeriod).isBefore(now);
+	}
+
+	private Predicate<UnityUser> hasValidLastSuccessHomeIdPVerificationTime(LocalDateTime now)
+	{
+		return u -> u.lastSuccessHomeIdPVerification == null
+				|| u.lastSuccessHomeIdPVerification.plus(config.validAccountPeriod).isBefore(now);
+	}
+
+	private Predicate<UnityUser> notInExludedGroups()
+	{
+		return u -> !u.groups.stream().anyMatch(config.excludedGroups::contains);
+	}
+
+	private Predicate<UnityUser> notInExludedUsers()
+	{
+		return u -> !u.identities.stream().map(i -> i.getTypeId() + "::" + i.getValue())
+				.anyMatch(config.excludedUsers::contains);
+	}
+
 }
