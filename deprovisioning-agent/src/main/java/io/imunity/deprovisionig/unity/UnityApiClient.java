@@ -147,16 +147,16 @@ public class UnityApiClient
 		for (Long entity : targetEntities)
 		{
 			Optional<EntityGroupAttributes> entityRootAttrs = groupMemebers.members.get("/").stream()
-					.filter(ea -> ea.entityId == entity).findAny();
+					.filter(ea -> ea.entityId == entity.longValue()).findAny();
 
 			Entity entityFull = groupMemebers.entities.stream()
-					.filter(e -> e.getEntityInformation().getEntityId() == entity).findAny().get();
+					.filter(e -> e.getEntityInformation().getEntityId().equals(entity)).findAny().get();
 
 			users.add(new UnityUser(entity,
 					extractStringAttribute(Constans.DISPLAY_NAME_ATTRIBUTE, entityRootAttrs),
 					entityFull.getEntityInformation().getState(), entityFull.getIdentities(),
 					groupMemebers.members.entrySet().stream().filter(e -> e.getValue().stream()
-							.filter(ea -> ea.entityId == entity).findAny().isPresent())
+							.filter(ea -> ea.entityId == entity.longValue()).findAny().isPresent())
 							.map(e -> e.getKey()).collect(Collectors.toSet()),
 					extractDataTimeAttribute(Constans.LAST_AUTHENTICATION_ATTRIBUTE,
 							entityRootAttrs),
