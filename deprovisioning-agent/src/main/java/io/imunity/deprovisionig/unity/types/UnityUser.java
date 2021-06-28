@@ -61,6 +61,12 @@ public class UnityUser
 				: notEmptylastHomeIdpVerification;
 	}
 	
+	public LocalDateTime getLastAuthenticationTimeFallbackToDefault()
+	{
+		LocalDateTime maxOld = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
+		return lastAuthenticationTime == null ? maxOld : lastAuthenticationTime;
+	}
+	
 	public String toFullString()
 	{
 		return "User " + entityId + " status: " + entityState + " groups:" + groups + " identities:"

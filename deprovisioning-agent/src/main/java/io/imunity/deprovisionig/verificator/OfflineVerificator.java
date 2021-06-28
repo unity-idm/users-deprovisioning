@@ -50,7 +50,7 @@ class OfflineVerificator
 
 		LocalDateTime firstOfflineVerificationAttempt = now;
 		if (user.firstOfflineVerificationAttempt == null
-				|| user.firstOfflineVerificationAttempt.isBefore(user.lastAuthenticationTime))
+				|| user.firstOfflineVerificationAttempt.isBefore(user.getLastAuthenticationTimeFallbackToDefault()))
 		{
 			unityClient.updateAttribute(user.entityId, LocalDateTimeAttribute
 					.of(Constans.FIRST_OFFLINE_VERIFICATION_ATTEMPT_ATTRIBUTE, now));

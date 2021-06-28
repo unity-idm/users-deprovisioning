@@ -182,7 +182,7 @@ public class UserVerificator
 	private boolean updateFirstHomeIdpVerificationFailureAttributeIfNeeded(LocalDateTime now, UnityUser user)
 	{
 		if (user.firstHomeIdpVerificationFailure == null
-				|| user.firstHomeIdpVerificationFailure.isBefore(user.lastAuthenticationTime))
+				|| user.firstHomeIdpVerificationFailure.isBefore(user.getLastAuthenticationTimeFallbackToDefault()))
 		{
 
 			unityClient.updateAttribute(user.entityId, LocalDateTimeAttribute
