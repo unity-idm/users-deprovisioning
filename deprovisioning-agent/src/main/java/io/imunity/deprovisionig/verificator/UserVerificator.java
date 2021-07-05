@@ -85,8 +85,7 @@ public class UserVerificator
 							user,
 							offlineOnlyVerifiableIdentity.get().getTranslationProfile());
 
-					offlineVerificator.verify(user, offlineOnlyVerifiableIdentity.get(),
-							config.fallbackOfflineVerificationAdminEmail);
+					processOfflineOnlyVerification(user, offlineOnlyVerifiableIdentity.get(), null);
 					continue;
 				}
 			}
@@ -100,8 +99,7 @@ public class UserVerificator
 				log.info("Can not find IDP with id {} in SAML metadata . Go to offline user verification {} {}",
 						onlineVerifiableIdentity.get().getRemoteIdp(), user,
 						onlineVerifiableIdentity);
-				offlineVerificator.verify(user, onlineVerifiableIdentity.get(),
-						config.fallbackOfflineVerificationAdminEmail);
+				processOfflineOnlyVerification(user, onlineVerifiableIdentity.get(), null);
 				continue;
 			}
 
@@ -109,8 +107,8 @@ public class UserVerificator
 			{
 				log.info("Attribute query service for IDP  {} is not available, only offline verification is possible",
 						samlIdpInfo.id);
-				offlineVerificator.verify(user, onlineVerifiableIdentity.get(),
-						getTechnicalAdminEmailFallbackToDefault(samlIdpInfo));
+				processOfflineOnlyVerification(user, onlineVerifiableIdentity.get(), samlIdpInfo);
+				
 			} else
 			{
 
@@ -163,6 +161,11 @@ public class UserVerificator
 			return;
 		}
 
+		processOfflineOnlyVerification(user, identity, idpInfo);
+	}
+	
+	private void processOfflineOnlyVerification(UnityUser user, Identity identity, SAMLIdpInfo idpInfo)
+	{
 		if (offlineVerificator.verify(user, identity, getTechnicalAdminEmailFallbackToDefault(idpInfo)))
 		{
 
@@ -171,10 +174,9 @@ public class UserVerificator
 
 		userStatusUpdater.changeUserStatusIfNeeded(user, identity, EntityState.onlyLoginPermitted, idpInfo);
 	}
-
 	String getTechnicalAdminEmailFallbackToDefault(SAMLIdpInfo samlIdpInfo)
 	{
-		return samlIdpInfo.technicalAdminEmail == null || samlIdpInfo.technicalAdminEmail.isEmpty()
+		return samlIdpInfo == null || samlIdpInfo.technicalAdminEmail == null || samlIdpInfo.technicalAdminEmail.isEmpty()
 				? config.fallbackOfflineVerificationAdminEmail
 				: samlIdpInfo.technicalAdminEmail;
 	}
