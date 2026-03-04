@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.groovy.util.Maps;
-import org.apache.http.entity.ContentType;
+import org.apache.hc.core5.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

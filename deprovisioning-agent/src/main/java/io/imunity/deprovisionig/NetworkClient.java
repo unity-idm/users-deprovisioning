@@ -7,7 +7,7 @@ package io.imunity.deprovisionig;
 
 import java.util.Properties;
 
-import org.apache.http.client.HttpClient;
+import org.apache.hc.client5.http.classic.HttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

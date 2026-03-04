@@ -28,11 +28,11 @@ import java.util.stream.Stream;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpStatus;
-import org.apache.http.ParseException;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.io.HttpClientResponseHandler;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.xmlbeans.XmlException;
@@ -282,30 +282,41 @@ public class SAMLMetadataManager
 	{
 		return uri.isOpaque() ? uri.getSchemeSpecificPart() : uri.getPath();
 	}
-
-	private ByteArrayInputStream download(URL url) throws Exception
-	{
-		log.info("Download file from: " + url);
-		HttpGet request = new HttpGet(url.toString());
 	
-		try (CloseableHttpResponse response = (CloseableHttpResponse) networkClient.getClient(url.toString())
-				.execute(request))
-		{
-			if (response.getStatusLine()
-					.getStatusCode() != HttpStatus.SC_OK)
-			{
-				String body = response.getEntity()
-						.getContentLength() < META_CONTENT_SIZE_LIMIT ? EntityUtils.toString(response.getEntity()) : "";
+	private ByteArrayInputStream download(URL url) throws UnityException {
 
-				throw new IOException("File download from " + url + " error: " + response.getStatusLine()
-						.toString() + "; " + body);
-			}
-			return new ByteArrayInputStream(IOUtils.toByteArray(response.getEntity()
-					.getContent()));
-		} catch (ParseException | IOException e)
-		{
-			throw new UnityException("Can not parse unity response", e);
-		}
+	    HttpGet request = new HttpGet(url.toString());
+
+	    HttpClientResponseHandler<ByteArrayInputStream> responseHandler = response -> {
+
+	        int status = response.getCode();
+
+	        if (status != HttpStatus.SC_OK) {
+	            long contentLength = response.getEntity() != null
+	                    ? response.getEntity().getContentLength()
+	                    : 0;
+
+	            String body = (contentLength < META_CONTENT_SIZE_LIMIT && response.getEntity() != null)
+	                    ? EntityUtils.toString(response.getEntity())
+	                    : "";
+
+	            throw new IOException("File download from " + url + " error: "
+	                    + status + "; " + body);
+	        }
+
+	        if (response.getEntity() == null) {
+	            throw new IOException("Empty response entity");
+	        }
+
+	        byte[] data = IOUtils.toByteArray(response.getEntity().getContent());
+	        return new ByteArrayInputStream(data);
+	    };
+
+	    try (CloseableHttpClient client =  (CloseableHttpClient) networkClient.getClient(url.toString())) {
+	        return client.execute(request, responseHandler);
+	    } catch (IOException e) {
+	        throw new UnityException("Can not parse unity response", e);
+	    }
 	}
 
 	private URI parseURI(String rawURI) throws IllegalArgumentException

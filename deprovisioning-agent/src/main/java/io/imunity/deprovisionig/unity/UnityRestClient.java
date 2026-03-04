@@ -6,33 +6,31 @@
 package io.imunity.deprovisionig.unity;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.ParseException;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.client5.http.auth.AuthCache;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
+import org.apache.hc.client5.http.impl.auth.BasicAuthCache;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
+import org.apache.hc.client5.http.impl.auth.BasicScheme;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.net.URIBuilder;
 import org.springframework.stereotype.Component;
 
 import io.imunity.deprovisionig.DeprovisioningConfiguration;
@@ -57,7 +55,7 @@ class UnityRestClient
 		{
 			throw new ConfigurationException("Invalid rest uri");
 		}
-		host = new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme());
+		host = HttpHost.create(uri);
 		restPath = uri.getPath();
 		context = getClientContext(host, unityConfig.restUsername, unityConfig.restPassword);
 		client = networkClient.getClient(unityConfig.restUri, unityConfig.getHttpClientProperties());
@@ -82,13 +80,7 @@ class UnityRestClient
 		}
 		if (content.isPresent())
 		{
-			try
-			{
-				postReq.setEntity(new StringEntity(content.get()));
-			} catch (UnsupportedEncodingException e)
-			{
-				throw new UnityException("Can not set post request content", e);
-			}
+			postReq.setEntity(new StringEntity(content.get()));
 		}
 
 		
@@ -169,20 +161,14 @@ class UnityRestClient
 		}
 		if (content.isPresent())
 		{
-			try
-			{
-				putReq.setEntity(new StringEntity(content.get()));
-			} catch (UnsupportedEncodingException e)
-			{
-				throw new UnityException("Can not set post request content", e);
-			}
+			putReq.setEntity(new StringEntity(content.get()));
 		}
 		
 		executeAndAssertStatusIsOk(putReq);
 	}
 
 	
-	private void executeAndAssertStatusIsOk(HttpRequest request) throws UnityException
+	private void executeAndAssertStatusIsOk(ClassicHttpRequest request) throws UnityException
 	{
 		try (CloseableHttpResponse response = execute(request))
 		{
@@ -195,18 +181,18 @@ class UnityRestClient
 	
 	private void assertResponseStatusIsOk(HttpResponse response) throws UnityException
 	{
-		if (!(HttpStatus.SC_OK == response.getStatusLine().getStatusCode()
-				|| HttpStatus.SC_NO_CONTENT == response.getStatusLine().getStatusCode()))
+		if (!(HttpStatus.SC_OK == response.getCode()
+				|| HttpStatus.SC_NO_CONTENT == response.getCode()))
 		{
-			throw new UnityException(response.getStatusLine().toString());
+			throw new UnityException(response.getCode() + " " + response.getReasonPhrase());
 		}
 	}
 
-	private CloseableHttpResponse execute(HttpRequest request) throws UnityException
+	private CloseableHttpResponse execute(ClassicHttpRequest request) throws UnityException
 	{
 		try
 		{
-			return (CloseableHttpResponse) client.execute(host, request, context);
+			return (CloseableHttpResponse) client.executeOpen(host, request, context);
 		} catch (IOException e)
 		{
 			throw new UnityException("Can not connect to unity", e);
@@ -215,13 +201,15 @@ class UnityRestClient
 
 	private HttpClientContext getClientContext(HttpHost host, String user, String pass)
 	{
-		CredentialsProvider credsProvider = new BasicCredentialsProvider();
-		credsProvider.setCredentials(new AuthScope(host.getHostName(), host.getPort()),
-				new UsernamePasswordCredentials(user, pass));
+		BasicCredentialsProvider credsProvider = new BasicCredentialsProvider();
+		credsProvider.setCredentials(new AuthScope(host),
+				new UsernamePasswordCredentials(user, pass.toCharArray()));
 
-		AuthCache authCache = new BasicAuthCache();
 		BasicScheme basicAuth = new BasicScheme();
-		authCache.put(host, basicAuth);
+	    basicAuth.initPreemptive(new UsernamePasswordCredentials(user, pass.toCharArray()));
+
+	    AuthCache authCache = new BasicAuthCache();
+	    authCache.put(host, basicAuth);
 		HttpClientContext context = HttpClientContext.create();
 		context.setCredentialsProvider(credsProvider);
 		context.setAuthCache(authCache);

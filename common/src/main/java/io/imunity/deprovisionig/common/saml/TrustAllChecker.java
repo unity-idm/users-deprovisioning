@@ -6,9 +6,8 @@
 
 package io.imunity.deprovisionig.common.saml;
 
-import org.apache.xmlbeans.XmlObject;
-
 import eu.unicore.samly2.exceptions.SAMLValidationException;
+import eu.unicore.samly2.messages.SAMLVerifiableElement;
 import eu.unicore.samly2.trust.CheckingMode;
 import eu.unicore.samly2.trust.ResponseTrustCheckResult;
 import eu.unicore.samly2.trust.SamlTrustChecker;
@@ -33,22 +32,23 @@ public class TrustAllChecker implements SamlTrustChecker
 	}
 
 	@Override
-	public ResponseTrustCheckResult checkTrust(XmlObject responseDoc, StatusResponseType response)
+	public CheckingMode getCheckingMode()
+	{
+		return CheckingMode.REQUIRE_SIGNED_ASSERTION;
+	}
+
+	@Override
+	public ResponseTrustCheckResult checkTrust(SAMLVerifiableElement responseMessage, StatusResponseType response)
 			throws SAMLValidationException
 	{
 		return new ResponseTrustCheckResult(true);
 	}
 
 	@Override
-	public void checkTrust(XmlObject requestDoc, RequestAbstractType request) throws SAMLValidationException
+	public void checkTrust(SAMLVerifiableElement requestMessage, RequestAbstractType request)
+			throws SAMLValidationException
 	{
 		
-	}
-
-	@Override
-	public CheckingMode getCheckingMode()
-	{
-		return CheckingMode.REQUIRE_SIGNED_ASSERTION;
 	}
 	
 
