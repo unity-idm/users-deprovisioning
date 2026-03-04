@@ -170,7 +170,7 @@ public class UnityUserExtractorTest
 	{
 		return new DeprovisioningConfiguration(Duration.ofDays(2), Duration.ofDays(2), Duration.ofDays(2),
 				Duration.ofDays(2), Duration.ofDays(2), "", unityRootGroup, excludedGroups,
-				excludedUsers, onlineProfiles, offlineProfiles, "", "", "", "", "fallbackAdminEmail@demo.com");
+				excludedUsers, onlineProfiles, offlineProfiles, "", "", "", "", "fallbackAdminEmail@demo.com", 20, 6, 0, 20000);
 
 	}
 

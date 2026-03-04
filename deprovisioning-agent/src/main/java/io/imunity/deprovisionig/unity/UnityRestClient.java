@@ -22,6 +22,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.protocol.HttpClientContext;
@@ -59,7 +60,7 @@ class UnityRestClient
 		host = new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme());
 		restPath = uri.getPath();
 		context = getClientContext(host, unityConfig.restUsername, unityConfig.restPassword);
-		client = networkClient.getClient(unityConfig.restUri);
+		client = networkClient.getClient(unityConfig.restUri, unityConfig.getHttpClientProperties());
 	}
 
 	String post(String path, ContentType contentType, Optional<String> content) throws UnityException
@@ -90,8 +91,8 @@ class UnityRestClient
 			}
 		}
 
-		HttpResponse response = execute(postReq);
-		try
+		
+		try (CloseableHttpResponse response = execute(postReq))
 		{
 			return EntityUtils.toString(response.getEntity());
 		} catch (ParseException | IOException e)
@@ -100,7 +101,7 @@ class UnityRestClient
 		}
 	}
 
-	HttpResponse post(String path, Map<String, String> params) throws UnityException
+	void post(String path, Map<String, String> params) throws UnityException
 
 	{
 		URIBuilder builder;
@@ -121,12 +122,10 @@ class UnityRestClient
 			throw new UnityException("Invalid unity url params", e);
 		}
 
-		HttpResponse response = execute(postReq);
-		assertResponseStatusIsOk(response);
-		return response;
+		executeAndAssertStatusIsOk(postReq);
 	}
 
-	HttpResponse put(String path, Optional<Map<String, String>> params) throws UnityException
+	void put(String path, Optional<Map<String, String>> params) throws UnityException
 
 	{
 		URIBuilder builder;
@@ -150,12 +149,10 @@ class UnityRestClient
 			throw new UnityException("Invalid unity url params", e);
 		}
 
-		HttpResponse response = execute(putReq);
-		assertResponseStatusIsOk(response);
-		return response;
+		executeAndAssertStatusIsOk(putReq);
 	}
 
-	HttpResponse put(String path, ContentType contentType, Optional<String> content) throws UnityException
+	void put(String path, ContentType contentType, Optional<String> content) throws UnityException
 	{
 		HttpPut putReq;
 		try
@@ -180,12 +177,22 @@ class UnityRestClient
 				throw new UnityException("Can not set post request content", e);
 			}
 		}
-
-		HttpResponse response = execute(putReq);
-		assertResponseStatusIsOk(response);
-		return response;
+		
+		executeAndAssertStatusIsOk(putReq);
 	}
 
+	
+	private void executeAndAssertStatusIsOk(HttpRequest request) throws UnityException
+	{
+		try (CloseableHttpResponse response = execute(request))
+		{
+			assertResponseStatusIsOk(response);
+		} catch (IOException e)
+		{
+			throw new UnityException("Can not connect to unity", e);
+		}
+	}
+	
 	private void assertResponseStatusIsOk(HttpResponse response) throws UnityException
 	{
 		if (!(HttpStatus.SC_OK == response.getStatusLine().getStatusCode()
@@ -195,11 +202,11 @@ class UnityRestClient
 		}
 	}
 
-	private HttpResponse execute(HttpRequest request) throws UnityException
+	private CloseableHttpResponse execute(HttpRequest request) throws UnityException
 	{
 		try
 		{
-			return client.execute(host, request, context);
+			return (CloseableHttpResponse) client.execute(host, request, context);
 		} catch (IOException e)
 		{
 			throw new UnityException("Can not connect to unity", e);

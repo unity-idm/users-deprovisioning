@@ -59,9 +59,9 @@ public class OnlineVerificatorTest
 	@BeforeEach
 	public void init()
 	{
-		DeprovisioningConfiguration config = new DeprovisioningConfiguration(Duration.ofDays(2),
-				Duration.ofDays(3), Duration.ofDays(2), Duration.ofDays(2), Duration.ofDays(2), "test",
-				"", new String[0], new String[0], Set.of("test"), Collections.emptySet(), "", "", "", "test", "test@demo.com");
+		DeprovisioningConfiguration config = new DeprovisioningConfiguration(Duration.ofDays(2), Duration.ofDays(3),
+				Duration.ofDays(2), Duration.ofDays(2), Duration.ofDays(2), "test", "", new String[0], new String[0],
+				Set.of("test"), Collections.emptySet(), "", "", "", "test", "test@demo.com", 20, 6, 0, 20000);
 
 		UserStatusUpdater userStatusUpdater = new UserStatusUpdater(groovyHook, client, config);
 		verificator = new OnlineVerificator(samlAttrQueryClient, userStatusUpdater, client);

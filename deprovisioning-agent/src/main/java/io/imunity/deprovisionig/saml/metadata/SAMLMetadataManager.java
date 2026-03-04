@@ -28,8 +28,9 @@ import java.util.stream.Stream;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.ParseException;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
@@ -41,6 +42,7 @@ import org.springframework.stereotype.Component;
 import eu.unicore.samly2.SAMLConstants;
 import io.imunity.deprovisionig.NetworkClient;
 import io.imunity.deprovisionig.common.WorkdirFileManager;
+import io.imunity.deprovisionig.unity.UnityException;
 import xmlbeans.org.oasis.saml2.metadata.AttributeAuthorityDescriptorType;
 import xmlbeans.org.oasis.saml2.metadata.ContactType;
 import xmlbeans.org.oasis.saml2.metadata.EndpointType;
@@ -285,18 +287,25 @@ public class SAMLMetadataManager
 	{
 		log.info("Download file from: " + url);
 		HttpGet request = new HttpGet(url.toString());
-		HttpResponse response = networkClient.getClient(url.toString()).execute(request);
-		if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK)
+	
+		try (CloseableHttpResponse response = (CloseableHttpResponse) networkClient.getClient(url.toString())
+				.execute(request))
 		{
-			String body = response.getEntity().getContentLength() < META_CONTENT_SIZE_LIMIT
-					? EntityUtils.toString(response.getEntity())
-					: "";
+			if (response.getStatusLine()
+					.getStatusCode() != HttpStatus.SC_OK)
+			{
+				String body = response.getEntity()
+						.getContentLength() < META_CONTENT_SIZE_LIMIT ? EntityUtils.toString(response.getEntity()) : "";
 
-			throw new IOException("File download from " + url + " error: "
-					+ response.getStatusLine().toString() + "; " + body);
+				throw new IOException("File download from " + url + " error: " + response.getStatusLine()
+						.toString() + "; " + body);
+			}
+			return new ByteArrayInputStream(IOUtils.toByteArray(response.getEntity()
+					.getContent()));
+		} catch (ParseException | IOException e)
+		{
+			throw new UnityException("Can not parse unity response", e);
 		}
-
-		return new ByteArrayInputStream(IOUtils.toByteArray(response.getEntity().getContent()));
 	}
 
 	private URI parseURI(String rawURI) throws IllegalArgumentException

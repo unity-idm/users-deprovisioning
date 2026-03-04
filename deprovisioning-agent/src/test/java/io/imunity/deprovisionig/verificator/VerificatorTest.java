@@ -61,9 +61,10 @@ public class VerificatorTest
 	@BeforeEach
 	public void init()
 	{
-		DeprovisioningConfiguration config = new DeprovisioningConfiguration(Duration.ofDays(2),
-				Duration.ofDays(3), Duration.ofDays(2), Duration.ofDays(2), Duration.ofDays(2), "test",
-				"", new String[0], new String[0], Set.of("onlineProfile"), Set.of("offlineOnly"), "", "", "", "test", "fallbackAdmin@demo.com");
+		DeprovisioningConfiguration config = new DeprovisioningConfiguration(Duration.ofDays(2), Duration.ofDays(3),
+				Duration.ofDays(2), Duration.ofDays(2), Duration.ofDays(2), "test", "", new String[0], new String[0],
+				Set.of("onlineProfile"), Set.of("offlineOnly"), "", "", "", "test", "fallbackAdmin@demo.com", 20, 6, 0,
+				20000);
 
 		verificator = new UserVerificator(samlMetadaMan, client, offlineVerificator, config, userStatusUpdater,
 				onlineVerificator);
