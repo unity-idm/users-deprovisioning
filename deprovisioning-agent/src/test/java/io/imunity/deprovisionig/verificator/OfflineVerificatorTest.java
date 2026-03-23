@@ -31,6 +31,7 @@ import io.imunity.deprovisionig.DeprovisioningConfiguration;
 import io.imunity.deprovisionig.unity.UnityApiClient;
 import io.imunity.deprovisionig.unity.types.Attribute;
 import io.imunity.deprovisionig.unity.types.EntityState;
+import io.imunity.deprovisionig.unity.types.I18nString;
 import io.imunity.deprovisionig.unity.types.Identity;
 import io.imunity.deprovisionig.unity.types.UnityUser;
 
@@ -48,7 +49,8 @@ public class OfflineVerificatorTest
 
 		DeprovisioningConfiguration config = new DeprovisioningConfiguration(Duration.ofDays(2), Duration.ofDays(3),
 				Duration.ofDays(10), Duration.ofDays(4), Duration.ofDays(2), "test", "", new String[0], new String[0],
-				Set.of("test"), Collections.emptySet(), "", "", "", "test", "test@demo.com", 20, 6, 0, 20000);
+				Set.of("test"), Collections.emptySet(), "", "", "", "test", "test@demo.com", 20, 6, 0, 20000,
+				Map.of("http://test.pl", "testName"));
 
 		verificator = new OfflineVerificator(client, config);
 	}
@@ -64,7 +66,7 @@ public class OfflineVerificatorTest
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(4));
 
-		verificator.verify(u1, u1.identities.get(0), "test@test.pl");
+		verificator.verify(u1, u1.identities.get(0), "test@test.pl", new I18nString("test"));
 
 		verify(client, never()).sendEmail(eq(1L), eq("test"), any());
 
@@ -81,7 +83,7 @@ public class OfflineVerificatorTest
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
 				LocalDateTime.now().minusDays(5), LocalDateTime.now().minusDays(4));
 
-		verificator.verify(u1, u1.identities.get(0), "test@test.pl");
+		verificator.verify(u1, u1.identities.get(0), "test@test.pl", new I18nString("test"));
 
 		@SuppressWarnings("unchecked")
 		ArgumentCaptor<Map<String, String>> emailArgs = ArgumentCaptor.forClass(Map.class);
@@ -89,11 +91,54 @@ public class OfflineVerificatorTest
 		verify(client).sendEmail(eq(1L), eq("test"), emailArgs.capture());
 		assertThat(emailArgs.getValue().get("email"), is("test@test.pl"));
 		assertThat(emailArgs.getValue().get("daysLeft"), is("4"));
+		assertThat(emailArgs.getValue().get("idpName"), is("test"));
 
 		ArgumentCaptor<Attribute> argument = ArgumentCaptor.forClass(Attribute.class);
 		verify(client).updateAttribute(eq(1L), argument.capture());
 		assertThat(argument.getValue().getName(), is(Constans.LAST_OFFLINE_VERIFICATION_ATTEMPT_ATTRIBUTE));
 
+	}
+	
+	@Test
+	public void shouldSendEmailWithIdpNameFromConfig()
+	{
+
+		UnityUser u1 = new UnityUser(1L, "u1", EntityState.disabled,
+				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test",
+						"http://test.pl")),
+				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(11),
+				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
+				LocalDateTime.now().minusDays(5), LocalDateTime.now().minusDays(4));
+
+		verificator.verify(u1, u1.identities.get(0), "test@test.pl", null);
+
+		@SuppressWarnings("unchecked")
+		ArgumentCaptor<Map<String, String>> emailArgs = ArgumentCaptor.forClass(Map.class);
+
+		verify(client).sendEmail(eq(1L), eq("test"), emailArgs.capture());
+		assertThat(emailArgs.getValue().get("email"), is("test@test.pl"));
+		assertThat(emailArgs.getValue().get("idpName"), is("testName"));
+	}
+	
+	@Test
+	public void shouldSendEmailWithIdpNameFromMeta()
+	{
+
+		UnityUser u1 = new UnityUser(1L, "u1", EntityState.disabled,
+				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "test",
+						"http://test.pl")),
+				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(11),
+				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
+				LocalDateTime.now().minusDays(5), LocalDateTime.now().minusDays(4));
+
+		verificator.verify(u1, u1.identities.get(0), "test@test.pl", new I18nString("en", "testNameFromMeta"));
+
+		@SuppressWarnings("unchecked")
+		ArgumentCaptor<Map<String, String>> emailArgs = ArgumentCaptor.forClass(Map.class);
+
+		verify(client).sendEmail(eq(1L), eq("test"), emailArgs.capture());
+		assertThat(emailArgs.getValue().get("email"), is("test@test.pl"));
+		assertThat(emailArgs.getValue().get("idpName"), is("testNameFromMeta"));
 	}
 
 	@Test
@@ -107,7 +152,7 @@ public class OfflineVerificatorTest
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
 				LocalDateTime.now().minusDays(9), LocalDateTime.now().minusDays(3));
 
-		verificator.verify(u1, u1.identities.get(0), "test@test.pl");
+		verificator.verify(u1, u1.identities.get(0), "test@test.pl", new I18nString("test"));
 
 		verify(client, never()).sendEmail(eq(1L), eq("test"), any());
 	}

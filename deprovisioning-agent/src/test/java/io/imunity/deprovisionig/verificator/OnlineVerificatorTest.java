@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.Set;
 
@@ -41,6 +42,7 @@ import io.imunity.deprovisionig.saml.metadata.SAMLIdpInfo;
 import io.imunity.deprovisionig.unity.UnityApiClient;
 import io.imunity.deprovisionig.unity.types.Attribute;
 import io.imunity.deprovisionig.unity.types.EntityState;
+import io.imunity.deprovisionig.unity.types.I18nString;
 import io.imunity.deprovisionig.unity.types.Identity;
 import io.imunity.deprovisionig.unity.types.UnityUser;
 
@@ -61,7 +63,7 @@ public class OnlineVerificatorTest
 	{
 		DeprovisioningConfiguration config = new DeprovisioningConfiguration(Duration.ofDays(2), Duration.ofDays(3),
 				Duration.ofDays(2), Duration.ofDays(2), Duration.ofDays(2), "test", "", new String[0], new String[0],
-				Set.of("test"), Collections.emptySet(), "", "", "", "test", "test@demo.com", 20, 6, 0, 20000);
+				Set.of("test"), Collections.emptySet(), "", "", "", "test", "test@demo.com", 20, 6, 0, 20000, new HashMap<>());
 
 		UserStatusUpdater userStatusUpdater = new UserStatusUpdater(groovyHook, client, config);
 		verificator = new OnlineVerificator(samlAttrQueryClient, userStatusUpdater, client);
@@ -82,7 +84,7 @@ public class OnlineVerificatorTest
 						"", Arrays.asList("active")))));
 
 		verificator.verify(u1, u1.identities.get(0),
-				new SAMLIdpInfo("http://test.pl", Optional.of("http://test.pl/attr"), "test@test.pl"));
+				new SAMLIdpInfo("http://test.pl", Optional.of("http://test.pl/attr"), "test@test.pl", new I18nString()));
 
 		verify(client).setUserStatus(eq(1L), eq(EntityState.valid));
 		ArgumentCaptor<Attribute> argument = ArgumentCaptor.forClass(Attribute.class);
@@ -112,7 +114,7 @@ public class OnlineVerificatorTest
 						SubStatus.STATUS2_UNKNOWN_PRINCIPAL, new Exception())));
 
 		verificator.verify(u1, u1.identities.get(0),
-				new SAMLIdpInfo("http://test.pl", Optional.of("http://test.pl/attr"), "test@test.pl"));
+				new SAMLIdpInfo("http://test.pl", Optional.of("http://test.pl/attr"), "test@test.pl", new I18nString()));
 
 		verify(client).setUserStatus(eq(1L), eq(EntityState.disabled));
 		verify(client).scheduleRemoveUser(eq(1L), anyLong());

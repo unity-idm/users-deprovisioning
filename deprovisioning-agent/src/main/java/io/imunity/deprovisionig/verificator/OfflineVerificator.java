@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import io.imunity.deprovisionig.Constans;
 import io.imunity.deprovisionig.DeprovisioningConfiguration;
 import io.imunity.deprovisionig.unity.UnityApiClient;
+import io.imunity.deprovisionig.unity.types.I18nString;
 import io.imunity.deprovisionig.unity.types.Identity;
 import io.imunity.deprovisionig.unity.types.LocalDateTimeAttribute;
 import io.imunity.deprovisionig.unity.types.UnityUser;
@@ -31,6 +32,7 @@ class OfflineVerificator
 	private static final String EMAIL_MESSAGE_TEMPLATE_PARAM = "email";
 	private static final String DAYSLEFT_MESSAGE_TEMPLATE_PARAM = "daysLeft";
 	private static final String DEPROVISIONING_DATE_MESSAGE_TEMPLATE_PARAM = "deprovisioningDate";
+	private static final String IDP_NAME = "idpName";
 
 	private final DeprovisioningConfiguration config;
 	private final UnityApiClient unityClient;
@@ -43,7 +45,7 @@ class OfflineVerificator
 
 	}
 
-	boolean verify(UnityUser user, Identity identity, String technicalAdminEmail)
+	boolean verify(UnityUser user, Identity identity, String technicalAdminEmail, I18nString idpName)
 	{
 		log.info("Attempting offline verification of user {} {}", user, identity);
 		LocalDateTime now = LocalDateTime.now();
@@ -83,7 +85,8 @@ class OfflineVerificator
 			params.put(DAYSLEFT_MESSAGE_TEMPLATE_PARAM, String.valueOf(daysLeft));
 			params.put(DEPROVISIONING_DATE_MESSAGE_TEMPLATE_PARAM,
 					deprovisioningDate.withNano(0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-
+			params.put(IDP_NAME, getIdpNameForEmailMessage(identity, idpName));
+			
 			log.info("Sending offline verification email to user {} {}", user, identity);
 
 			unityClient.sendEmail(user.entityId, config.emailTemplate, params);
@@ -98,4 +101,37 @@ class OfflineVerificator
 		return true;
 	}
 
+	private String getIdpNameForEmailMessage(Identity id, I18nString idpName)
+	{
+		if (idpName != null)
+		{
+			if (idpName.getValue("en") != null)
+			{
+				return idpName.getValue("en");
+			} else if (idpName.getValue("de") != null)
+			{
+				return idpName.getValue("de");
+			}
+
+			if (idpName.getLocalizedMap() != null && !idpName.getLocalizedMap()
+					.isEmpty())
+			{
+				return idpName.getLocalizedMap()
+						.values()
+						.stream()
+						.findFirst()
+						.get();
+			}
+		}
+
+		String remoteIdp = id.getRemoteIdp();
+		if (config.idpNames != null && remoteIdp != null && config.idpNames.containsKey(remoteIdp))
+		{
+			return config.idpNames.get(remoteIdp);
+		}
+
+		log.debug("No name found for IdP {}, using id as fallback", remoteIdp);
+
+		return id.getRemoteIdp();
+	}
 }

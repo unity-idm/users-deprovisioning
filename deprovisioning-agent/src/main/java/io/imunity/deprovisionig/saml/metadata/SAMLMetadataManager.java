@@ -94,10 +94,11 @@ public class SAMLMetadataManager
 		{
 			for (EntityDescriptorType entity : entities)
 			{
-				result.put(entity.getEntityID(), new SAMLIdpInfo(entity.getEntityID(),
-						getSOAPEndpointLocation(getSaml2AttributeService(entity,
-								entity.getAttributeAuthorityDescriptorArray())),
-						getTechnicalPersonEmail(entity)));
+				String entityId = entity.getEntityID();
+				result.put(entityId, new SAMLIdpInfo(entity.getEntityID(),
+						getSOAPEndpointLocation(
+								getSaml2AttributeService(entity, entity.getAttributeAuthorityDescriptorArray())),
+						getTechnicalPersonEmail(entity), SAMLIdPNameFromMetaExtractor.getLocalizedNamesAsI18nString(entityId, entity)));
 			}
 		}
 	}
@@ -111,9 +112,10 @@ public class SAMLMetadataManager
 
 		final String UNITY_OLD_ENDPOINT_SUFFIX = "/saml2idp-soap";
 		final String UNITY_MISSING_ENDPOINT_PATH = "/AssertionQueryService";
-		String location = endpointType.get().getLocation();
-		return Optional.of(location.endsWith(UNITY_OLD_ENDPOINT_SUFFIX) ? location + UNITY_MISSING_ENDPOINT_PATH
-				: location);
+		String location = endpointType.get()
+				.getLocation();
+		return Optional
+				.of(location.endsWith(UNITY_OLD_ENDPOINT_SUFFIX) ? location + UNITY_MISSING_ENDPOINT_PATH : location);
 	}
 
 	private String getTechnicalPersonEmail(EntityDescriptorType idpDef)
@@ -123,13 +125,16 @@ public class SAMLMetadataManager
 						.equals(xmlbeans.org.oasis.saml2.metadata.ContactTypeType.TECHNICAL))
 				.findAny();
 
-		if (contactTechnical.isEmpty() || contactTechnical.get().getEmailAddressArray() == null
-				|| contactTechnical.get().getEmailAddressArray().length == 0)
+		if (contactTechnical.isEmpty() || contactTechnical.get()
+				.getEmailAddressArray() == null
+				|| contactTechnical.get()
+						.getEmailAddressArray().length == 0)
 		{
 			return null;
 		}
 
-		String emailValue = contactTechnical.get().getEmailAddressArray()[0];
+		String emailValue = contactTechnical.get()
+				.getEmailAddressArray()[0];
 		if (emailValue.startsWith("mailto:"))
 		{
 			return emailValue.substring(7);
@@ -147,16 +152,20 @@ public class SAMLMetadataManager
 		Optional<EndpointType> soapAttrQuery = Optional.empty();
 		for (AttributeAuthorityDescriptorType idpDef : idpDefs)
 		{
-			if (idpDef.getProtocolSupportEnumeration().stream()
-					.filter(s -> SAMLConstants.PROTOCOL_NS.equals(s)).findAny().isEmpty())
+			if (idpDef.getProtocolSupportEnumeration()
+					.stream()
+					.filter(s -> SAMLConstants.PROTOCOL_NS.equals(s))
+					.findAny()
+					.isEmpty())
 			{
-				log.debug("Attribute query services of {} doesn't support SAML2 - ignoring.",
-						meta.getEntityID());
+				log.debug("Attribute query services of {} doesn't support SAML2 - ignoring.", meta.getEntityID());
 				return Optional.empty();
 			}
 
 			soapAttrQuery = Stream.of(idpDef.getAttributeServiceArray())
-					.filter(a -> a.getBinding().equals(SAMLConstants.BINDING_SOAP)).findAny();
+					.filter(a -> a.getBinding()
+							.equals(SAMLConstants.BINDING_SOAP))
+					.findAny();
 			if (soapAttrQuery.isPresent())
 				break;
 		}
@@ -182,7 +191,8 @@ public class SAMLMetadataManager
 
 		String filePath = DigestUtils.md5Hex(uri.toString());
 		if (fileMan.exists(filePath) && fileMan.getLastModifiedTime(filePath)
-				.isAfter(Instant.now().minus(config.metadataValidityTime)))
+				.isAfter(Instant.now()
+						.minus(config.metadataValidityTime)))
 		{
 			return parseMetadataFile(fileMan.readFile(filePath));
 
@@ -195,8 +205,7 @@ public class SAMLMetadataManager
 
 	}
 
-	private void cacheMetadata(URI uri, ByteArrayInputStream metadataFileContent, String filePath)
-			throws IOException
+	private void cacheMetadata(URI uri, ByteArrayInputStream metadataFileContent, String filePath) throws IOException
 	{
 		log.info("Cache metadata file from: " + uri);
 		fileMan.saveFile(metadataFileContent.readAllBytes(), filePath);
@@ -242,7 +251,10 @@ public class SAMLMetadataManager
 
 	private ByteArrayInputStream readURI(URI uri) throws IOException
 	{
-		if (uri.getScheme().equals("http") || uri.getScheme().equals("https"))
+		if (uri.getScheme()
+				.equals("http")
+				|| uri.getScheme()
+						.equals("https"))
 		{
 			try
 			{
@@ -252,7 +264,8 @@ public class SAMLMetadataManager
 				throw new IllegalArgumentException("Can not read URL, uri: " + uri.toString(), e);
 			}
 
-		} else if (uri.getScheme().equals("data"))
+		} else if (uri.getScheme()
+				.equals("data"))
 		{
 
 			try
@@ -274,7 +287,8 @@ public class SAMLMetadataManager
 			throw new IllegalArgumentException("Data element of uri can not be empty");
 
 		String pureBase64 = data.contains(",") ? data.substring(data.indexOf(",") + 1) : data;
-		return new ByteArrayInputStream(Base64.getDecoder().decode(pureBase64));
+		return new ByteArrayInputStream(Base64.getDecoder()
+				.decode(pureBase64));
 
 	}
 
@@ -282,41 +296,46 @@ public class SAMLMetadataManager
 	{
 		return uri.isOpaque() ? uri.getSchemeSpecificPart() : uri.getPath();
 	}
-	
-	private ByteArrayInputStream download(URL url) throws UnityException {
 
-	    HttpGet request = new HttpGet(url.toString());
+	private ByteArrayInputStream download(URL url) throws UnityException
+	{
 
-	    HttpClientResponseHandler<ByteArrayInputStream> responseHandler = response -> {
+		HttpGet request = new HttpGet(url.toString());
 
-	        int status = response.getCode();
+		HttpClientResponseHandler<ByteArrayInputStream> responseHandler = response ->
+		{
 
-	        if (status != HttpStatus.SC_OK) {
-	            long contentLength = response.getEntity() != null
-	                    ? response.getEntity().getContentLength()
-	                    : 0;
+			int status = response.getCode();
 
-	            String body = (contentLength < META_CONTENT_SIZE_LIMIT && response.getEntity() != null)
-	                    ? EntityUtils.toString(response.getEntity())
-	                    : "";
+			if (status != HttpStatus.SC_OK)
+			{
+				long contentLength = response.getEntity() != null ? response.getEntity()
+						.getContentLength() : 0;
 
-	            throw new IOException("File download from " + url + " error: "
-	                    + status + "; " + body);
-	        }
+				String body = (contentLength < META_CONTENT_SIZE_LIMIT && response.getEntity() != null)
+						? EntityUtils.toString(response.getEntity())
+						: "";
 
-	        if (response.getEntity() == null) {
-	            throw new IOException("Empty response entity");
-	        }
+				throw new IOException("Failed to download file from" + url + "; error: " + status + "; " + body);
+			}
 
-	        byte[] data = IOUtils.toByteArray(response.getEntity().getContent());
-	        return new ByteArrayInputStream(data);
-	    };
+			if (response.getEntity() == null)
+			{
+				throw new IOException("Empty response entity");
+			}
 
-	    try (CloseableHttpClient client =  (CloseableHttpClient) networkClient.getClient(url.toString())) {
-	        return client.execute(request, responseHandler);
-	    } catch (IOException e) {
-	        throw new UnityException("Can not parse unity response", e);
-	    }
+			byte[] data = IOUtils.toByteArray(response.getEntity()
+					.getContent());
+			return new ByteArrayInputStream(data);
+		};
+
+		try (CloseableHttpClient client = (CloseableHttpClient) networkClient.getClient(url.toString()))
+		{
+			return client.execute(request, responseHandler);
+		} catch (IOException e)
+		{
+			throw new UnityException("Can not parse unity response", e);
+		}
 	}
 
 	private URI parseURI(String rawURI) throws IllegalArgumentException

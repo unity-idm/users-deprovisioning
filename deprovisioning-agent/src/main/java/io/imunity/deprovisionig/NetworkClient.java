@@ -36,7 +36,7 @@ public class NetworkClient
 	public HttpClient getClient(String url, HttpClientProperties properties)
 	{
 		DefaultClientConfiguration clientCfg = new DefaultClientConfiguration();
-		if (url.startsWith("https:"))
+		if (url.toLowerCase().startsWith("https:"))
 		{
 			clientCfg.setValidator(truststore.getValidator());
 			clientCfg.setSslEnabled(true);

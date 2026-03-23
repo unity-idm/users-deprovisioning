@@ -85,7 +85,9 @@ public class UserVerificator
 							user,
 							offlineOnlyVerifiableIdentity.get().getTranslationProfile());
 
-					processOfflineOnlyVerification(user, offlineOnlyVerifiableIdentity.get(), null);
+					SAMLIdpInfo samlIdpInfo = getSamlIdpInfoForUser(IdpsAsMap.get(), user,
+							offlineOnlyVerifiableIdentity.get()).orElse(null);
+					processOfflineOnlyVerification(user, offlineOnlyVerifiableIdentity.get(), samlIdpInfo);
 					continue;
 				}
 			}
@@ -166,9 +168,11 @@ public class UserVerificator
 	
 	private void processOfflineOnlyVerification(UnityUser user, Identity identity, SAMLIdpInfo idpInfo)
 	{
-		if (offlineVerificator.verify(user, identity, getTechnicalAdminEmailFallbackToDefault(idpInfo)))
+		if (offlineVerificator.verify(user, identity, getTechnicalAdminEmailFallbackToDefault(idpInfo),
+				Optional.ofNullable(idpInfo)
+						.map(i -> i.name)
+						.orElse(null)))
 		{
-
 			return;
 		}
 

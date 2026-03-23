@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -170,7 +171,7 @@ public class UnityUserExtractorTest
 	{
 		return new DeprovisioningConfiguration(Duration.ofDays(2), Duration.ofDays(2), Duration.ofDays(2),
 				Duration.ofDays(2), Duration.ofDays(2), "", unityRootGroup, excludedGroups,
-				excludedUsers, onlineProfiles, offlineProfiles, "", "", "", "", "fallbackAdminEmail@demo.com", 20, 6, 0, 20000);
+				excludedUsers, onlineProfiles, offlineProfiles, "", "", "", "", "fallbackAdminEmail@demo.com", 20, 6, 0, 20000, new HashMap<>());
 
 	}
 

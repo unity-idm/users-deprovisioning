@@ -6,6 +6,7 @@
 package io.imunity.deprovisionig;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -45,6 +46,8 @@ public class DeprovisioningConfiguration
 	public final String hookScript;
 
 	public final String fallbackOfflineVerificationAdminEmail;
+	
+	public final Map<String, String> idpNames;
 
 	public DeprovisioningConfiguration(@Value("${time.validAccountPeriod:14}") Duration validAccountPeriod,
 			@Value("${time.onlineOnlyVerificationPeriod:14}") Duration onlineOnlyVerificationPeriod,
@@ -65,7 +68,9 @@ public class DeprovisioningConfiguration
 			@Value("${unity.http.maxTotalConnections:20}") int maxTotalConnections,
 			@Value("${unity.http.maxPerRouteConnections:6}") int maxPerRouteConnections,
 			@Value("${unity.http.socket.timeout:0}") int socketTimeout,
-			@Value("${unity.http.connection.timeout:20000}") int connectionTimeout)
+			@Value("${unity.http.connection.timeout:20000}") int connectionTimeout,
+			@Value("#{${unity.idp.names:{}}}") Map<String, String> idpNames)
+	
 	{
 		this.unityRootGroup = unityRootGroup;
 		this.excludedGroups = Set.of(excludedGroups);
@@ -91,6 +96,8 @@ public class DeprovisioningConfiguration
 		this.maxPerRouteConnections = maxPerRouteConnections;
 		this.socketTimeout = socketTimeout;
 		this.connectionTimeout = connectionTimeout;
+		
+		this.idpNames = idpNames;
 	}
 
 	public HttpClientProperties getHttpClientProperties()

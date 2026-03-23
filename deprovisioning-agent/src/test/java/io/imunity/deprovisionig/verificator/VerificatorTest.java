@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -33,6 +34,7 @@ import io.imunity.deprovisionig.saml.metadata.SAMLIdpInfo;
 import io.imunity.deprovisionig.saml.metadata.SAMLMetadataManager;
 import io.imunity.deprovisionig.unity.UnityApiClient;
 import io.imunity.deprovisionig.unity.types.EntityState;
+import io.imunity.deprovisionig.unity.types.I18nString;
 import io.imunity.deprovisionig.unity.types.Identity;
 import io.imunity.deprovisionig.unity.types.UnityUser;
 
@@ -64,12 +66,12 @@ public class VerificatorTest
 		DeprovisioningConfiguration config = new DeprovisioningConfiguration(Duration.ofDays(2), Duration.ofDays(3),
 				Duration.ofDays(2), Duration.ofDays(2), Duration.ofDays(2), "test", "", new String[0], new String[0],
 				Set.of("onlineProfile"), Set.of("offlineOnly"), "", "", "", "test", "fallbackAdmin@demo.com", 20, 6, 0,
-				20000);
+				20000, new HashMap<>());
 
 		verificator = new UserVerificator(samlMetadaMan, client, offlineVerificator, config, userStatusUpdater,
 				onlineVerificator);
-		fullSamlIdpInfo = new SAMLIdpInfo("http://test.pl", Optional.of("http://test.pl/attr"), "test@test.pl");
-		samlIdpInfoWithotAttrQuery = new SAMLIdpInfo("http://test.pl", Optional.empty(), "test@test.pl");
+		fullSamlIdpInfo = new SAMLIdpInfo("http://test.pl", Optional.of("http://test.pl/attr"), "test@test.pl", new I18nString());
+		samlIdpInfoWithotAttrQuery = new SAMLIdpInfo("http://test.pl", Optional.empty(), "test@test.pl", new I18nString());
 	}
 
 	@Test
@@ -86,7 +88,7 @@ public class VerificatorTest
 		when(onlineVerificator.verify(eq(u1), eq(u1.identities.get(0)), eq(fullSamlIdpInfo))).thenReturn(true);
 
 		verificator.verifyUsers(Set.of(u1));
-		verify(offlineVerificator, never()).verify(eq(u1), eq(u1.identities.get(0)), any());
+		verify(offlineVerificator, never()).verify(eq(u1), eq(u1.identities.get(0)), any(), any());
 	}
 	
 	@Test
@@ -106,7 +108,7 @@ public class VerificatorTest
 		when(onlineVerificator.verify(eq(u1), eq(u1.identities.get(0)), eq(fullSamlIdpInfo))).thenReturn(true);
 
 		verificator.verifyUsers(Set.of(u1));
-		verify(offlineVerificator, never()).verify(eq(u1), any(), any());
+		verify(offlineVerificator, never()).verify(eq(u1), any(), any(), any());
 	}
 	
 	
@@ -120,7 +122,7 @@ public class VerificatorTest
 				LocalDateTime.now().minusDays(7), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
 		verificator.verifyUsers(Set.of(u1));
-		verify(offlineVerificator).verify(eq(u1), eq(u1.identities.get(0)), eq("fallbackAdmin@demo.com"));
+		verify(offlineVerificator).verify(eq(u1), eq(u1.identities.get(0)), eq("fallbackAdmin@demo.com"), any());
 		verifyNoInteractions(onlineVerificator);	
 	}
 	
@@ -134,7 +136,7 @@ public class VerificatorTest
 				LocalDateTime.now().minusDays(7), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
 		verificator.verifyUsers(Set.of(u1));
-		verify(offlineVerificator).verify(eq(u1), eq(u1.identities.get(0)), eq("fallbackAdmin@demo.com"));
+		verify(offlineVerificator).verify(eq(u1), eq(u1.identities.get(0)), eq("fallbackAdmin@demo.com"), any());
 		verifyNoInteractions(onlineVerificator);	
 	}
 
@@ -195,7 +197,7 @@ public class VerificatorTest
 
 		verificator.verifyUsers(Set.of(u1));
 
-		verify(offlineVerificator).verify(eq(u1), eq(u1.identities.get(0)), eq("test@test.pl"));
+		verify(offlineVerificator).verify(eq(u1), eq(u1.identities.get(0)), eq("test@test.pl"), any());
 	}
 
 	@Test
@@ -213,7 +215,7 @@ public class VerificatorTest
 		verificator.verifyUsers(Set.of(u1));
 
 		verify(onlineVerificator, never()).verify(eq(u1), eq(u1.identities.get(0)), eq(fullSamlIdpInfo));
-		verify(offlineVerificator).verify(eq(u1), eq(u1.identities.get(0)), eq("test@test.pl"));
+		verify(offlineVerificator).verify(eq(u1), eq(u1.identities.get(0)), eq("test@test.pl"), any());
 	}
 
 }
