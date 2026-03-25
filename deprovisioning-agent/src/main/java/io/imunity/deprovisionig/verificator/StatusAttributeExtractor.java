@@ -13,8 +13,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import eu.unicore.samly2.attrprofile.ParsedAttribute;
-import io.imunity.deprovisionig.unity.types.EntityState;
+import io.imunity.deprovisionig.unity.types.Identity;
 import io.imunity.deprovisionig.unity.types.UnityUser;
+import io.imunity.deprovisionig.verificator.OnlineIdentityVerificationStatus.IdentityStatus;
 
 class StatusAttributeExtractor
 {
@@ -23,13 +24,13 @@ class StatusAttributeExtractor
 	public static final String SAML_STATUS_ATTRIBUTE_NAME = "urn:oid:1.3.6.1.4.1.25178.1.2.19";
 	public static final String SAML_STATUS_ATTRIBUTE_SCHAC_PREFIX = "urn:schac:userStatus:";
 
-	static EntityState getStatusFromAttributesOrFallbackToUserStatus(UnityUser user,
+	static IdentityStatus getStatusFromAttributesOrFallbackToUnknown(UnityUser user, Identity identity,
 			Optional<List<ParsedAttribute>> attributes)
 	{
 		if (attributes.isEmpty())
 		{
-			log.debug("No status attributes in saml response  for user {}", user);
-			return user.entityState;
+			log.debug("No status attributes in saml response  for user {}, identity {}", user, identity);
+			return IdentityStatus.unknown;
 		}
 
 		Optional<ParsedAttribute> statusAttr = attributes.get().stream()
@@ -37,22 +38,22 @@ class StatusAttributeExtractor
 						|| a.getName().startsWith(SAML_STATUS_ATTRIBUTE_SCHAC_PREFIX))
 				.findAny();
 
-		return mapToUnityStatusOrFallbackToUserStatus(user, statusAttr);
+		return mapToUnityStatusOrFallbackToUnknown(user, identity, statusAttr);
 	}
 
-	private static EntityState mapToUnityStatusOrFallbackToUserStatus(UnityUser user,
+	private static IdentityStatus mapToUnityStatusOrFallbackToUnknown(UnityUser user, Identity identity,
 			Optional<ParsedAttribute> status)
 	{
 		if (!status.isPresent())
 		{
-			log.debug("No status attributes in saml response  for user {}", user);
-			return EntityState.valid;
+			log.debug("No status attributes in saml response  for user {}, identity {}", user, identity);
+			return IdentityStatus.active;
 		}
 
 		if (status.get().getStringValues().isEmpty())
 		{
-			log.debug("Empty status attribute values in saml response  for user {}" + user);
-			return user.entityState;
+			log.debug("Empty status attribute values in saml response  for user {}, identity {}", user, identity);
+			return IdentityStatus.unknown;
 		}
 
 		String statusL = Stream.of(status.get().getStringValues().get(0).toLowerCase().split(":"))
@@ -60,19 +61,19 @@ class StatusAttributeExtractor
 
 		if ("active".equals(statusL))
 		{
-			return EntityState.valid;
+			return IdentityStatus.active;
 		} else if ("locked".equals(statusL))
 		{
-			return EntityState.authenticationDisabled;
+			return IdentityStatus.locked;
 		} else if ("disabled".equals(statusL))
 		{
-			return EntityState.disabled;
+			return IdentityStatus.disabled;
 		} else if ("deleted".equals(statusL))
 		{
-			return EntityState.onlyLoginPermitted;
+			return IdentityStatus.deleted;
 		}
 
-		log.warn("Can not interpret new status of user {} status={}", user, statusL);
-		return user.entityState;
+		log.warn("Can not interpret new status of user {}, identity {}, status={}", user, identity, statusL);
+		return IdentityStatus.unknown;
 	}
 }

@@ -6,6 +6,7 @@
 package io.imunity.deprovisionig.verificator;
 
 import java.time.Instant;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,15 +37,15 @@ class UserStatusUpdater
 		this.config = config;
 	}
 
-	void changeUserStatusIfNeeded(UnityUser user, Identity identity, EntityState newStatus, SAMLIdpInfo idpInfo)
+	void changeUserStatusIfNeeded(UnityUser user, List<Identity> identities, EntityState newStatus, SAMLIdpInfo idpInfo)
 	{
 		if (user.entityState.equals(newStatus))
 		{
-			log.debug("User status of {} {} remains unchanged ({})", user, identity, user.entityState);
+			log.debug("User status of {} {} remains unchanged ({})", user, identities, user.entityState);
 			return;
 		}
 
-		log.info("Change user status of {} {} to {}", user, identity, newStatus.toString());
+		log.info("Change user status of {} {} to {}", user, identities, newStatus.toString());
 
 		Instant scheduledRemovalTime = null;
 		if (newStatus.equals(EntityState.onlyLoginPermitted))

@@ -50,6 +50,12 @@ public class UnityUser
 		return identities.stream().filter(i -> i.getTypeId().equals(Constans.IDENTIFIER_IDENTITY)
 				&& profiles.contains(i.getTranslationProfile())).findAny();
 	}
+	
+	public List<Identity> getIdentifiersIdentityByProfile(Set<String> profiles)
+	{
+		return identities.stream().filter(i -> i.getTypeId().equals(Constans.IDENTIFIER_IDENTITY)
+				&& profiles.contains(i.getTranslationProfile())).toList();
+	}
 
 	public LocalDateTime getLastSuccessfullOnlineVerificationTime()
 	{

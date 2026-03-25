@@ -6,7 +6,9 @@
 package io.imunity.deprovisionig.verificator;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -64,12 +66,12 @@ public class UserVerificator
 		{
 			log.info("Verify user {}", user);
 
-			Optional<Identity> onlineVerifiableIdentity = user
-					.getIdentifierIdentityByProfile(config.inputProfilesForOnlineProcessing);
+			List<Identity> onlineVerifiableIdentities = user
+					.getIdentifiersIdentityByProfile(config.inputProfilesForOnlineProcessing);
 			Optional<Identity> offlineOnlyVerifiableIdentity = user
 					.getIdentifierIdentityByProfile(config.inputProfilesForOfflineProcessingOnly);
 
-			if (onlineVerifiableIdentity.isEmpty())
+			if (onlineVerifiableIdentities.isEmpty())
 			{
 				if (offlineOnlyVerifiableIdentity.isEmpty())
 				{
@@ -87,21 +89,32 @@ public class UserVerificator
 
 					SAMLIdpInfo samlIdpInfo = getSamlIdpInfoForUser(IdpsAsMap.get(), user,
 							offlineOnlyVerifiableIdentity.get()).orElse(null);
-					processOfflineOnlyVerification(user, offlineOnlyVerifiableIdentity.get(), samlIdpInfo);
+					processOfflineOnlyVerification(user, List.of(offlineOnlyVerifiableIdentity.get()), samlIdpInfo);
 					continue;
 				}
 			}
-			log.debug("User identity associated with online processing profile {}: {}",
-					onlineVerifiableIdentity.get().getTranslationProfile(),
-					onlineVerifiableIdentity.get());
+			
+			if (checkIfUserHasMultipleRemoteIdpsAssociatedWithOnlineProcessingProfile(onlineVerifiableIdentities))
+			{
+				log.warn("Skipping user {} with multiple remote IDPs associated with online processing profile: {}, {}",
+						user, config.inputProfilesForOnlineProcessing,
+						onlineVerifiableIdentities);
+				continue;
+			}
+			
+			log.debug("User identities associated with online processing profile {}: {}",
+					onlineVerifiableIdentities.iterator().next().getTranslationProfile(),
+					onlineVerifiableIdentities);
+			
 			SAMLIdpInfo samlIdpInfo = getSamlIdpInfoForUser(IdpsAsMap.get(), user,
-					onlineVerifiableIdentity.get()).orElse(null);
+					onlineVerifiableIdentities.iterator().next()).orElse(null);
+
 			if (samlIdpInfo == null)
 			{
 				log.info("Can not find IDP with id {} in SAML metadata . Go to offline user verification {} {}",
-						onlineVerifiableIdentity.get().getRemoteIdp(), user,
-						onlineVerifiableIdentity);
-				processOfflineOnlyVerification(user, onlineVerifiableIdentity.get(), null);
+						onlineVerifiableIdentities.iterator().next().getRemoteIdp(), user,
+						onlineVerifiableIdentities);
+				processOfflineOnlyVerification(user, onlineVerifiableIdentities, null);
 				continue;
 			}
 
@@ -109,20 +122,30 @@ public class UserVerificator
 			{
 				log.info("Attribute query service for IDP  {} is not available, only offline verification is possible",
 						samlIdpInfo.id);
-				processOfflineOnlyVerification(user, onlineVerifiableIdentity.get(), samlIdpInfo);
+				processOfflineOnlyVerification(user, onlineVerifiableIdentities, samlIdpInfo);
 				
 			} else
 			{
-
-				if (!onlineVerificator.verify(user, onlineVerifiableIdentity.get(), samlIdpInfo))
+				OnlineVerificationStatus onlineVerificationStatus =  onlineVerificator.verify(user, onlineVerifiableIdentities, samlIdpInfo);
+				
+				if (!onlineVerificationStatus.equals(OnlineVerificationStatus.success))
 				{
-					processOnlineUnverifiedUser(user, onlineVerifiableIdentity.get(), samlIdpInfo);
+					processOnlineUnverifiedUser(user, onlineVerifiableIdentities, samlIdpInfo);
 				}
 			}
 		}
 
 		log.info("Verification of " + extractedUnityUsers.size() + " users complete");
 
+	}
+	
+	private boolean checkIfUserHasMultipleRemoteIdpsAssociatedWithOnlineProcessingProfile(List<Identity> onlineVerifiableIdentity)
+	{
+		return onlineVerifiableIdentity.stream()
+			    .map(Identity::getRemoteIdp)
+			    .filter(Objects::nonNull) 
+			    .distinct()
+			    .count() > 1;
 	}
 
 	private Optional<SAMLIdpInfo> getSamlIdpInfoForUser(Map<String, SAMLIdpInfo> attributeQueryAddressesAsMap,
@@ -146,9 +169,9 @@ public class UserVerificator
 		return Optional.empty();
 	}
 
-	private void processOnlineUnverifiedUser(UnityUser user, Identity identity, SAMLIdpInfo idpInfo)
+	private void processOnlineUnverifiedUser(UnityUser user, List<Identity> identities, SAMLIdpInfo idpInfo)
 	{
-		log.info("Process online unverified user {} {}", user, identity);
+		log.info("Process online unverified user {} {}", user, identities);
 
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime firstHomeIdpVerificationFailure = now;
@@ -158,17 +181,17 @@ public class UserVerificator
 			firstHomeIdpVerificationFailure = user.firstHomeIdpVerificationFailure;
 		}
 
-		if (checkIsInOnlineOnlyVerificationTime(now, firstHomeIdpVerificationFailure, user, identity))
+		if (checkIsInOnlineOnlyVerificationTime(now, firstHomeIdpVerificationFailure, user, identities))
 		{
 			return;
 		}
 
-		processOfflineOnlyVerification(user, identity, idpInfo);
+		processOfflineOnlyVerification(user, identities, idpInfo);
 	}
 	
-	private void processOfflineOnlyVerification(UnityUser user, Identity identity, SAMLIdpInfo idpInfo)
+	private void processOfflineOnlyVerification(UnityUser user, List<Identity> identities, SAMLIdpInfo idpInfo)
 	{
-		if (offlineVerificator.verify(user, identity, getTechnicalAdminEmailFallbackToDefault(idpInfo),
+		if (offlineVerificator.verify(user, identities, getTechnicalAdminEmailFallbackToDefault(idpInfo),
 				Optional.ofNullable(idpInfo)
 						.map(i -> i.name)
 						.orElse(null)))
@@ -176,7 +199,7 @@ public class UserVerificator
 			return;
 		}
 
-		userStatusUpdater.changeUserStatusIfNeeded(user, identity, EntityState.onlyLoginPermitted, idpInfo);
+		userStatusUpdater.changeUserStatusIfNeeded(user, identities, EntityState.onlyLoginPermitted, idpInfo);
 	}
 	String getTechnicalAdminEmailFallbackToDefault(SAMLIdpInfo samlIdpInfo)
 	{
@@ -201,13 +224,13 @@ public class UserVerificator
 	}
 
 	private boolean checkIsInOnlineOnlyVerificationTime(LocalDateTime now,
-			LocalDateTime firstHomeIdpVerificationFailure, UnityUser user, Identity identity)
+			LocalDateTime firstHomeIdpVerificationFailure, UnityUser user, List<Identity> identities)
 	{
 		if (now.isEqual(firstHomeIdpVerificationFailure) || (now.isAfter(firstHomeIdpVerificationFailure) && now
 				.isBefore(firstHomeIdpVerificationFailure.plus(config.onlineOnlyVerificationPeriod))))
 		{
 			log.info("Skip further verification of user {} {} (is in onlineOnlyVerificationPeriod)", user,
-					identity);
+					identities);
 			return true;
 		}
 		return false;

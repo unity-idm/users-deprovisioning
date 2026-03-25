@@ -66,7 +66,7 @@ public class OfflineVerificatorTest
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(4));
 
-		verificator.verify(u1, u1.identities.get(0), "test@test.pl", new I18nString("test"));
+		verificator.verify(u1, u1.identities, "test@test.pl", new I18nString("test"));
 
 		verify(client, never()).sendEmail(eq(1L), eq("test"), any());
 
@@ -83,7 +83,7 @@ public class OfflineVerificatorTest
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
 				LocalDateTime.now().minusDays(5), LocalDateTime.now().minusDays(4));
 
-		verificator.verify(u1, u1.identities.get(0), "test@test.pl", new I18nString("test"));
+		verificator.verify(u1, u1.identities, "test@test.pl", new I18nString("test"));
 
 		@SuppressWarnings("unchecked")
 		ArgumentCaptor<Map<String, String>> emailArgs = ArgumentCaptor.forClass(Map.class);
@@ -110,7 +110,7 @@ public class OfflineVerificatorTest
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
 				LocalDateTime.now().minusDays(5), LocalDateTime.now().minusDays(4));
 
-		verificator.verify(u1, u1.identities.get(0), "test@test.pl", null);
+		verificator.verify(u1, u1.identities, "test@test.pl", null);
 
 		@SuppressWarnings("unchecked")
 		ArgumentCaptor<Map<String, String>> emailArgs = ArgumentCaptor.forClass(Map.class);
@@ -131,7 +131,7 @@ public class OfflineVerificatorTest
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
 				LocalDateTime.now().minusDays(5), LocalDateTime.now().minusDays(4));
 
-		verificator.verify(u1, u1.identities.get(0), "test@test.pl", new I18nString("en", "testNameFromMeta"));
+		verificator.verify(u1, u1.identities, "test@test.pl", new I18nString("en", "testNameFromMeta"));
 
 		@SuppressWarnings("unchecked")
 		ArgumentCaptor<Map<String, String>> emailArgs = ArgumentCaptor.forClass(Map.class);
@@ -152,7 +152,7 @@ public class OfflineVerificatorTest
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
 				LocalDateTime.now().minusDays(9), LocalDateTime.now().minusDays(3));
 
-		verificator.verify(u1, u1.identities.get(0), "test@test.pl", new I18nString("test"));
+		verificator.verify(u1, u1.identities, "test@test.pl", new I18nString("test"));
 
 		verify(client, never()).sendEmail(eq(1L), eq("test"), any());
 	}

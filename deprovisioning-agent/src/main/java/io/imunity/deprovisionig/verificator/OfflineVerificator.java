@@ -9,6 +9,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
@@ -45,9 +46,9 @@ class OfflineVerificator
 
 	}
 
-	boolean verify(UnityUser user, Identity identity, String technicalAdminEmail, I18nString idpName)
+	boolean verify(UnityUser user, List<Identity> identities, String technicalAdminEmail, I18nString idpName)
 	{
-		log.info("Attempting offline verification of user {} {}", user, identity);
+		log.info("Attempting offline verification of user {} {}", user, identities);
 		LocalDateTime now = LocalDateTime.now();
 
 		LocalDateTime firstOfflineVerificationAttempt = now;
@@ -65,7 +66,7 @@ class OfflineVerificator
 				|| now.isAfter(firstOfflineVerificationAttempt.plus(config.offlineVerificationPeriod))))
 		{
 			log.info("Skip offline verification for user {} {} (offlineVerificationPeriod has passed)",
-					user, identity);
+					user, identities);
 			return false;
 		}
 
@@ -85,23 +86,23 @@ class OfflineVerificator
 			params.put(DAYSLEFT_MESSAGE_TEMPLATE_PARAM, String.valueOf(daysLeft));
 			params.put(DEPROVISIONING_DATE_MESSAGE_TEMPLATE_PARAM,
 					deprovisioningDate.withNano(0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-			params.put(IDP_NAME, getIdpNameForEmailMessage(identity, idpName));
+			params.put(IDP_NAME, getIdpNameForEmailMessage(identities, idpName));
 			
-			log.info("Sending offline verification email to user {} {}", user, identity);
+			log.info("Sending offline verification email to user {} {}", user, identities);
 
 			unityClient.sendEmail(user.entityId, config.emailTemplate, params);
 			unityClient.updateAttribute(user.entityId, LocalDateTimeAttribute
 					.of(Constans.LAST_OFFLINE_VERIFICATION_ATTEMPT_ATTRIBUTE, now));
 		} else
 		{
-			log.info("Skip send email to user {} {} (emailResendPeriod)", user, identity);
+			log.info("Skip send email to user {} {} (emailResendPeriod)", user, identities);
 		}
 
-		log.debug("Offline verification of {} {} complete", user, identity);
+		log.debug("Offline verification of {} {} complete", user, identities);
 		return true;
 	}
 
-	private String getIdpNameForEmailMessage(Identity id, I18nString idpName)
+	private String getIdpNameForEmailMessage(List<Identity> ids, I18nString idpName)
 	{
 		if (idpName != null)
 		{
@@ -124,7 +125,7 @@ class OfflineVerificator
 			}
 		}
 
-		String remoteIdp = id.getRemoteIdp();
+		String remoteIdp = ids.iterator().next().getRemoteIdp();
 		if (config.idpNames != null && remoteIdp != null && config.idpNames.containsKey(remoteIdp))
 		{
 			return config.idpNames.get(remoteIdp);
@@ -132,6 +133,6 @@ class OfflineVerificator
 
 		log.debug("No name found for IdP {}, using id as fallback", remoteIdp);
 
-		return id.getRemoteIdp();
+		return ids.iterator().next().getRemoteIdp();
 	}
 }

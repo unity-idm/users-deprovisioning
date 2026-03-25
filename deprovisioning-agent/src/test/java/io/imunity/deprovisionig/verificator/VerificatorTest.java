@@ -85,10 +85,10 @@ public class VerificatorTest
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
 		when(samlMetadaMan.getIDPsAsMap())
 				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
-		when(onlineVerificator.verify(eq(u1), eq(u1.identities.get(0)), eq(fullSamlIdpInfo))).thenReturn(true);
+		when(onlineVerificator.verify(eq(u1), eq(u1.identities), eq(fullSamlIdpInfo))).thenReturn(OnlineVerificationStatus.success);
 
 		verificator.verifyUsers(Set.of(u1));
-		verify(offlineVerificator, never()).verify(eq(u1), eq(u1.identities.get(0)), any(), any());
+		verify(offlineVerificator, never()).verify(eq(u1), eq(u1.identities), any(), any());
 	}
 	
 	@Test
@@ -105,9 +105,51 @@ public class VerificatorTest
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
 		when(samlMetadaMan.getIDPsAsMap())
 				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
-		when(onlineVerificator.verify(eq(u1), eq(u1.identities.get(0)), eq(fullSamlIdpInfo))).thenReturn(true);
+		when(onlineVerificator.verify(eq(u1), eq(u1.identities.stream()
+				.filter(i -> i.getTranslationProfile()
+						.equals("onlineProfile"))
+				.toList()), eq(fullSamlIdpInfo))).thenReturn(OnlineVerificationStatus.success);
 
 		verificator.verifyUsers(Set.of(u1));
+		verify(offlineVerificator, never()).verify(eq(u1), any(), any(), any());
+	}
+	
+	@Test
+	public void shouldSkipOfflineVerificationIfOnlineIndentitiesAreVerified() throws Exception
+	{
+		UnityUser u1 = new UnityUser(1L, "u1", EntityState.disabled,
+				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "onlineProfile",
+						"http://test.pl"),
+						new Identity(Constans.IDENTIFIER_IDENTITY, "x2", "onlineProfile",
+								"http://test.pl")			
+						),
+				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(8),
+				LocalDateTime.now().minusDays(7), LocalDateTime.now().minusDays(8),
+				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
+		when(samlMetadaMan.getIDPsAsMap())
+				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
+		when(onlineVerificator.verify(eq(u1), eq(u1.identities), eq(fullSamlIdpInfo))).thenReturn(OnlineVerificationStatus.success);
+		
+		
+		verificator.verifyUsers(Set.of(u1));
+		verify(offlineVerificator, never()).verify(eq(u1), any(), any(), any());
+	}
+	
+	@Test
+	public void shouldSkipUserIfIdentitiesComeFromDiffrentIDPs() throws Exception
+	{
+		UnityUser u1 = new UnityUser(1L, "u1", EntityState.disabled,
+				Arrays.asList(new Identity(Constans.IDENTIFIER_IDENTITY, "x1", "onlineProfile",
+						"http://test.pl"),
+						new Identity(Constans.IDENTIFIER_IDENTITY, "x2", "onlineProfile",
+								"http://test2.pl")			
+						),
+				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(8),
+				LocalDateTime.now().minusDays(7), LocalDateTime.now().minusDays(8),
+				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
+			
+		verificator.verifyUsers(Set.of(u1));
+		verify(onlineVerificator, never()).verify(eq(u1), any(), any());
 		verify(offlineVerificator, never()).verify(eq(u1), any(), any(), any());
 	}
 	
@@ -122,7 +164,7 @@ public class VerificatorTest
 				LocalDateTime.now().minusDays(7), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
 		verificator.verifyUsers(Set.of(u1));
-		verify(offlineVerificator).verify(eq(u1), eq(u1.identities.get(0)), eq("fallbackAdmin@demo.com"), any());
+		verify(offlineVerificator).verify(eq(u1), eq(u1.identities), eq("fallbackAdmin@demo.com"), any());
 		verifyNoInteractions(onlineVerificator);	
 	}
 	
@@ -136,7 +178,7 @@ public class VerificatorTest
 				LocalDateTime.now().minusDays(7), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
 		verificator.verifyUsers(Set.of(u1));
-		verify(offlineVerificator).verify(eq(u1), eq(u1.identities.get(0)), eq("fallbackAdmin@demo.com"), any());
+		verify(offlineVerificator).verify(eq(u1), eq(u1.identities), eq("fallbackAdmin@demo.com"), any());
 		verifyNoInteractions(onlineVerificator);	
 	}
 
@@ -150,9 +192,10 @@ public class VerificatorTest
 				LocalDateTime.now().minusDays(2), LocalDateTime.now().minusDays(8), null, null);
 		when(samlMetadaMan.getIDPsAsMap())
 				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
+		when(onlineVerificator.verify(eq(u1), eq(u1.identities), eq(fullSamlIdpInfo))).thenReturn(OnlineVerificationStatus.failure);
 
 		verificator.verifyUsers(Set.of(u1));
-		verify(userStatusUpdater, never()).changeUserStatusIfNeeded(eq(u1), eq(u1.identities.get(0)),
+		verify(userStatusUpdater, never()).changeUserStatusIfNeeded(eq(u1), eq(u1.identities),
 				eq(EntityState.onlyLoginPermitted), eq(fullSamlIdpInfo));
 	}
 
@@ -172,10 +215,12 @@ public class VerificatorTest
 				null, null);
 		when(samlMetadaMan.getIDPsAsMap())
 				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
+		when(onlineVerificator.verify(eq(u1), eq(u1.identities), eq(fullSamlIdpInfo))).thenReturn(OnlineVerificationStatus.failure);
+		when(onlineVerificator.verify(eq(u2), eq(u2.identities), eq(fullSamlIdpInfo))).thenReturn(OnlineVerificationStatus.success);
 
 		verificator.verifyUsers(Set.of(u1, u2));
 
-		verify(userStatusUpdater).changeUserStatusIfNeeded(eq(u1), eq(u1.identities.get(0)),
+		verify(userStatusUpdater).changeUserStatusIfNeeded(eq(u1), eq(u1.identities),
 				eq(EntityState.onlyLoginPermitted), eq(fullSamlIdpInfo));
 
 	}
@@ -193,11 +238,11 @@ public class VerificatorTest
 		when(samlMetadaMan.getIDPsAsMap())
 				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
 
-		when(onlineVerificator.verify(eq(u1), eq(u1.identities.get(0)), eq(fullSamlIdpInfo))).thenReturn(false);
+		when(onlineVerificator.verify(eq(u1), eq(u1.identities), eq(fullSamlIdpInfo))).thenReturn(OnlineVerificationStatus.failure);
 
 		verificator.verifyUsers(Set.of(u1));
 
-		verify(offlineVerificator).verify(eq(u1), eq(u1.identities.get(0)), eq("test@test.pl"), any());
+		verify(offlineVerificator).verify(eq(u1), eq(u1.identities), eq("test@test.pl"), any());
 	}
 
 	@Test
@@ -214,8 +259,8 @@ public class VerificatorTest
 
 		verificator.verifyUsers(Set.of(u1));
 
-		verify(onlineVerificator, never()).verify(eq(u1), eq(u1.identities.get(0)), eq(fullSamlIdpInfo));
-		verify(offlineVerificator).verify(eq(u1), eq(u1.identities.get(0)), eq("test@test.pl"), any());
+		verify(onlineVerificator, never()).verify(eq(u1), eq(u1.identities), eq(fullSamlIdpInfo));
+		verify(offlineVerificator).verify(eq(u1), eq(u1.identities), eq("test@test.pl"), any());
 	}
 
 }
