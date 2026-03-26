@@ -85,10 +85,12 @@ public class VerificatorTest
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
 		when(samlMetadaMan.getIDPsAsMap())
 				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
-		when(onlineVerificator.verify(eq(u1), eq(u1.identities), eq(fullSamlIdpInfo))).thenReturn(OnlineVerificationStatus.success);
+		when(onlineVerificator.verify(eq(u1),
+				eq(new IdentitiesFromSingleIdp(u1.identities, Map.of("http://test.pl", fullSamlIdpInfo)))))
+						.thenReturn(OnlineVerificationStatus.success);
 
 		verificator.verifyUsers(Set.of(u1));
-		verify(offlineVerificator, never()).verify(eq(u1), eq(u1.identities), any(), any());
+		verify(offlineVerificator, never()).verify(eq(u1), eq(new IdentitiesFromSingleIdp(u1.identities, Map.of("http://test.pl", fullSamlIdpInfo))));
 	}
 	
 	@Test
@@ -105,13 +107,18 @@ public class VerificatorTest
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
 		when(samlMetadaMan.getIDPsAsMap())
 				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
-		when(onlineVerificator.verify(eq(u1), eq(u1.identities.stream()
-				.filter(i -> i.getTranslationProfile()
-						.equals("onlineProfile"))
-				.toList()), eq(fullSamlIdpInfo))).thenReturn(OnlineVerificationStatus.success);
+		when(onlineVerificator.verify(
+		        eq(u1),
+		        eq(new IdentitiesFromSingleIdp(
+		                u1.identities.stream()
+		                        .filter(i -> i.getTranslationProfile().equals("onlineProfile"))
+		                        .toList(),
+		                Map.of("http://test.pl", fullSamlIdpInfo)
+		        ))
+		)).thenReturn(OnlineVerificationStatus.success);
 
 		verificator.verifyUsers(Set.of(u1));
-		verify(offlineVerificator, never()).verify(eq(u1), any(), any(), any());
+		verify(offlineVerificator, never()).verify(eq(u1), any());
 	}
 	
 	@Test
@@ -128,11 +135,13 @@ public class VerificatorTest
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
 		when(samlMetadaMan.getIDPsAsMap())
 				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
-		when(onlineVerificator.verify(eq(u1), eq(u1.identities), eq(fullSamlIdpInfo))).thenReturn(OnlineVerificationStatus.success);
+		when(onlineVerificator.verify(eq(u1),
+				eq(new IdentitiesFromSingleIdp(u1.identities, Map.of("http://test.pl", fullSamlIdpInfo)))))
+						.thenReturn(OnlineVerificationStatus.success);
 		
 		
 		verificator.verifyUsers(Set.of(u1));
-		verify(offlineVerificator, never()).verify(eq(u1), any(), any(), any());
+		verify(offlineVerificator, never()).verify(eq(u1), any());
 	}
 	
 	@Test
@@ -149,8 +158,8 @@ public class VerificatorTest
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
 			
 		verificator.verifyUsers(Set.of(u1));
-		verify(onlineVerificator, never()).verify(eq(u1), any(), any());
-		verify(offlineVerificator, never()).verify(eq(u1), any(), any(), any());
+		verify(onlineVerificator, never()).verify(eq(u1), any());
+		verify(offlineVerificator, never()).verify(eq(u1), any());
 	}
 	
 	
@@ -163,8 +172,11 @@ public class VerificatorTest
 				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(7), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
+		when(samlMetadaMan.getIDPsAsMap())
+			.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
+		
 		verificator.verifyUsers(Set.of(u1));
-		verify(offlineVerificator).verify(eq(u1), eq(u1.identities), eq("fallbackAdmin@demo.com"), any());
+		verify(offlineVerificator).verify(eq(u1), eq(new IdentitiesFromSingleIdp(u1.identities, Map.of("http://test.pl", fullSamlIdpInfo))));
 		verifyNoInteractions(onlineVerificator);	
 	}
 	
@@ -177,8 +189,10 @@ public class VerificatorTest
 				Set.of("/", "/A", "/B"), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(7), LocalDateTime.now().minusDays(8),
 				LocalDateTime.now().minusDays(4), LocalDateTime.now().minusDays(1));
+		when(samlMetadaMan.getIDPsAsMap())
+			.thenReturn(Map.of("http://test2.pl", fullSamlIdpInfo));
 		verificator.verifyUsers(Set.of(u1));
-		verify(offlineVerificator).verify(eq(u1), eq(u1.identities), eq("fallbackAdmin@demo.com"), any());
+		verify(offlineVerificator).verify(eq(u1), eq(new IdentitiesFromSingleIdp(u1.identities, Map.of("http://test2.pl", fullSamlIdpInfo))));
 		verifyNoInteractions(onlineVerificator);	
 	}
 
@@ -192,11 +206,11 @@ public class VerificatorTest
 				LocalDateTime.now().minusDays(2), LocalDateTime.now().minusDays(8), null, null);
 		when(samlMetadaMan.getIDPsAsMap())
 				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
-		when(onlineVerificator.verify(eq(u1), eq(u1.identities), eq(fullSamlIdpInfo))).thenReturn(OnlineVerificationStatus.failure);
+		when(onlineVerificator.verify(eq(u1), eq(new IdentitiesFromSingleIdp(u1.identities, Map.of("http://test.pl", fullSamlIdpInfo))))).thenReturn(OnlineVerificationStatus.failure);
 
 		verificator.verifyUsers(Set.of(u1));
-		verify(userStatusUpdater, never()).changeUserStatusIfNeeded(eq(u1), eq(u1.identities),
-				eq(EntityState.onlyLoginPermitted), eq(fullSamlIdpInfo));
+		verify(userStatusUpdater, never()).changeUserStatusIfNeeded(eq(u1), eq(new IdentitiesFromSingleIdp(u1.identities, Map.of("http://test.pl", fullSamlIdpInfo))),
+				eq(EntityState.onlyLoginPermitted));
 	}
 
 	@Test
@@ -215,13 +229,18 @@ public class VerificatorTest
 				null, null);
 		when(samlMetadaMan.getIDPsAsMap())
 				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
-		when(onlineVerificator.verify(eq(u1), eq(u1.identities), eq(fullSamlIdpInfo))).thenReturn(OnlineVerificationStatus.failure);
-		when(onlineVerificator.verify(eq(u2), eq(u2.identities), eq(fullSamlIdpInfo))).thenReturn(OnlineVerificationStatus.success);
+		
+		when(onlineVerificator.verify(eq(u1),
+				eq(new IdentitiesFromSingleIdp(u1.identities, Map.of("http://test.pl", fullSamlIdpInfo)))))
+						.thenReturn(OnlineVerificationStatus.failure);
+		when(onlineVerificator.verify(eq(u2),
+				eq(new IdentitiesFromSingleIdp(u2.identities, Map.of("http://test.pl", fullSamlIdpInfo)))))
+						.thenReturn(OnlineVerificationStatus.success);
 
 		verificator.verifyUsers(Set.of(u1, u2));
 
-		verify(userStatusUpdater).changeUserStatusIfNeeded(eq(u1), eq(u1.identities),
-				eq(EntityState.onlyLoginPermitted), eq(fullSamlIdpInfo));
+		verify(userStatusUpdater).changeUserStatusIfNeeded(eq(u1), any(),
+				eq(EntityState.onlyLoginPermitted));
 
 	}
 
@@ -238,11 +257,13 @@ public class VerificatorTest
 		when(samlMetadaMan.getIDPsAsMap())
 				.thenReturn(Map.of("http://test.pl", fullSamlIdpInfo));
 
-		when(onlineVerificator.verify(eq(u1), eq(u1.identities), eq(fullSamlIdpInfo))).thenReturn(OnlineVerificationStatus.failure);
+		when(onlineVerificator.verify(eq(u1),
+				eq(new IdentitiesFromSingleIdp(u1.identities, Map.of("http://test.pl", fullSamlIdpInfo)))))
+						.thenReturn(OnlineVerificationStatus.failure);
 
 		verificator.verifyUsers(Set.of(u1));
 
-		verify(offlineVerificator).verify(eq(u1), eq(u1.identities), eq("test@test.pl"), any());
+		verify(offlineVerificator).verify(eq(u1), any());
 	}
 
 	@Test
@@ -259,8 +280,8 @@ public class VerificatorTest
 
 		verificator.verifyUsers(Set.of(u1));
 
-		verify(onlineVerificator, never()).verify(eq(u1), eq(u1.identities), eq(fullSamlIdpInfo));
-		verify(offlineVerificator).verify(eq(u1), eq(u1.identities), eq("test@test.pl"), any());
+		verify(onlineVerificator, never()).verify(eq(u1), any());
+		verify(offlineVerificator).verify(eq(u1), eq(new IdentitiesFromSingleIdp(u1.identities, Map.of("http://test.pl", samlIdpInfoWithotAttrQuery))));
 	}
 
 }

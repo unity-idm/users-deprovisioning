@@ -27,12 +27,12 @@ import xmlbeans.org.oasis.saml2.metadata.SSODescriptorType;
 import xmlbeans.org.oasis.saml2.metadata.extui.UIInfoDocument;
 import xmlbeans.org.oasis.saml2.metadata.extui.UIInfoType;
 
-public class SAMLIdPNameFromMetaExtractor
+class SAMLIdPNameFromMetaExtractor
 {
 	private static final Logger log = LogManager.getLogger(SAMLIdPNameFromMetaExtractor.class);
 	private static final String defaultLocaleCode = "en";
 
-	public static I18nString getLocalizedNamesAsI18nString(String entityId, EntityDescriptorType mainDescriptor)
+	static I18nString getLocalizedNamesAsI18nString(String entityId, EntityDescriptorType mainDescriptor)
 	{
 		I18nString ret = new I18nString();
 		List<IDPSSODescriptorType> idpssoDescriptorList = mainDescriptor.getIDPSSODescriptorList();

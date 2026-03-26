@@ -29,7 +29,7 @@ import io.imunity.deprovisionig.unity.types.Identity;
 import io.imunity.deprovisionig.unity.types.LocalDateTimeAttribute;
 import io.imunity.deprovisionig.unity.types.UnityUser;
 import io.imunity.deprovisionig.verificator.OnlineIdentityVerificationStatus.IdentityStatus;
-import io.imunity.deprovisionig.verificator.OnlineIdentityVerificationStatus.Status;
+import io.imunity.deprovisionig.verificator.OnlineIdentityVerificationStatus.OnlineResponseStatus;
 
 @Component
 class OnlineVerificator
@@ -50,19 +50,18 @@ class OnlineVerificator
 	}
 	
 	
-	OnlineVerificationStatus verify(UnityUser user, List<Identity> identities, SAMLIdpInfo samlIdpInfo)
+	OnlineVerificationStatus verify(UnityUser user, IdentitiesFromSingleIdp identitiesFromSingleIdp)
 	{
-		List<OnlineIdentityVerificationStatus> results = identities.stream()
-				.map(i -> verifySingleIdentity(user, i, samlIdpInfo))
+		List<OnlineIdentityVerificationStatus> results = identitiesFromSingleIdp.identities.stream()
+				.map(i -> verifySingleIdentity(user, i, identitiesFromSingleIdp.idpInfo))
 				.collect(Collectors.toList());
-		if (!results.stream().anyMatch(r -> r.status().equals(Status.success)))
+		if (!results.stream().anyMatch(r -> r.status().equals(OnlineResponseStatus.complete)))
 		{
 			return OnlineVerificationStatus.failure;
 		}
 		
-		userStatusUpdater.changeUserStatusIfNeeded(user, identities,
-				IdentitiesStatusToEntityStatusMapper.mapSuccessIdentityStatusToEntityState(results, user.entityState),
-				samlIdpInfo);
+		userStatusUpdater.changeUserStatusIfNeeded(user, identitiesFromSingleIdp,
+				new SuccessfulIdentityVerificationResults(results).toEntityState(user.entityState));
 		updateLastSuccessVerificationTime(user);
 		
 		return OnlineVerificationStatus.success;
@@ -115,13 +114,13 @@ class OnlineVerificator
 		{
 			log.debug("Online verification error:", e);
 		}
-		return new OnlineIdentityVerificationStatus(Status.failure, null);
+		return new OnlineIdentityVerificationStatus(OnlineResponseStatus.not_complete, null);
 	}
 	
 	private OnlineIdentityVerificationStatus success(UnityUser user, Identity identity, IdentityStatus state, SAMLIdpInfo samlIdpInfo)
 	{
-		log.info("Online verification successfull for user {}, identity {}, state {} ", user, identity, state);
-		return new OnlineIdentityVerificationStatus(Status.success, state);
+		log.info("Online verification successful for user {}, identity {}, state {} ", user, identity, state);
+		return new OnlineIdentityVerificationStatus(OnlineResponseStatus.complete, state);
 	}
 
 	private void updateLastSuccessVerificationTime(UnityUser user)

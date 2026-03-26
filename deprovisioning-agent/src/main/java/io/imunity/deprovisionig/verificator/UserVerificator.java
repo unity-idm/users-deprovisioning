@@ -8,7 +8,6 @@ package io.imunity.deprovisionig.verificator;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -66,8 +65,18 @@ public class UserVerificator
 		{
 			log.info("Verify user {}", user);
 
-			List<Identity> onlineVerifiableIdentities = user
-					.getIdentifiersIdentityByProfile(config.inputProfilesForOnlineProcessing);
+			IdentitiesFromSingleIdp onlineVerifiableIdentities;
+			try
+			{
+				 onlineVerifiableIdentities = new IdentitiesFromSingleIdp(
+						 user
+							.getIdentifiersIdentityByProfile(config.inputProfilesForOnlineProcessing), IdpsAsMap.get());
+			} catch (IllegalArgumentException e)
+			{
+				log.warn("Skipping user {} with multiple remote IDPs associated with online processing profile: {}",
+						user, config.inputProfilesForOnlineProcessing);
+				continue;
+			}
 			Optional<Identity> offlineOnlyVerifiableIdentity = user
 					.getIdentifierIdentityByProfile(config.inputProfilesForOfflineProcessingOnly);
 
@@ -87,50 +96,39 @@ public class UserVerificator
 							user,
 							offlineOnlyVerifiableIdentity.get().getTranslationProfile());
 
-					SAMLIdpInfo samlIdpInfo = getSamlIdpInfoForUser(IdpsAsMap.get(), user,
-							offlineOnlyVerifiableIdentity.get()).orElse(null);
-					processOfflineOnlyVerification(user, List.of(offlineOnlyVerifiableIdentity.get()), samlIdpInfo);
+					
+					processOfflineOnlyVerification(user,
+							new IdentitiesFromSingleIdp(List.of(offlineOnlyVerifiableIdentity.get()), IdpsAsMap.get()));
 					continue;
 				}
 			}
 			
-			if (checkIfUserHasMultipleRemoteIdpsAssociatedWithOnlineProcessingProfile(onlineVerifiableIdentities))
-			{
-				log.warn("Skipping user {} with multiple remote IDPs associated with online processing profile: {}, {}",
-						user, config.inputProfilesForOnlineProcessing,
-						onlineVerifiableIdentities);
-				continue;
-			}
-			
 			log.debug("User identities associated with online processing profile {}: {}",
-					onlineVerifiableIdentities.iterator().next().getTranslationProfile(),
-					onlineVerifiableIdentities);
+					onlineVerifiableIdentities.translationProfile(),
+					onlineVerifiableIdentities.identities);
 			
-			SAMLIdpInfo samlIdpInfo = getSamlIdpInfoForUser(IdpsAsMap.get(), user,
-					onlineVerifiableIdentities.iterator().next()).orElse(null);
-
-			if (samlIdpInfo == null)
+			if (onlineVerifiableIdentities.idpInfo == null)
 			{
 				log.info("Can not find IDP with id {} in SAML metadata . Go to offline user verification {} {}",
-						onlineVerifiableIdentities.iterator().next().getRemoteIdp(), user,
-						onlineVerifiableIdentities);
-				processOfflineOnlyVerification(user, onlineVerifiableIdentities, null);
+						onlineVerifiableIdentities.remoteIdp(), user,
+						onlineVerifiableIdentities.identities);
+				processOfflineOnlyVerification(user, onlineVerifiableIdentities);
 				continue;
 			}
 
-			if (samlIdpInfo.attributeQueryServiceUrl.isEmpty())
+			if (onlineVerifiableIdentities.idpInfo.attributeQueryServiceUrl.isEmpty())
 			{
 				log.info("Attribute query service for IDP  {} is not available, only offline verification is possible",
-						samlIdpInfo.id);
-				processOfflineOnlyVerification(user, onlineVerifiableIdentities, samlIdpInfo);
+						onlineVerifiableIdentities.idpInfo.id);
+				processOfflineOnlyVerification(user, onlineVerifiableIdentities);
 				
 			} else
 			{
-				OnlineVerificationStatus onlineVerificationStatus =  onlineVerificator.verify(user, onlineVerifiableIdentities, samlIdpInfo);
+				OnlineVerificationStatus onlineVerificationStatus =  onlineVerificator.verify(user, onlineVerifiableIdentities);
 				
 				if (!onlineVerificationStatus.equals(OnlineVerificationStatus.success))
 				{
-					processOnlineUnverifiedUser(user, onlineVerifiableIdentities, samlIdpInfo);
+					processOnlineUnverifiedUser(user, onlineVerifiableIdentities);
 				}
 			}
 		}
@@ -139,23 +137,6 @@ public class UserVerificator
 
 	}
 	
-	private boolean checkIfUserHasMultipleRemoteIdpsAssociatedWithOnlineProcessingProfile(List<Identity> onlineVerifiableIdentity)
-	{
-		return onlineVerifiableIdentity.stream()
-			    .map(Identity::getRemoteIdp)
-			    .filter(Objects::nonNull) 
-			    .distinct()
-			    .count() > 1;
-	}
-
-	private Optional<SAMLIdpInfo> getSamlIdpInfoForUser(Map<String, SAMLIdpInfo> attributeQueryAddressesAsMap,
-			UnityUser user, Identity identity)
-	{
-		SAMLIdpInfo samlIdpInfo = attributeQueryAddressesAsMap.get(identity.getRemoteIdp());
-		return Optional.ofNullable(samlIdpInfo);
-
-	}
-
 	private Optional<Map<String, SAMLIdpInfo>> getIDPs()
 	{
 		try
@@ -169,9 +150,9 @@ public class UserVerificator
 		return Optional.empty();
 	}
 
-	private void processOnlineUnverifiedUser(UnityUser user, List<Identity> identities, SAMLIdpInfo idpInfo)
+	private void processOnlineUnverifiedUser(UnityUser user, IdentitiesFromSingleIdp identitiesFromOneIdp)
 	{
-		log.info("Process online unverified user {} {}", user, identities);
+		log.info("Process online unverified user {} {}", user, identitiesFromOneIdp.identities);
 
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime firstHomeIdpVerificationFailure = now;
@@ -181,33 +162,24 @@ public class UserVerificator
 			firstHomeIdpVerificationFailure = user.firstHomeIdpVerificationFailure;
 		}
 
-		if (checkIsInOnlineOnlyVerificationTime(now, firstHomeIdpVerificationFailure, user, identities))
+		if (checkIsInOnlineOnlyVerificationTime(now, firstHomeIdpVerificationFailure, user, identitiesFromOneIdp.identities))
 		{
 			return;
 		}
 
-		processOfflineOnlyVerification(user, identities, idpInfo);
+		processOfflineOnlyVerification(user, identitiesFromOneIdp);
 	}
 	
-	private void processOfflineOnlyVerification(UnityUser user, List<Identity> identities, SAMLIdpInfo idpInfo)
+	private void processOfflineOnlyVerification(UnityUser user, IdentitiesFromSingleIdp identitiesFromOneIdp)
 	{
-		if (offlineVerificator.verify(user, identities, getTechnicalAdminEmailFallbackToDefault(idpInfo),
-				Optional.ofNullable(idpInfo)
-						.map(i -> i.name)
-						.orElse(null)))
+		if (offlineVerificator.verify(user, identitiesFromOneIdp))
 		{
 			return;
 		}
 
-		userStatusUpdater.changeUserStatusIfNeeded(user, identities, EntityState.onlyLoginPermitted, idpInfo);
+		userStatusUpdater.changeUserStatusIfNeeded(user, identitiesFromOneIdp, EntityState.onlyLoginPermitted);
 	}
-	String getTechnicalAdminEmailFallbackToDefault(SAMLIdpInfo samlIdpInfo)
-	{
-		return samlIdpInfo == null || samlIdpInfo.technicalAdminEmail == null || samlIdpInfo.technicalAdminEmail.isEmpty()
-				? config.fallbackOfflineVerificationAdminEmail
-				: samlIdpInfo.technicalAdminEmail;
-	}
-
+	
 	private boolean updateFirstHomeIdpVerificationFailureAttributeIfNeeded(LocalDateTime now, UnityUser user)
 	{
 		if (user.firstHomeIdpVerificationFailure == null

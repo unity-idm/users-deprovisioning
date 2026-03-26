@@ -3,7 +3,7 @@
  * See LICENCE.txt file for licensing information.
  */
 
-package io.imunity.deprovisionig.saml;
+package io.imunity.deprovisionig.saml.metadata;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -20,9 +20,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.imunity.deprovisionig.NetworkClient;
 import io.imunity.deprovisionig.common.WorkdirFileManager;
-import io.imunity.deprovisionig.saml.metadata.SAMLIdpInfo;
-import io.imunity.deprovisionig.saml.metadata.SAMLMetadataConfiguration;
-import io.imunity.deprovisionig.saml.metadata.SAMLMetadataManager;
 
 @ExtendWith(MockitoExtension.class)
 public class SAMLMetadataManagerTest

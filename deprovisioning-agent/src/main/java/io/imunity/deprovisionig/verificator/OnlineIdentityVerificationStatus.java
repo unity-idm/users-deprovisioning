@@ -6,12 +6,12 @@
 package io.imunity.deprovisionig.verificator;
 
 record OnlineIdentityVerificationStatus(
-		Status status,
+		OnlineResponseStatus status,
 		IdentityStatus identityStatus)
 {
-	enum Status
+	enum OnlineResponseStatus
 	{
-		success, failure
+		complete, not_complete
 	}
 
 	enum IdentityStatus

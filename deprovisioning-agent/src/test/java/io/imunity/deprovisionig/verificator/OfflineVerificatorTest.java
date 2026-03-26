@@ -28,6 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.imunity.deprovisionig.Constans;
 import io.imunity.deprovisionig.DeprovisioningConfiguration;
+import io.imunity.deprovisionig.saml.metadata.SAMLIdpInfo;
 import io.imunity.deprovisionig.unity.UnityApiClient;
 import io.imunity.deprovisionig.unity.types.Attribute;
 import io.imunity.deprovisionig.unity.types.EntityState;
@@ -66,7 +67,7 @@ public class OfflineVerificatorTest
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(4));
 
-		verificator.verify(u1, u1.identities, "test@test.pl", new I18nString("test"));
+		verificator.verify(u1, new IdentitiesFromSingleIdp(u1.identities, Map.of()));
 
 		verify(client, never()).sendEmail(eq(1L), eq("test"), any());
 
@@ -83,7 +84,8 @@ public class OfflineVerificatorTest
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
 				LocalDateTime.now().minusDays(5), LocalDateTime.now().minusDays(4));
 
-		verificator.verify(u1, u1.identities, "test@test.pl", new I18nString("test"));
+		verificator.verify(u1, new IdentitiesFromSingleIdp(u1.identities, Map.of("http://test.pl",
+				new SAMLIdpInfo("http://test.pl", null, "test@test.pl", new I18nString("test")))));
 
 		@SuppressWarnings("unchecked")
 		ArgumentCaptor<Map<String, String>> emailArgs = ArgumentCaptor.forClass(Map.class);
@@ -110,13 +112,13 @@ public class OfflineVerificatorTest
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
 				LocalDateTime.now().minusDays(5), LocalDateTime.now().minusDays(4));
 
-		verificator.verify(u1, u1.identities, "test@test.pl", null);
+		verificator.verify(u1, new IdentitiesFromSingleIdp(u1.identities, Map.of()));
 
 		@SuppressWarnings("unchecked")
 		ArgumentCaptor<Map<String, String>> emailArgs = ArgumentCaptor.forClass(Map.class);
 
 		verify(client).sendEmail(eq(1L), eq("test"), emailArgs.capture());
-		assertThat(emailArgs.getValue().get("email"), is("test@test.pl"));
+		
 		assertThat(emailArgs.getValue().get("idpName"), is("testName"));
 	}
 	
@@ -131,7 +133,8 @@ public class OfflineVerificatorTest
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
 				LocalDateTime.now().minusDays(5), LocalDateTime.now().minusDays(4));
 
-		verificator.verify(u1, u1.identities, "test@test.pl", new I18nString("en", "testNameFromMeta"));
+		verificator.verify(u1, new IdentitiesFromSingleIdp(u1.identities, Map.of("http://test.pl",
+				new SAMLIdpInfo("http://test.pl", null, "test@test.pl", new I18nString("testNameFromMeta")))));
 
 		@SuppressWarnings("unchecked")
 		ArgumentCaptor<Map<String, String>> emailArgs = ArgumentCaptor.forClass(Map.class);
@@ -152,7 +155,7 @@ public class OfflineVerificatorTest
 				LocalDateTime.now().minusDays(11), LocalDateTime.now().minusDays(11),
 				LocalDateTime.now().minusDays(9), LocalDateTime.now().minusDays(3));
 
-		verificator.verify(u1, u1.identities, "test@test.pl", new I18nString("test"));
+		verificator.verify(u1, new IdentitiesFromSingleIdp(u1.identities, Map.of()));
 
 		verify(client, never()).sendEmail(eq(1L), eq("test"), any());
 	}

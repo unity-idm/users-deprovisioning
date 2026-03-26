@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import io.imunity.deprovisionig.Constans;
 import io.imunity.deprovisionig.DeprovisioningConfiguration;
+import io.imunity.deprovisionig.saml.metadata.SAMLIdpInfo;
 import io.imunity.deprovisionig.unity.UnityApiClient;
 import io.imunity.deprovisionig.unity.types.I18nString;
 import io.imunity.deprovisionig.unity.types.Identity;
@@ -46,9 +48,9 @@ class OfflineVerificator
 
 	}
 
-	boolean verify(UnityUser user, List<Identity> identities, String technicalAdminEmail, I18nString idpName)
+	boolean verify(UnityUser user, IdentitiesFromSingleIdp identitiesSingleIdp)
 	{
-		log.info("Attempting offline verification of user {} {}", user, identities);
+		log.info("Attempting offline verification of user {} {}", user, identitiesSingleIdp.identities);
 		LocalDateTime now = LocalDateTime.now();
 
 		LocalDateTime firstOfflineVerificationAttempt = now;
@@ -66,7 +68,7 @@ class OfflineVerificator
 				|| now.isAfter(firstOfflineVerificationAttempt.plus(config.offlineVerificationPeriod))))
 		{
 			log.info("Skip offline verification for user {} {} (offlineVerificationPeriod has passed)",
-					user, identities);
+					user, identitiesSingleIdp.identities);
 			return false;
 		}
 
@@ -78,6 +80,8 @@ class OfflineVerificator
 					.plus(config.offlineVerificationPeriod);
 			long daysLeft = Duration.between(now, deprovisioningDate).toDays();
 
+			String technicalAdminEmail = getTechnicalAdminEmailFallbackToDefault(identitiesSingleIdp.idpInfo);
+			
 			Map<String, String> params = new HashMap<>();
 			if (technicalAdminEmail != null)
 			{
@@ -86,22 +90,33 @@ class OfflineVerificator
 			params.put(DAYSLEFT_MESSAGE_TEMPLATE_PARAM, String.valueOf(daysLeft));
 			params.put(DEPROVISIONING_DATE_MESSAGE_TEMPLATE_PARAM,
 					deprovisioningDate.withNano(0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-			params.put(IDP_NAME, getIdpNameForEmailMessage(identities, idpName));
+			params.put(IDP_NAME, getIdpNameForEmailMessage(identitiesSingleIdp.identities,
+					Optional.ofNullable(identitiesSingleIdp.idpInfo)
+					.map(i -> i.name)
+					.orElse(null)));
 			
-			log.info("Sending offline verification email to user {} {}", user, identities);
+			log.info("Sending offline verification email to user {} {}", user, identitiesSingleIdp.identities);
 
 			unityClient.sendEmail(user.entityId, config.emailTemplate, params);
 			unityClient.updateAttribute(user.entityId, LocalDateTimeAttribute
 					.of(Constans.LAST_OFFLINE_VERIFICATION_ATTEMPT_ATTRIBUTE, now));
 		} else
 		{
-			log.info("Skip send email to user {} {} (emailResendPeriod)", user, identities);
+			log.info("Skip send email to user {} {} (emailResendPeriod)", user, identitiesSingleIdp.identities);
 		}
 
-		log.debug("Offline verification of {} {} complete", user, identities);
+		log.debug("Offline verification of {} {} complete", user, identitiesSingleIdp.identities);
 		return true;
 	}
 
+	String getTechnicalAdminEmailFallbackToDefault(SAMLIdpInfo samlIdpInfo)
+	{
+		return samlIdpInfo == null || samlIdpInfo.technicalAdminEmail == null || samlIdpInfo.technicalAdminEmail.isEmpty()
+				? config.fallbackOfflineVerificationAdminEmail
+				: samlIdpInfo.technicalAdminEmail;
+	}
+
+	
 	private String getIdpNameForEmailMessage(List<Identity> ids, I18nString idpName)
 	{
 		if (idpName != null)

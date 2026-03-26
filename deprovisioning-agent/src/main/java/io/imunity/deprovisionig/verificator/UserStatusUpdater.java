@@ -6,7 +6,6 @@
 package io.imunity.deprovisionig.verificator;
 
 import java.time.Instant;
-import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,10 +14,8 @@ import org.springframework.stereotype.Component;
 
 import io.imunity.deprovisionig.DeprovisioningConfiguration;
 import io.imunity.deprovisionig.hook.GroovyHookExecutor;
-import io.imunity.deprovisionig.saml.metadata.SAMLIdpInfo;
 import io.imunity.deprovisionig.unity.UnityApiClient;
 import io.imunity.deprovisionig.unity.types.EntityState;
-import io.imunity.deprovisionig.unity.types.Identity;
 import io.imunity.deprovisionig.unity.types.UnityUser;
 
 @Component
@@ -37,15 +34,15 @@ class UserStatusUpdater
 		this.config = config;
 	}
 
-	void changeUserStatusIfNeeded(UnityUser user, List<Identity> identities, EntityState newStatus, SAMLIdpInfo idpInfo)
+	void changeUserStatusIfNeeded(UnityUser user, IdentitiesFromSingleIdp identitiesFromOneIdp, EntityState newStatus)
 	{
 		if (user.entityState.equals(newStatus))
 		{
-			log.debug("User status of {} {} remains unchanged ({})", user, identities, user.entityState);
+			log.debug("User status of {} {} remains unchanged ({})", user, identitiesFromOneIdp.identities, user.entityState);
 			return;
 		}
 
-		log.info("Change user status of {} {} to {}", user, identities, newStatus.toString());
+		log.info("Change user status of {} {} to {}", user, identitiesFromOneIdp.identities, newStatus.toString());
 
 		Instant scheduledRemovalTime = null;
 		if (newStatus.equals(EntityState.onlyLoginPermitted))
@@ -64,7 +61,7 @@ class UserStatusUpdater
 			unityClient.setUserStatus(user.entityId, newStatus);
 		}
 
-		groovyHook.runHook(user, newStatus, idpInfo, scheduledRemovalTime);
+		groovyHook.runHook(user, newStatus, identitiesFromOneIdp.idpInfo, scheduledRemovalTime);
 	}
 
 	private Instant getRemoveTime()

@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -83,8 +84,9 @@ public class OnlineVerificatorTest
 				Arrays.asList(new ParsedAttribute(StatusAttributeExtractor.SAML_STATUS_ATTRIBUTE_NAME,
 						"", Arrays.asList("active")))));
 
-		verificator.verify(u1, u1.identities,
-				new SAMLIdpInfo("http://test.pl", Optional.of("http://test.pl/attr"), "test@test.pl", new I18nString()));
+		
+		verificator.verify(u1, new IdentitiesFromSingleIdp(u1.identities, Map.of("http://test.pl",
+				new SAMLIdpInfo("http://test.pl", Optional.of("http://test.pl/attr"), "test@test.pl", new I18nString("test")))));
 
 		verify(client).setUserStatus(eq(1L), eq(EntityState.valid));
 		ArgumentCaptor<Attribute> argument = ArgumentCaptor.forClass(Attribute.class);
@@ -113,8 +115,10 @@ public class OnlineVerificatorTest
 				new SAMLException("Error", new SAMLErrorResponseException(Status.STATUS_RESPONDER,
 						SubStatus.STATUS2_UNKNOWN_PRINCIPAL, new Exception())));
 
-		verificator.verify(u1, u1.identities,
-				new SAMLIdpInfo("http://test.pl", Optional.of("http://test.pl/attr"), "test@test.pl", new I18nString()));
+		
+		verificator.verify(u1, new IdentitiesFromSingleIdp(u1.identities, Map.of("http://test.pl",
+				new SAMLIdpInfo("http://test.pl", Optional.of("http://test.pl/attr"), "test@test.pl", new I18nString("test")))));
+
 
 		verify(client).setUserStatus(eq(1L), eq(EntityState.disabled));
 		verify(client).scheduleRemoveUser(eq(1L), anyLong());
@@ -136,9 +140,10 @@ public class OnlineVerificatorTest
 				Arrays.asList(new ParsedAttribute(StatusAttributeExtractor.SAML_STATUS_ATTRIBUTE_NAME,
 						"", Arrays.asList("locked")))));
 
-		verificator.verify(u1, u1.identities,
-				new SAMLIdpInfo("http://test.pl", Optional.of("http://test.pl/attr"), "test@test.pl", new I18nString()));
-
+		
+		verificator.verify(u1, new IdentitiesFromSingleIdp(u1.identities, Map.of("http://test.pl",
+				new SAMLIdpInfo("http://test.pl", Optional.of("http://test.pl/attr"), "test@test.pl", new I18nString("test")))));
+	
 		verify(client).setUserStatus(eq(1L), eq(EntityState.authenticationDisabled));
 		ArgumentCaptor<Attribute> argument = ArgumentCaptor.forClass(Attribute.class);
 		verify(client, times(3)).updateAttribute(eq(1L), argument.capture());
