@@ -41,8 +41,10 @@ class UserStatusUpdater
 			log.debug("User status of {} {} remains unchanged ({})", user, identitiesFromOneIdp.identities, user.entityState);
 			return;
 		}
-
+				
 		log.info("Change user status of {} {} to {}", user, identitiesFromOneIdp.identities, newStatus.toString());
+
+		unityClient.clearScheduledOperation(user.entityId);
 
 		Instant scheduledRemovalTime = null;
 		if (newStatus.equals(EntityState.onlyLoginPermitted))

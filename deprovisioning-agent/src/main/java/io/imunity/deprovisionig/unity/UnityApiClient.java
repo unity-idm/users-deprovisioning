@@ -70,6 +70,18 @@ public class UnityApiClient
 			log.error("Can not shedule remove user", e);
 		}
 	}
+	
+	public void clearScheduledOperation(long entityId)
+	{
+		try
+		{
+			client.delete("/v1/entity/" + entityId + "/admin-schedule");
+			log.info("Clear scheduled operation for user {}", entityId);
+		} catch (UnityException e)
+		{
+			log.error("Can not clear sheduled operation for user", e);
+		}
+	}
 
 	public void scheduleRemoveUserWithLoginPermit(long entityId, long when)
 	{

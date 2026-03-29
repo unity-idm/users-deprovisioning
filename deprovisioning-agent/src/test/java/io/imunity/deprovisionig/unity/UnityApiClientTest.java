@@ -46,7 +46,6 @@ public class UnityApiClientTest
 	@Test
 	public void shouldCallStatusChange() throws UnityException
 	{
-
 		apiClient.setUserStatus(1, EntityState.valid);
 		verify(restClient).put(eq("/v1/entity/1/status/" + EntityState.valid.toString()), eq(Optional.empty()));
 	}
@@ -54,16 +53,21 @@ public class UnityApiClientTest
 	@Test
 	public void shouldCallScheduleRemoveUser() throws UnityException
 	{
-
 		apiClient.scheduleRemoveUser(1, 2);
 		verify(restClient).put(eq("/v1/entity/1/admin-schedule"),
 				eq(Optional.of(Map.of("operation", "REMOVE", "when", String.valueOf(2)))));
+	}
+	
+	@Test
+	public void shouldCallClearScheduledOperation() throws UnityException
+	{
+		apiClient.clearScheduledOperation(1);
+		verify(restClient).delete(eq("/v1/entity/1/admin-schedule"));
 	}
 
 	@Test
 	public void shouldCallScheduleRemoveUserWithLoginPermit() throws UnityException
 	{
-
 		apiClient.scheduleRemoveUserWithLoginPermit(1, 2);
 		verify(restClient).put(eq("/v1/entity/1/removal-schedule"),
 				eq(Optional.of(Map.of("when", String.valueOf(2)))));
@@ -72,7 +76,6 @@ public class UnityApiClientTest
 	@Test
 	public void shouldCallUpdateAttribute() throws UnityException, JsonProcessingException
 	{
-
 		Attribute attr = new Attribute();
 		attr.setName("name");
 		attr.setValues(Arrays.asList("v1"));
@@ -86,7 +89,6 @@ public class UnityApiClientTest
 	@Test
 	public void shouldCallNotificationTrigger() throws UnityException, JsonProcessingException
 	{
-
 		apiClient.sendEmail(1, "x", Maps.of("days", "1"));
 		verify(restClient).post(eq("/v1/userNotification-trigger/entity/1/template/x"),
 				eq(Maps.of("custom.days", "1")));

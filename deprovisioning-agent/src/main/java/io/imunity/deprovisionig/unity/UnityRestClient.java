@@ -15,6 +15,7 @@ import org.apache.hc.client5.http.auth.AuthCache;
 import org.apache.hc.client5.http.auth.AuthScope;
 import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
 import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpDelete;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.classic.methods.HttpPut;
 import org.apache.hc.client5.http.impl.auth.BasicAuthCache;
@@ -142,6 +143,20 @@ class UnityRestClient
 		}
 
 		executeAndAssertStatusIsOk(putReq);
+	}
+	
+	void delete(String path) throws UnityException
+	{
+		HttpDelete delReq;
+		try
+		{
+			delReq = new HttpDelete(new URIBuilder(restPath + path).build());
+		} catch (URISyntaxException e)
+		{
+			throw new UnityException("Invalid unity url", e);
+		}
+
+		executeAndAssertStatusIsOk(delReq);
 	}
 
 	void put(String path, ContentType contentType, Optional<String> content) throws UnityException
