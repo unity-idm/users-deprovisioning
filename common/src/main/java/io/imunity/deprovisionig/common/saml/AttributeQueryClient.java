@@ -96,7 +96,7 @@ public class AttributeQueryClient
 	public Optional<List<ParsedAttribute>> getAttributes(String attributeQueryServiceUrl, NameID userIdentity)
 			throws SAMLException
 	{
-		log.debug("Get attributes for user " + userIdentity.getXBean().getStringValue() + " from "
+		log.debug("Get attributes for identity " + userIdentity.getXBean().getStringValue() + " from "
 				+ attributeQueryServiceUrl);
 		try
 		{
@@ -110,7 +110,7 @@ public class AttributeQueryClient
 	public AttributeAssertionParser query(String attributeQueryServiceUrl, NameID userIdentity) throws SAMLException
 	{
 		SAMLAttributeQueryClient attrClient = prepareQueryClient(attributeQueryServiceUrl);
-		log.debug("Query for attributes for user " + userIdentity.getXBean().getStringValue() + " from "
+		log.debug("Query for attributes for identity " + userIdentity.getXBean().getStringValue() + " from "
 				+ attributeQueryServiceUrl);
 		AttributeAssertionParser attrQueryParser;
 		try

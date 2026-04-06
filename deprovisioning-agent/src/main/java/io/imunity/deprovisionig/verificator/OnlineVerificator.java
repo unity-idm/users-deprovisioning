@@ -69,7 +69,7 @@ class OnlineVerificator
 	
 	private OnlineIdentityVerificationStatus verifySingleIdentity(UnityUser user, Identity identity, SAMLIdpInfo samlIdpInfo)
 	{
-		log.info("Online verification attempt of user {} {}", user, identity);
+		log.info("Online verification attempt of identity {} (of user {})", identity, user);
 		Optional<List<ParsedAttribute>> attributes;
 		try
 		{
@@ -96,7 +96,7 @@ class OnlineVerificator
 		{
 			return fail(user, identity, e);
 		}
-		log.debug("Collected attributes for user {} {}: {}", user, identity,
+		log.debug("Collected attributes for identity {} (of user {}): {}", identity, user,
 				attributes.isPresent()
 						? attributes.get().stream()
 								.map(a -> a.getName() + "=" + a.getStringValues())
@@ -109,7 +109,7 @@ class OnlineVerificator
 
 	private OnlineIdentityVerificationStatus fail(UnityUser user, Identity identity, Exception e)
 	{
-		log.info("Online verification failed for user {} {} ", user, identity);
+		log.info("Online verification failed for identity {} (of user {}) ", identity, user);
 		if (e != null)
 		{
 			log.debug("Online verification error:", e);
@@ -119,7 +119,7 @@ class OnlineVerificator
 	
 	private OnlineIdentityVerificationStatus success(UnityUser user, Identity identity, IdentityStatus state, SAMLIdpInfo samlIdpInfo)
 	{
-		log.info("Online verification successful for user {}, identity {}, state {} ", user, identity, state);
+		log.info("Online verification successful for identity {} (of user {}); result: {} ", identity, user, state);
 		return new OnlineIdentityVerificationStatus(OnlineResponseStatus.complete, state);
 	}
 

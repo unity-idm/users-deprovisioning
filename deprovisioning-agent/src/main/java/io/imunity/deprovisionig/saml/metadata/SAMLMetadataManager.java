@@ -180,7 +180,7 @@ public class SAMLMetadataManager
 
 	public EntitiesDescriptorDocument getMetadaFromUri(String rawUri) throws Exception
 	{
-		log.debug("Getting saml metada from uri {}", rawUri);
+		log.debug("Getting saml metadata from uri {}", rawUri);
 
 		URI uri = parseURI(rawUri);
 

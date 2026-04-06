@@ -49,8 +49,8 @@ class OfflineVerificator
 	}
 
 	boolean verify(UnityUser user, IdentitiesFromSingleIdp identitiesSingleIdp)
-	{
-		log.info("Attempting offline verification of user {} {}", user, identitiesSingleIdp.identities);
+	{		
+		log.info("Attempting offline verification of user {} (with identities {})", user, identitiesSingleIdp.identities);
 		LocalDateTime now = LocalDateTime.now();
 
 		LocalDateTime firstOfflineVerificationAttempt = now;
@@ -95,17 +95,17 @@ class OfflineVerificator
 					.map(i -> i.name)
 					.orElse(null)));
 			
-			log.info("Sending offline verification email to user {} {}", user, identitiesSingleIdp.identities);
+			log.info("Sending offline verification email to user {} (with identities {})", user, identitiesSingleIdp.identities);
 
 			unityClient.sendEmail(user.entityId, config.emailTemplate, params);
 			unityClient.updateAttribute(user.entityId, LocalDateTimeAttribute
 					.of(Constans.LAST_OFFLINE_VERIFICATION_ATTEMPT_ATTRIBUTE, now));
 		} else
 		{
-			log.info("Skip send email to user {} {} (emailResendPeriod)", user, identitiesSingleIdp.identities);
+			log.info("Skip send email to user {} (with identities {}) (emailResendPeriod)", user, identitiesSingleIdp.identities);
 		}
 
-		log.debug("Offline verification of {} {} complete", user, identitiesSingleIdp.identities);
+		log.debug("Offline verification of user {} (with identities {}) complete", user, identitiesSingleIdp.identities);
 		return true;
 	}
 

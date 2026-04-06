@@ -130,18 +130,25 @@ class SAMLIdPNameFromMetaExtractor
 		for (LocalizedNameType name : names)
 		{
 			String lang = name.getLang();
+			String value = name.getStringValue();
+			if (value != null)
+				value = value.trim();
+
 			if (lang != null)
 			{
-				ret.put(lang, name.getStringValue());
+				ret.put(lang, value);
+
 				if (lang.equals(defaultLocaleCode))
-					ret.put("", name.getStringValue());
+					ret.put("", value);
+
 				if (lang.equals("en"))
-					enName = name.getStringValue();
+					enName = value;
 			} else
 			{
-				ret.put("", name.getStringValue());
+				ret.put("", value);
 			}
 		}
+
 		if (enName != null && !ret.containsKey(""))
 			ret.put("", enName);
 	}

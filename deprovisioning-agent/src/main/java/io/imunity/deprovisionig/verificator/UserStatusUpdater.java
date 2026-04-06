@@ -38,11 +38,11 @@ class UserStatusUpdater
 	{
 		if (user.entityState.equals(newStatus))
 		{
-			log.debug("User status of {} {} remains unchanged ({})", user, identitiesFromOneIdp.identities, user.entityState);
+			log.debug("Status of user {} {} remains unchanged ({})", user, identitiesFromOneIdp.identities, user.entityState);
 			return;
 		}
 				
-		log.info("Change user status of {} {} to {}", user, identitiesFromOneIdp.identities, newStatus.toString());
+		log.info("Changing user {} {} status to {} ", user, identitiesFromOneIdp.identities, newStatus.toString());
 
 		unityClient.clearScheduledOperation(user.entityId);
 

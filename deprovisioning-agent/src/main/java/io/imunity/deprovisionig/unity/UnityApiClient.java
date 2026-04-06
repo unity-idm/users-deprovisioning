@@ -103,7 +103,7 @@ public class UnityApiClient
 		{
 			client.put("/v1/entity/" + entityId + "/attribute", ContentType.APPLICATION_JSON,
 					Optional.of(Constans.MAPPER.writeValueAsString(attribute)));
-			log.info("Update attribute {} of user {},set value to {} in linked Unity", attribute.getName(),
+			log.info("Update attribute {} of user {}, set value to {} in linked Unity", attribute.getName(),
 					entityId, attribute.getValues());
 		} catch (UnityException | JsonProcessingException e)
 		{

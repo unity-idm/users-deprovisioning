@@ -29,7 +29,7 @@ class StatusAttributeExtractor
 	{
 		if (attributes.isEmpty())
 		{
-			log.debug("No status attributes in saml response  for user {}, identity {}", user, identity);
+			log.debug("No status attributes in saml response for identity {} (of user {})", identity, user);
 			return IdentityStatus.unknown;
 		}
 
@@ -46,13 +46,13 @@ class StatusAttributeExtractor
 	{
 		if (!status.isPresent())
 		{
-			log.debug("No status attributes in saml response  for user {}, identity {}", user, identity);
+			log.debug("No status attributes in saml response  for identity {} (of user {})", identity, user);
 			return IdentityStatus.active;
 		}
 
 		if (status.get().getStringValues().isEmpty())
 		{
-			log.debug("Empty status attribute values in saml response  for user {}, identity {}", user, identity);
+			log.debug("Empty status attribute values in saml response  for identity {} (of user {})", identity, user);
 			return IdentityStatus.unknown;
 		}
 
@@ -73,7 +73,7 @@ class StatusAttributeExtractor
 			return IdentityStatus.deleted;
 		}
 
-		log.warn("Can not interpret new status of user {}, identity {}, status={}", user, identity, statusL);
+		log.warn("Can not interpret new status for identity {} (of user {}), status {}", identity, user, statusL);
 		return IdentityStatus.unknown;
 	}
 }
