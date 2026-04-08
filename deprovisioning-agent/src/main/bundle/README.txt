@@ -1,3 +1,5 @@
+Min required Unity version: 4.3.3
+
 Steps to be performed on Unity side before starting the deprovisioning agent:
 
 0. Make sure to record SAML persistent identity as an identifier identity in Unity (via input translation profile)
