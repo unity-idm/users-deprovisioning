@@ -11,5 +11,3 @@ Steps to be performed on Unity side before starting the deprovisioning agent:
 	  b. custom.daysLeft - number of days left to planned user removal
 	  c. custom.deprovisioningDate - date when removal will take place
 	  c. custom.idpName - user's home IdP name
-
-	  
